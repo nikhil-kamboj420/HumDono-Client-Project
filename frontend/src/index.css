@@ -1,6 +1,78 @@
 @import "tailwindcss";
+
+/* ===== ROMANTIC DATING APP THEME ===== */
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Primary Pink Shades - Romantic & Warm */
+  --pink-50: #fdf2f8;
+  --pink-100: #fce7f3;
+  --pink-200: #fbcfe8;
+  --pink-300: #f9a8d4;
+  --pink-400: #f472b6;
+  --pink-500: #ec4899;
+  --pink-600: #db2777;
+  --pink-700: #be185d;
+  --pink-800: #9d174d;
+  --pink-900: #831843;
+
+  /* Dark Red Shades - Passionate & Deep */
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+  --red-200: #fecaca;
+  --red-300: #fca5a5;
+  --red-400: #f87171;
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-800: #991b1b;
+  --red-900: #7f1d1d;
+
+  /* Rose Shades - Elegant & Sophisticated */
+  --rose-50: #fff1f2;
+  --rose-100: #ffe4e6;
+  --rose-200: #fecdd3;
+  --rose-300: #fda4af;
+  --rose-400: #fb7185;
+  --rose-500: #f43f5e;
+  --rose-600: #e11d48;
+  --rose-700: #be123c;
+  --rose-800: #9f1239;
+  --rose-900: #881337;
+
+  /* Vibrant Red to Pink Gradient - Bold & Beautiful */
+  --gradient-romantic: linear-gradient(135deg, #ec4899 0%, #be185d 50%, #9f1239 100%);
+  --gradient-passion: linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #be123c 100%);
+  --gradient-love: linear-gradient(135deg, #fda4af 0%, #fb7185 50%, #f43f5e 100%);
+  --gradient-sunset: linear-gradient(180deg, 
+    #ff0000 0%,
+    #ff0033 20%,
+    #ff0066 40%,
+    #ff0099 60%,
+    #ff00cc 80%,
+    #ff00ff 100%
+  );
+  --gradient-heart: linear-gradient(135deg, #fce7f3 0%, #f9a8d4 50%, #ec4899 100%);
+}
+
+/* Custom Font Definition */
+@font-face {
+  font-family: 'ARLRDBD';
+  src: url('/Fonts/ARLRDBD.TTF') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Preload the font for better performance */
+@font-face {
+  font-family: 'ARLRDBD';
+  src: url('/Fonts/ARLRDBD.TTF') format('truetype');
+  font-weight: 100 900; /* Support all font weights */
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -25,10 +97,11 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 h1 {
@@ -42,7 +115,7 @@ button {
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
-  font-family: inherit;
+  font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif;
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
@@ -53,6 +126,505 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+input, textarea, option {
+  color: #cc0033 !important;
+  font-weight: 600 !important;
+  font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif !important;
+}
+
+/* Apply custom font to all elements */
+* {
+  font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Ensure headings use the custom font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Ensure paragraphs and spans use the custom font */
+p, span, div, label {
+  font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  color:  #364153;
+}
+
+/* Smooth scrolling for profile cards */
+.profile-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure profile content is properly visible */
+.profile-scroll > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Fix for profile content sections */
+.profile-scroll > div:not(:first-child) {
+  background: white;
+  position: relative;
+  z-index: 10;
+}
+
+/* Ensure proper stacking context */
+.profile-scroll .bg-white {
+  position: relative;
+  z-index: 10;
+}
+
+/* Custom scrollbar for profile cards */
+.profile-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.profile-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.profile-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 2px;
+}
+
+.profile-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Hide scrollbar on mobile for cleaner look */
+@media (max-width: 768px) {
+  .profile-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .profile-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Navigation transitions and animations */
+.nav-transition {
+  transition: all 0.3s ease-in-out;
+}
+
+/* Desktop sidebar styling */
+.desktop-sidebar {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+/* Mobile bottom sheet animation */
+.mobile-menu-enter {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+.mobile-menu-enter-active {
+  transform: translateY(0);
+  opacity: 1;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+/* Notification badge pulse animation */
+@keyframes pulse-notification {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.notification-badge {
+  animation: pulse-notification 2s infinite;
+}
+
+/* Prevent horizontal overflow globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  box-sizing: border-box;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Fix container overflow issues */
+.container-fix {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Responsive image fixes */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Fix flex container overflow */
+.flex-container-fix {
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+/* Desktop layout fixes */
+@media (min-width: 1024px) {
+  /* Ensure content doesn't overflow with sidebar */
+  .lg\:pr-64 {
+    padding-right: 16rem; /* 256px sidebar width */
+  }
+  
+  /* Prevent horizontal scroll on desktop */
+  body {
+    overflow-x: hidden;
+  }
+  
+  /* Fix container widths on desktop */
+  .container-fix {
+    max-width: calc(100vw - 16rem); /* Account for sidebar */
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* Ensure header content fits properly */
+  .container-fix header {
+    max-width: 100%;
+    overflow: hidden;
+  }
+  
+  /* Logo container should not cause overflow */
+  .container-fix .flex-1 {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  
+  /* Logo specific fixes */
+  .logo-container {
+    max-width: 60%;
+    overflow: hidden;
+  }
+  
+  .logo-container img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* Mobile layout fixes */
+@media (max-width: 1023px) {
+  .container-fix {
+    max-width: 100vw;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 0; /* No bottom padding - cards should touch navigation */
+  }
+}
+
+/* Scroll indicator for better UX */
+.profile-scroll {
+  position: relative;
+}
+
+.profile-scroll::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1), transparent);
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profile-scroll:hover::before {
+  opacity: 1;
+}
+
+/* ===== ROMANTIC THEME COMPONENTS ===== */
+
+/* Romantic Buttons */
+.btn-romantic {
+  background: var(--gradient-romantic);
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+}
+
+.btn-romantic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
+}
+
+.btn-passion {
+  background: var(--gradient-passion);
+  color: white;
+  border: none;
+  border-radius: 1rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(244, 63, 94, 0.3);
+}
+
+.btn-passion:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(244, 63, 94, 0.4);
+}
+
+/* Soft Romantic Cards - Elegant Glass Effect */
+.card-romantic {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 24px 0 rgba(236, 72, 153, 0.12),
+              0 0 0 1px rgba(255, 255, 255, 0.15),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.card-romantic:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px 0 rgba(236, 72, 153, 0.18),
+              0 0 0 1px rgba(255, 255, 255, 0.2),
+              inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Romantic Backgrounds */
+.bg-romantic-gradient {
+  background: var(--gradient-romantic);
+}
+
+.bg-passion-gradient {
+  background: var(--gradient-passion);
+}
+
+.bg-love-gradient {
+  background: var(--gradient-love);
+}
+
+.bg-sunset-gradient {
+  background: var(--gradient-sunset);
+  background-size: 400% 400%;
+  animation: gradientShift 5s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-heart-gradient {
+  background: var(--gradient-heart);
+}
+
+/* Romantic Text Colors */
+.text-romantic {
+  color: var(--pink-600);
+}
+
+.text-passion {
+  color: var(--red-700);
+}
+
+.text-love {
+  color: var(--rose-600);
+}
+
+/* Romantic Borders */
+.border-romantic {
+  border-color: var(--pink-300);
+}
+
+.border-passion {
+  border-color: var(--red-300);
+}
+
+/* Location Search Component Styling */
+.location-search-wrapper input {
+  border-color: var(--pink-400) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.75rem !important;
+  transition: all 0.3s ease !important;
+}
+
+.location-search-wrapper input:focus {
+  border-color: var(--pink-500) !important;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1) !important;
+}
+
+.location-search-wrapper .absolute.z-50 {
+  border-color: var(--pink-300) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 20px 40px rgba(236, 72, 153, 0.15) !important;
+  background: linear-gradient(145deg, #fff1f2 0%, #ffffff 100%) !important;
+}
+
+/* Romantic Form Elements */
+input[type="text"], input[type="email"], input[type="tel"], textarea, select {
+  border-color: var(--pink-300);
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]:focus, input[type="email"]:focus, input[type="tel"]:focus, textarea:focus, select:focus {
+  border-color: var(--pink-500);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
+  outline: none;
+}
+
+/* Romantic Range Sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--pink-200);
+  border-radius: 1rem;
+  height: 6px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--gradient-romantic);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(236, 72, 153, 0.3);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--gradient-romantic);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 10px rgba(236, 72, 153, 0.3);
+}
+
+/* Romantic Checkboxes */
+input[type="checkbox"] {
+  accent-color: var(--pink-500);
+  border-radius: 0.25rem;
+}
+
+/* Romantic Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--pink-50);
+  border-radius: 1rem;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-romantic);
+  border-radius: 1rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gradient-passion);
+}
+
+/* Romantic Loading Animation */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+@keyframes romantic-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(236, 72, 153, 0);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes love-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+.heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.romantic-pulse {
+  animation: romantic-pulse 2s infinite;
+}
+
+.love-float {
+  animation: love-float 3s ease-in-out infinite;
+}
+
+/* Romantic Hover Effects */
+.hover-romantic:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(236, 72, 153, 0.2);
+  transition: all 0.3s ease;
+}
+
+.hover-love:hover {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+  transition: all 0.3s ease;
+}
+
+/* Romantic Text Gradients */
+.text-gradient-romantic {
+  background: var(--gradient-romantic);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-love {
+  background: var(--gradient-love);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Soft Romantic Shadows */
+.shadow-romantic {
+  box-shadow: 0 8px 32px -4px rgba(236, 72, 153, 0.15),
+              0 4px 16px -2px rgba(249, 168, 212, 0.12),
+              0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.shadow-love {
+  box-shadow: 0 12px 40px -6px rgba(244, 63, 94, 0.18),
+              0 6px 20px -3px rgba(236, 72, 153, 0.15);
+}
+
+.shadow-passion {
+  box-shadow: 0 16px 48px -8px rgba(190, 24, 93, 0.2),
+              0 8px 24px -4px rgba(236, 72, 153, 0.18);
 }
 
 @media (prefers-color-scheme: light) {
@@ -66,4 +638,98 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+
+/* Desktop sidebar - explicit media query for better browser compatibility */
+.desktop-sidebar {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktop-sidebar {
+    display: block !important;
+  }
+}
+
+/* Logo styling - Circular with white background */
+img[src="/logo.png"] {
+  border-radius: 50%;
+  background: white;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Irregular circle effect for larger logos */
+.logo-irregular {
+  border-radius: 45% 55% 52% 48% / 48% 45% 55% 52%;
+  background: white;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  animation: morphShape 8s ease-in-out infinite;
+}
+
+@keyframes morphShape {
+  0%, 100% {
+    border-radius: 45% 55% 52% 48% / 48% 45% 55% 52%;
+  }
+  25% {
+    border-radius: 52% 48% 45% 55% / 55% 52% 48% 45%;
+  }
+  50% {
+    border-radius: 48% 52% 55% 45% / 45% 55% 52% 48%;
+  }
+  75% {
+    border-radius: 55% 45% 48% 52% / 52% 48% 45% 55%;
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Show thin scrollbar for notification filters */
+.notification-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 72, 153, 0.3) transparent;
+}
+
+.notification-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.notification-scroll::-webkit-scrollbar-track {
+  background: rgba(236, 72, 153, 0.1);
+  border-radius: 2px;
+}
+
+.notification-scroll::-webkit-scrollbar-thumb {
+  background: rgba(236, 72, 153, 0.4);
+  border-radius: 2px;
+}
+
+.notification-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.6);
+}
+
+/* Offline indicator animation */
+@keyframes slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease-out;
 }
