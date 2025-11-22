@@ -7,7 +7,13 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed:gifts": "node scripts/seedGifts.js"
+    "seed:gifts": "node scripts/seedGifts.js",
+    "build": "echo 'Backend build complete'",
+    "postinstall": "echo 'Dependencies installed successfully'"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

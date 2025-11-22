@@ -1,0 +1,35 @@
+# HumDono - Robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /messages/
+Disallow: /settings/
+Disallow: /profile/edit
+Disallow: /wallet/
+Disallow: /subscription/
+
+# Allow important pages
+Allow: /
+Allow: /login
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# Sitemap
+Sitemap: https://humdono.in/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 10
+
+# Specific bots
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /
