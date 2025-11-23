@@ -10,10 +10,10 @@
     "preview": "vite preview",
     "start": "vite preview --port 3000"
   },
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=9.0.0"
-  },
+"engines": {
+  "node": ">=20.19.0",
+  "npm": ">=9.0.0"
+},
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.17",
