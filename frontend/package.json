@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite preview"
+     "start": "node -e \"console.log('ENV PORT=', process.env.PORT)\" && vite preview"
   },
 "engines": {
   "node": ">=20.19.0",
