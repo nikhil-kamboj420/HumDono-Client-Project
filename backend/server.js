@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
@@ -164,5 +166,22 @@ app.use((err, req, res, next) => {
   res.status(500).json({ ok: false, error: 'Server error' });
 });
 
-const PORT = process.env.PORT || 5000;
+// ... your existing routes and middleware above ...
+
+const PORT = process.env.PORT || 4173;
+
+// serve the static build folder **only if it exists**
+const distPath = path.join(process.cwd(), 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  // for SPA: serve index.html for any unknown route (so client-side routing works)
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+} else {
+  console.log('⚠️  Static dist folder not found at', distPath, '- skipping static serve.');
+}
+
+// health check
+app.get("/health", (_, res) => res.send("ok"));
 app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
