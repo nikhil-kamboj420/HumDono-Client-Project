@@ -93,30 +93,30 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ ok: false, error: "Email already registered" });
     }
 
-    // Generate and send OTP
+    // Generate OTP
     const otp = genOtp();
     const otpHash = await bcrypt.hash(otp, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Remove old OTPs for this email
-    await Otp.deleteMany({ email: cleanEmail });
+    // Remove old OTPs and store new one (parallel operations)
+    await Promise.all([
+      Otp.deleteMany({ email: cleanEmail }),
+      Otp.create({ email: cleanEmail, otpHash, expiresAt })
+    ]);
 
-    // Store OTP
-    await Otp.create({ email: cleanEmail, otpHash, expiresAt });
+    // Send OTP email in background (non-blocking)
+    // Don't await - let it send while user waits on frontend
+    sendOtpEmail(cleanEmail, otp)
+      .then(result => {
+        if (result.success) {
+          console.log(`✅ OTP email sent to ${cleanEmail} via ${result.provider} in ${result.duration}ms`);
+        } else {
+          console.error(`⚠️ OTP email failed for ${cleanEmail}:`, result.error);
+        }
+      })
+      .catch(err => console.error('Email error:', err));
 
-    // Send OTP email
-    try {
-      await sendOtpEmail(cleanEmail, otp);
-    } catch (emailError) {
-      console.error("Email send failed:", emailError.message);
-    }
-
-    // Return success message
-    return res.json({
-      ok: true,
-      message: "Verification code sent to your email"
-    });
-
+    // Return immediately - don't wait for email
     return res.json({
       ok: true,
       message: "Verification code sent to your email",
