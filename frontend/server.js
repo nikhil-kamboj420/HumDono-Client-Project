@@ -26,6 +26,12 @@ app.get('/health', (req, res) => res.status(200).send('ok'));
 // If dist exists, serve static files
 if (fs.existsSync(distPath)) {
   log('Serving static assets from', distPath);
+  try {
+    const files = fs.readdirSync(distPath);
+    log('Files in dist:', files);
+  } catch (e) {
+    log('Error reading dist:', e);
+  }
 
   // Cache static assets aggressively (add Cache-Control headers)
   app.use(express.static(distPath, {
