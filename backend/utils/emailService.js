@@ -1,5 +1,6 @@
 // backend/utils/emailService.js
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 // Create transporter (supports both Gmail and SendGrid)
 const createTransporter = () => {
@@ -49,6 +50,61 @@ const createTransporter = () => {
  * OPTIMIZED: Returns immediately, sends email in background
  */
 export const sendOtpEmail = async (email, otp) => {
+  // Check for Resend API Key first
+  if (process.env.RESEND_API_KEY) {
+    console.log('📧 [Resend] Attempting to send OTP...');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const startTime = Date.now();
+
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'HumDono <no-reply@humdono.in>',
+        to: [email],
+        subject: 'Your HumDono Verification Code',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #cc0033;">Welcome to HumDono! 💕</h2>
+            <p>Your verification code is:</p>
+            <div style="background: #ffebf1; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
+              <h1 style="color: #cc0033; font-size: 36px; margin: 0;">${otp}</h1>
+            </div>
+            <p>This code will expire in <strong>5 minutes</strong>.</p>
+            <p>If you didn't request this code, please ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+            <p style="color: #666; font-size: 12px;">
+              This is an automated email from HumDono Dating App.
+            </p>
+          </div>
+        `
+      });
+
+      if (error) {
+        console.error('❌ [Resend] Error:', error);
+        throw new Error(error.message);
+      }
+
+      const duration = Date.now() - startTime;
+      console.log(`✅ [Resend] Email sent in ${duration}ms. ID: ${data.id}`);
+      return { success: true, messageId: data.id, duration, provider: 'Resend' };
+
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ [Resend] Failed after ${duration}ms:`, error.message);
+      // Fallback to other providers is possible here, but for now we return error
+      // or we could let it fall through to the existing logic? 
+      // Let's return error for now to be explicit, or we can remove the 'else' block below to fallback.
+      // Given the user specifically wants to use this, let's stick to it.
+      
+      return { 
+        success: false, 
+        error: error.message, 
+        duration,
+        provider: 'Resend',
+        fallback: true 
+      };
+    }
+  }
+
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER;
   const provider = process.env.SENDGRID_API_KEY ? 'SendGrid' : 'Gmail';
   
