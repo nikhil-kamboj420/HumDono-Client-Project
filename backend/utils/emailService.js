@@ -19,28 +19,28 @@ const createTransporter = () => {
     });
   }
   
-  // Fallback to Gmail (for development)
+  // Gmail SMTP (with production-optimized settings)
+  console.log('📮 Using Gmail SMTP');
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // use STARTTLS
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS
     },
-    // Add connection pooling and timeout settings
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    rateDelta: 1000,
-    rateLimit: 5,
-    // Timeout settings (in milliseconds)
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000,
-    socketTimeout: 30000, // 30 seconds
-    // TLS settings
-    secure: true,
+    // Increased timeouts for production (Railway can be slow)
+    connectionTimeout: 60000, // 60 seconds
+    greetingTimeout: 30000,
+    socketTimeout: 60000,
+    // TLS settings for better compatibility
     tls: {
+      ciphers: 'SSLv3',
       rejectUnauthorized: false
-    }
+    },
+    // Enable debug logging in production
+    debug: process.env.NODE_ENV === 'production',
+    logger: process.env.NODE_ENV === 'production'
   });
 };
 
@@ -51,6 +51,14 @@ const createTransporter = () => {
 export const sendOtpEmail = async (email, otp) => {
   const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.EMAIL_USER;
   const provider = process.env.SENDGRID_API_KEY ? 'SendGrid' : 'Gmail';
+  
+  // Log environment check
+  console.log('🔍 Email Service Check:');
+  console.log('  - Provider:', provider);
+  console.log('  - From Email:', fromEmail);
+  console.log('  - EMAIL_USER set:', !!process.env.EMAIL_USER);
+  console.log('  - EMAIL_PASS set:', !!process.env.EMAIL_PASS);
+  console.log('  - NODE_ENV:', process.env.NODE_ENV);
   
   const mailOptions = {
     from: `"HumDono Dating" <${fromEmail}>`,
@@ -79,11 +87,16 @@ export const sendOtpEmail = async (email, otp) => {
   try {
     const transporter = createTransporter();
     
-    // Send with 15 second timeout (faster than before)
+    // Verify transporter configuration
+    console.log('🔧 Verifying transporter...');
+    await transporter.verify();
+    console.log('✅ Transporter verified successfully');
+    
+    // Send with 30 second timeout (increased for production)
     const sendWithTimeout = Promise.race([
       transporter.sendMail(mailOptions),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Email timeout after 15s')), 15000)
+        setTimeout(() => reject(new Error('Email timeout after 30s')), 30000)
       )
     ]);
 
@@ -94,7 +107,14 @@ export const sendOtpEmail = async (email, otp) => {
     return { success: true, messageId: info.messageId, duration, provider };
   } catch (error) {
     const duration = Date.now() - startTime;
-    console.error(`❌ [${provider}] Email failed after ${duration}ms:`, error.message);
+    console.error(`❌ [${provider}] Email failed after ${duration}ms`);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode
+    });
     
     // Don't throw error - return failure status instead
     // This prevents the entire registration from failing
@@ -103,6 +123,7 @@ export const sendOtpEmail = async (email, otp) => {
       error: error.message, 
       duration,
       provider,
+      errorCode: error.code,
       // Still allow user to proceed (they can request resend)
       fallback: true 
     };
