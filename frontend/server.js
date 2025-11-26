@@ -63,6 +63,6 @@ if (fs.existsSync(distPath)) {
 }
 
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   log(`Static server listening on port ${PORT}`);
 });
