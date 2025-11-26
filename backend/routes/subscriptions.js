@@ -216,7 +216,7 @@ router.post("/verify", auth, async (req, res) => {
       user.requiresFirstSubscription = false;
       user.hasCompletedFirstSubscription = true;
       user.firstSubscriptionDate = new Date();
-      console.log(`✅ User ${user.phone} completed first subscription! Unlocked all features.`);
+
     }
 
     await user.save();

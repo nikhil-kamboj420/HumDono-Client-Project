@@ -48,8 +48,7 @@ const subscriptionSchema = new mongoose.Schema({
     default: 'pending'
   },
   razorpaySubscriptionId: {
-    type: String,
-    index: true
+    type: String
   },
   razorpayPlanId: {
     type: String

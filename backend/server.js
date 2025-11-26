@@ -10,7 +10,7 @@ import notificationsRoutes from './routes/notifications.js';
 import matchesRoutes from './routes/matches.js';
 import messagesRoutes from './routes/messages.js';
 import giftsRoutes from './routes/gifts.js';
-import friendsRoutes from './routes/friends.js';
+
 import boostsRoutes from './routes/boosts.js';
 import referralsRoutes from './routes/referrals.js';
 import requestsRoutes from './routes/requests.js';
@@ -98,7 +98,7 @@ const connectDB = async () => {
 
 // Handle connection events
 mongoose.connection.on('connected', () => {
-  console.log('📡 Mongoose connected to MongoDB');
+  // Connected
 });
 
 mongoose.connection.on('error', (err) => {
@@ -106,7 +106,7 @@ mongoose.connection.on('error', (err) => {
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('📴 Mongoose disconnected from MongoDB');
+  // Disconnected
 });
 
 // Connect to database
@@ -126,7 +126,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/matches', matchesRoutes);
 app.use('/api/messages', messagesRoutes);
 app.use('/api/gifts', giftsRoutes);
-app.use('/api/friends', friendsRoutes);
+
 app.use('/api/boosts', boostsRoutes);
 app.use('/api/referrals', referralsRoutes);
 app.use('/api/requests', requestsRoutes);
@@ -143,7 +143,6 @@ app.use('/api/admin', adminRoutes);
 
 // Test endpoint to verify ngrok is working
 app.get('/webhook-test', (req, res) => {
-  console.log('🧪 Webhook test endpoint hit!');
   res.json({ 
     success: true, 
     message: 'Webhook endpoint is reachable!',

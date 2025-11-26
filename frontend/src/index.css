@@ -128,10 +128,20 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Alternative: Use size attribute for scrollable select */
+select[size] {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 input, textarea, option {
   color: #cc0033 !important;
   font-weight: 600 !important;
   font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif !important;
+}
+
+select{
+color : #364153 !important;
 }
 
 /* Apply custom font to all elements */
@@ -145,7 +155,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Ensure paragraphs and spans use the custom font */
-p, span, div, label {
+p, span div, label{
   font-family: 'ARLRDBD', system-ui, Avenir, Helvetica, Arial, sans-serif;
   color:  #364153;
 }
@@ -476,6 +486,7 @@ img {
 .location-search-wrapper .absolute.z-50 {
   border-color: var(--pink-300) !important;
   border-radius: 0.75rem !important;
+  color:  #ffffff !important;
   box-shadow: 0 20px 40px rgba(236, 72, 153, 0.15) !important;
   background: linear-gradient(145deg, #fff1f2 0%, #ffffff 100%) !important;
 }
@@ -732,4 +743,8 @@ img[src="/logo.png"] {
 
 .animate-slide-down {
   animation: slide-down 0.3s ease-out;
+}
+
+div button {
+  color: inherit;
 }

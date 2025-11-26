@@ -51,7 +51,7 @@ router.post("/validate", auth, async (req, res) => {
     if (!coupon.applicableFor.includes('all') && !coupon.applicableFor.includes(orderType)) {
       return res.status(400).json({ 
         success: false, 
-        error: `Coupon not applicable for ${orderType} purchases` 
+        error: "Coupon not applicable for " + orderType + " purchases" 
       });
     }
 
@@ -184,13 +184,13 @@ router.get("/available", auth, async (req, res) => {
         { 'applicableFor': orderType }
       ],
       'userRestrictions.excludedUsers': { $ne: userId }
-    }).select('code name description discountType discountValue maxDiscount minOrderAmount validUntil');
+    }).select('code name description discountType discountValue maxDiscount minOrderAmount validUntil usageHistory userRestrictions');
 
     // Filter coupons based on user usage
     const availableCoupons = [];
     
     for (const coupon of coupons) {
-      const userUsageCount = coupon.usageHistory.filter(
+      const userUsageCount = (coupon.usageHistory || []).filter(
         usage => usage.user.toString() === userId
       ).length;
 

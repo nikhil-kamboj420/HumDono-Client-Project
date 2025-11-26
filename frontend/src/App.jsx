@@ -2,25 +2,28 @@
 import { useEffect, useState, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import LoginPhone from "./pages/LoginPhone";
-import VerifyOtp from "./pages/VerifyOtp";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import VerifyRegistration from "./pages/VerifyRegistration";
 import ProfileCreate from "./pages/ProfileCreate";
 import HomeFeed from "./pages/HomeFeed";
 import Matches from "./pages/Matches";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
-import Friends from "./pages/Friends";
+
 import Liked from "./pages/Liked";
 import Disliked from "./pages/Disliked";
 import Boosts from "./pages/Boosts";
 import Referrals from "./pages/Referrals";
 import Gifts from "./pages/Gifts";
 import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
 import Settings from "./pages/Settings";
-import FriendRequests from "./pages/FriendRequests";
+
 import api from "./lib/api";
 import Wallet from "./pages/Wallet";
 import Subscription from "./pages/Subscription";
+import LifetimeSubscription from "./pages/LifetimeSubscription";
 import Notifications from "./pages/Notifications";
 import NotificationPopup from "./components/NotificationPopup";
 import OfflineIndicator from "./components/OfflineIndicator";
@@ -58,7 +61,7 @@ function App() {
   };
 
   // Check if user is on authenticated page
-  const isAuthPage = !['/login', '/verify'].includes(location.pathname);
+  const isAuthPage = !['/login', '/register', '/verify-registration'].includes(location.pathname);
 
   // Global notification polling (only on authenticated pages)
   const { data: notificationData } = useQuery({
@@ -95,6 +98,8 @@ function App() {
       
       // Don't redirect if user is already on a page (not on root)
       if (location.pathname !== '/') {
+        // Just ensure token is set in axios
+        if (token) api.setAuthToken(token);
         return;
       }
       
@@ -111,11 +116,10 @@ function App() {
             nav("/profile/create", { replace: true }); // Complete profile first
           }
         } catch (error) {
-          // Token invalid, clear and redirect to login
-          console.warn('Token validation failed:', error);
-          localStorage.clear();
-          api.setAuthToken(null);
-          nav("/login", { replace: true });
+          // Token invalid, BUT DO NOT LOGOUT per user request
+          console.warn('Token validation failed, but keeping session active:', error);
+          // We keep the token and let the user stay on the page
+          // They will see errors if they try to fetch data, but won't be kicked out
         }
       } else {
         nav("/login", { replace: true });
@@ -140,31 +144,34 @@ function App() {
       )}
 
       <Routes>
-        <Route path="/login" element={<LoginPhone />} />
-        <Route path="/verify" element={<VerifyOtp />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/verify-registration" element={<VerifyRegistration />} />
         <Route path="/profile/create" element={<ProfileCreate />} />
         <Route path="/" element={<HomeFeed />} />
         <Route path="/matches" element={<Matches />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/chat/:matchId" element={<Chat />} />
-        <Route path="/friends" element={<Friends />} />
+
         <Route path="/liked" element={<Liked />} />
         <Route path="/disliked" element={<Disliked />} />
         <Route path="/boosts" element={<Boosts />} />
         <Route path="/referrals" element={<Referrals />} />
         <Route path="/gifts" element={<Gifts />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:id" element={<UserProfile />} />
         <Route path="/settings" element={<Settings />} />
-        <Route path="/friend-requests" element={<FriendRequests />} />
+
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/wallet" element={<Wallet />} />
-        <Route path="/subscription" element={<Subscription />} />
+        <Route path="/subscription" element={<LifetimeSubscription />} />
+        <Route path="/subscription/plans" element={<Subscription />} />
         <Route
           path="/buy"
           element={<div className="p-6">Buy coins page (placeholder)</div>}
         />
 
-        <Route path="*" element={<LoginPhone />} />
+        <Route path="*" element={<Login />} />
       </Routes>
     </div>
   );

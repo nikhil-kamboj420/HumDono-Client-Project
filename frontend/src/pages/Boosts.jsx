@@ -18,14 +18,31 @@ const Boosts = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [showCoupons, setShowCoupons] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
   useEffect(() => {
+    checkUserGender();
     fetchBoostData();
     fetchAvailableCoupons();
     checkSubscriptionRequirement();
   }, []);
+
+  const checkUserGender = async () => {
+    try {
+      const response = await api.getUserProfile();
+      setCurrentUser(response.user);
+      
+      // Redirect females away from boosts page
+      if (response.user?.gender?.toLowerCase() === 'female') {
+        showError('Boost purchases not required for female users', 'Free Access');
+        setTimeout(() => navigate('/'), 1500);
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
   const checkSubscriptionRequirement = async () => {
     try {

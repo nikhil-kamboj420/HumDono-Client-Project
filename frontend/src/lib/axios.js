@@ -137,7 +137,7 @@ axiosInstance.interceptors.response.use(
       if (!newToken) {
         // refresh didn't return token -> force logout
         processQueue(new Error("No token returned from refresh"), null);
-        setAxiosAuthToken(null);
+        // setAxiosAuthToken(null); // Don't clear token immediately, let user stay "logged in" visually
         isRefreshing = false;
         return Promise.reject(error);
       }
@@ -166,28 +166,20 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(refreshError);
       }
       
-      // Only logout on actual auth failures (401, 403, etc.)
+      // On actual auth failure (refresh token invalid/expired)
+      // We DO NOT auto-logout the user here anymore as per request.
+      // We just reject the request. The user will see an error but stay on the page.
+      // They will only be logged out if they manually click logout.
+      
+      console.warn('Refresh failed, but keeping user session active locally per user request.');
       processQueue(refreshError, null);
-      setAxiosAuthToken(null);
-
-      // Auto-redirect to login when refresh fails (not network error)
       isRefreshing = false;
       
-      // Clear all auth data
-      try {
-        localStorage.clear();
-      } catch (e) {
-        console.warn('Failed to clear localStorage:', e);
-      }
-      
-      // Redirect to login page
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
-      
+      // We do NOT clear localStorage or redirect to login
       return Promise.reject(refreshError);
     }
   }
 );
 
 export default axiosInstance;
+

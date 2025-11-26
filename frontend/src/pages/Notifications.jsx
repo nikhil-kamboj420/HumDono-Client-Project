@@ -85,8 +85,8 @@ export default function Notifications() {
   };
 
   const getNotificationMessage = (notification) => {
-    const { type, data, fromUser } = notification;
-    const userName = fromUser?.name || "Someone";
+    const { type, data, sender } = notification;
+    const userName = sender?.name || "Someone";
 
     switch (type) {
       case "like":
@@ -219,16 +219,16 @@ export default function Notifications() {
                 <div className="flex items-start gap-4">
                   {/* User Avatar */}
                   <div className="relative">
-                    {notification.fromUser?.photos?.[0]?.url ? (
+                    {notification.sender?.photos?.[0]?.url ? (
                       <img
-                        src={notification.fromUser.photos[0].url}
-                        alt={notification.fromUser.name}
+                        src={notification.sender.photos[0].url}
+                        alt={notification.sender.name}
                         className="w-12 h-12 rounded-full object-cover"
                       />
                     ) : (
                       <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                         <span className="text-gray-600 font-medium">
-                          {notification.fromUser?.name?.[0] || "?"}
+                          {notification.sender?.name?.[0] || "?"}
                         </span>
                       </div>
                     )}

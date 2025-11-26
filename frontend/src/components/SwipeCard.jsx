@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
  */
 export default function SwipeCard({
   profile = {},
+  currentUser = null,
   onLike,
   onDislike,
   onRequestPhone,
@@ -39,6 +40,34 @@ export default function SwipeCard({
   };
 
   const handleMessage = () => {
+    // Check if user is male
+    const isMale = currentUser?.gender?.toLowerCase() === 'male';
+    const hasLifetimeSubscription = currentUser?.subscription?.isLifetime === true;
+    const userCoins = currentUser?.coins || 0;
+
+    // MALE USER LOGIC
+    if (isMale) {
+      // Check if has lifetime subscription
+      if (!hasLifetimeSubscription) {
+        // No subscription -> Redirect to subscription page
+        navigate("/subscription");
+        return;
+      }
+      
+      // Has subscription, check coins (hidden from user)
+      if (userCoins < 10) {
+        // Not enough coins -> Redirect to wallet
+        navigate("/wallet");
+        return;
+      }
+      
+      // Has subscription and coins -> Allow messaging
+      if (typeof onMessage === "function") {
+        return onMessage(profile);
+      }
+    }
+
+    // FEMALE USER LOGIC - Free messaging
     if (typeof onMessage === "function") {
       return onMessage(profile);
     }
@@ -443,76 +472,7 @@ export default function SwipeCard({
           </div>
         )}
 
-        {/* Action buttons */}
-        <div className="px-4 sm:px-5 lg:px-6 py-4 border-t space-y-3">
-          <button
-            onClick={() =>
-              onSendFriendRequest && onSendFriendRequest(profile._id)
-            }
-            className="w-full flex items-center justify-center gap-2 py-3 text-sm sm:text-base text-[#1f32f9] hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle
-                cx="9"
-                cy="7"
-                r="4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="m19 8 2 2-2 2"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="m21 10-7.5 0"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            ADD AS FRIEND
-          </button>
 
-          <button className="w-full flex items-center justify-center gap-2 py-3 text-sm sm:text-base text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="1.5"
-              />
-              <path
-                d="m15 9-6 6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="m9 9 6 6"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            BLOCK OR REPORT
-          </button>
-        </div>
       </div>
 
       {/* Fixed bottom action bar */}

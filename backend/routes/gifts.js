@@ -6,6 +6,7 @@ import User from "../models/User.js";
 import Message from "../models/Message.js";
 import Match from "../models/Match.js";
 import Transaction from "../models/Transaction.js";
+import { createNotification } from "./notifications.js";
 
 const router = express.Router();
 
@@ -63,7 +64,7 @@ router.post("/send", auth, async (req, res) => {
     // Record transaction
     await Transaction.create({
       user: userId,
-      orderId: `gift_${Date.now()}_${userId}`,
+      orderId: "gift_" + Date.now() + "_" + userId,
       amount: 0, // No money transaction, just coins
       coins: -gift.coinValue, // Negative for deduction
       currency: 'INR',
@@ -84,7 +85,7 @@ router.post("/send", auth, async (req, res) => {
           match: matchId,
           sender: userId,
           receiver: receiverId,
-          content: message || `Sent you a ${gift.name}!`,
+          content: message || "Sent you a " + gift.name + "!",
           messageType: "gift",
           gift: {
             type: gift.name,
@@ -98,6 +99,20 @@ router.post("/send", auth, async (req, res) => {
         await match.save();
       }
     }
+
+    // Create notification for receiver
+    await createNotification({
+      recipient: receiverId,
+      sender: userId,
+      type: "gift",
+      message: user.name + " sent you a " + gift.name + "! 🎁",
+      data: {
+        giftName: gift.name,
+        giftImage: gift.image,
+        senderName: user.name,
+        senderPhoto: user.photos?.[0]?.url
+      }
+    });
 
     res.json({ 
       success: true,

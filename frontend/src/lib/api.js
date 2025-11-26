@@ -140,41 +140,7 @@ export const requestPhoneAccess = async (to) => {
  * -------------------------------
  */
 
-/** Send friend request */
-export const sendFriendRequest = async (recipientId) => {
-  const res = await axiosInstance.post("/friends/request", { recipientId });
-  return res.data;
-};
 
-/** Get friend requests (received) */
-export const getFriendRequests = async () => {
-  const res = await axiosInstance.get("/friends/requests");
-  return res.data;
-};
-
-/** Get sent friend requests */
-export const getSentFriendRequests = async () => {
-  const res = await axiosInstance.get("/friends/sent");
-  return res.data;
-};
-
-/** Accept or decline friend request */
-export const respondToFriendRequest = async (requestId, action) => {
-  const res = await axiosInstance.put(`/friends/${requestId}/respond`, { action });
-  return res.data;
-};
-
-/** Get friends list */
-export const getFriends = async () => {
-  const res = await axiosInstance.get("/friends");
-  return res.data;
-};
-
-/** Remove friend */
-export const removeFriend = async (friendshipId) => {
-  const res = await axiosInstance.delete(`/friends/${friendshipId}`);
-  return res.data;
-};
 
 /**
  * -------------------------------
@@ -308,13 +274,7 @@ const api = {
 
   requestPhoneAccess,
 
-  // friends
-  sendFriendRequest,
-  getFriendRequests,
-  getSentFriendRequests,
-  respondToFriendRequest,
-  getFriends,
-  removeFriend,
+
 
   // notifications
   getNotifications,

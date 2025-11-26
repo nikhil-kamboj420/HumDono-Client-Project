@@ -294,7 +294,7 @@ export default function LoginPhone() {
             type="tel"
             inputMode="tel"
             aria-label="phone"
-            placeholder="+91 98765 43210"
+            placeholder="+91"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className="w-full p-3 rounded-xl text-black border border-[#ff4c91]

@@ -1,0 +1,503 @@
+[
+  {
+    "name": "Kritika Malhotra",
+    "age": 26,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764114458/photo_6055642423092168940_y_skfgyt.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764114458/photo_6055642423092168942_y_le9xml.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764114458/photo_6055642423092168941_y_l5vbss.jpg"
+    ],
+    "photo_descriptions": [
+      "Selfie at India Gate in ethnic wear",
+      "Cozy coffee shop candid"
+    ],
+    "about": "Ambitious yet fun-loving. I’m into fashion, book cafes, and walking around Connaught Place with friends on weekends."
+  },
+  {
+    "name": "Shweta Arora",
+    "age": 29,
+    "gender": "Female",
+    "languages": ["Punjabi", "Hindi", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115487/photo_6055642423092168944_y_wof5rj.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115487/photo_6055642423092168945_y_qomo6n.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115472/photo_6055642423092168946_y_gmsmjs.jpg"
+    ],
+    "photo_descriptions": [
+      "Studio portrait in Indo-western outfit",
+      "Laughing shot at Hauz Khas Village"
+    ],
+    "about": "Corporate by day, foodie by heart. I love trying new restaurants and vlogging my weekend food hunts."
+  },
+  {
+    "name": "Tanya Bhatia",
+    "age": 24,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764116139/photo_6055642423092168949_y_y8z1lu.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115473/photo_6055642423092168950_y_mycgof.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115472/photo_6055642423092168951_y_vyvgqa.jpg"
+    ],
+    "photo_descriptions": [
+      "Monsoon selfie at Lodhi Garden",
+      "Mirror selfie in western outfit"
+    ],
+    "about": "Nature lover and a student of sociology. I enjoy photography, exploring heritage spots, and long walks with lo-fi music."
+  },
+  {
+    "name": "Simran Kaur",
+    "age": 27,
+    "gender": "Female",
+    "languages": ["Punjabi", "Hindi", "English"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115471/photo_6055642423092168958_y_yj9lan.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115471/photo_6055642423092168959_y_etxkth.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115471/photo_6055642423092168960_y_ckjavv.jpg"
+    ],
+    "photo_descriptions": [
+      "Traditional look in salwar suit",
+      "Gym mirror selfie"
+    ],
+    "about": "Strong, sweet, and a little savage. I’m into fitness, chai, and Bhangra beats. Let’s match energies, not egos."
+  },
+  {
+    "name": "Radhika Verma",
+    "age": 25,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115464/photo_6055642423092168963_y_myqbrc.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115471/photo_6055642423092168961_y_zdahpk.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115471/photo_6055642423092168962_y_yedqzc.jpg"
+    ],
+    "photo_descriptions": [
+      "Fun candid in a crop top and jeans",
+      "Travel photo at Humayun’s Tomb"
+    ],
+    "about": "Explorer at heart, I love solo travel and spontaneous plans. Also addicted to Korean dramas and iced coffee."
+  },
+  {
+    "name": "Mehak Kapoor",
+    "age": 22,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115461/photo_6055642423092168971_y_blrrik.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115461/photo_6055642423092168973_y_ebptro.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115461/photo_6055642423092168972_y_s9v5zv.jpg"
+    ],
+    "photo_descriptions": [
+      "Campus-style selfie in ethnic kurti",
+      "Pouting selfie with a filter"
+    ],
+    "about": "Just a college girl with big dreams. I love reels, street shopping at Sarojini, and making playlists for every mood."
+  },
+  {
+    "name": "Niharika Jain",
+    "age": 30,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115453/photo_6055642423092168976_y_mqrvhh.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115451/photo_6055642423092168977_y_aj7px4.jpg"
+    ],
+    "photo_descriptions": [
+      "Aesthetic side profile at sunset",
+      "Indo-western outfit on balcony"
+    ],
+    "about": "Balanced and bold—I’m a fashion stylist who believes every outfit tells a story. Let’s vibe over vintage finds and cold brews."
+  },
+  {
+    "name": "Ananya Gupta",
+    "age": 28,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115450/photo_6055642423092168980_y_y8nu6n.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115450/photo_6055642423092168981_y_ry9dub.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115451/photo_6055642423092168979_y_twz9ak.jpg"
+    ],
+    "photo_descriptions": [
+      "Cafe shot with fairy lights",
+      "Casual home photo in natural light"
+    ],
+    "about": "Quietly chaotic, bookworm by choice. I’m obsessed with journaling, tarot cards, and deep conversations at midnight."
+  },
+  {
+    "name": "Priyanshi Sharma",
+    "age": 23,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115450/photo_6055642423092168983_y_szfvpv.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115450/photo_6055642423092168984_y_rzkdbl.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115441/photo_6055642423092168985_y_o1eknp.jpg"
+    ],
+    "photo_descriptions": [
+      "Stylish pic at Delhi metro station",
+      "Outdoor smiling selfie in park"
+    ],
+    "about": "Final-year student who loves poetry, street photography, and chai breaks under cloudy skies."
+  },
+  {
+    "name": "Avantika Rao",
+    "age": 32,
+    "gender": "Female",
+    "languages": ["Hindi", "English", "Kannada"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115441/photo_6055642423092168986_y_o2bhwe.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115441/photo_6055642423092168986_y_o2bhwe.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115441/photo_6055642423092168987_y_iiwffw.jpg"
+    ],
+    "photo_descriptions": [
+      "Saree photo at a family function",
+      "Standing against a graffiti wall"
+    ],
+    "about": "Professional, spiritual, and emotional. I enjoy minimalism, temple visits, and honest conversations."
+  },
+  {
+    "name": "Neha Ahuja",
+    "age": 27,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Delhi",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115440/photo_6055642423092168989_y_isgzl8.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115440/photo_6055642423092168989_y_isgzl8.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115425/photo_6055642423092168990_y_fz1p0i.jpg"
+    ],
+    "photo_descriptions": [
+      "High-angle selfie with long hair open",
+      "Winter outfit shot in a Delhi street"
+    ],
+    "about": "Goofy, passionate, and a plant mom. I’m into skincare, astrology, and writing poems that never get posted."
+  },
+  {
+    "name": "Neelam Arora",
+    "age": 30,
+    "gender": "Female",
+    "languages": ["Hindi", "Punjabi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115409/photo_6055642423092169043_y_z05b5v.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115409/photo_6055642423092169042_y_oetma5.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115409/photo_6055642423092169044_y_gdp4g5.jpg"
+    ],
+    "photo_descriptions": [
+      "Profile photo on rooftop terrace",
+      "Laughing candid during a picnic"
+    ],
+    "about": "Mature, calm, and thoughtful. I work in real estate and love long walks, planning get-togethers, and nature photography."
+  },
+  {
+    "name": "Tanya Brar",
+    "age": 24,
+    "gender": "Female",
+    "languages": ["Punjabi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115394/photo_6055642423092169050_y_gam3eq.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115394/photo_6055642423092169051_y_fuhitx.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115396/photo_6055642423092169049_y_ylgkol.jpg"
+    ],
+    "photo_descriptions": [
+      "Edgy outfit near graffiti wall",
+      "Coffee shop selfie with headphones on"
+    ],
+    "about": "Aesthetic soul, Instagram lover. I vibe with art, filters, food photography, and emotional playlists."
+  },
+  {
+    "name": "Ritu Sharma",
+    "age": 31,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115394/photo_6055642423092169053_y_qn2ndq.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115394/photo_6055642423092169054_y_c30tgv.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115393/photo_6055642423092169055_y_oep7ez.jpg"
+    ],
+    "photo_descriptions": [
+      "Office look near her desk",
+      "Chill photo in pajamas reading a novel"
+    ],
+    "about": "Workaholic with a soft side. I enjoy personal development books, early morning workouts, and cooking pasta on Sundays."
+  },
+  {
+    "name": "Jasleen Kaur",
+    "age": 29,
+    "gender": "Female",
+    "languages": ["Punjabi", "Hindi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115393/photo_6055642423092169057_y_unwgoz.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115393/photo_6055642423092169056_y_tnuoma.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115382/photo_6055642423092169058_y_rc9rhl.jpg"
+    ],
+    "photo_descriptions": [
+      "Baisakhi festival outfit shot",
+      "Stylish selfie with sunglasses"
+    ],
+    "about": "Free spirit with a flair for fashion. I model part-time, love cats, and always say yes to road trips."
+  },
+  {
+    "name": "Aditi Kapoor",
+    "age": 23,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115382/photo_6055642423092169059_y_sa0kmg.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115381/photo_6055642423092169061_y_jn3f5k.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115381/photo_6055642423092169061_y_jn3f5k.jpg"
+    ],
+    "photo_descriptions": [
+      "College casual look on campus",
+      "Goofy smiling selfie in raincoat"
+    ],
+    "about": "Final-year student who lives on coffee and deadlines. I’m always up for a night drive, TED Talk, or a Netflix binge."
+  },
+  {
+    "name": "Sneha Bansal",
+    "age": 28,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115381/photo_6055642423092169062_y_obrkau.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115381/photo_6055642423092169063_y_hod37k.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115381/photo_6055642423092169064_y_fghplf.jpg"
+    ],
+    "photo_descriptions": [
+      "Subtle makeup portrait in front of mirror",
+      "Traditional wear with open hair"
+    ],
+    "about": "Simple girl, strong values. Into skincare, devotional music, and helping my mom run her small business."
+  },
+  {
+    "name": "Charvi Narang",
+    "age": 26,
+    "gender": "Female",
+    "languages": ["Hindi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115366/photo_6055642423092169066_y_guhaky.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115366/photo_6057828870683477632_y_ubf9se.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115366/photo_6055642423092169065_y_wgjdrr.jpg"
+    ],
+    "photo_descriptions": [
+      "Fashionista shot at Elante Mall",
+      "Laughing pose in a garden or park"
+    ],
+    "about": "Trendy, loud, and passionate. I’m building my own clothing brand and love talking about self-love and hustle culture."
+  },
+  {
+    "name": "Anusha Dahiya",
+    "age": 22,
+    "gender": "Female",
+    "languages": ["Hindi", "Haryanvi", "English"],
+    "city": "Chandigarh",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115381/photo_6055642423092169064_y_fghplf.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115365/photo_6057828870683477631_y_jvrdpv.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115365/photo_6057828870683477633_y_l1xmi6.jpg"
+    ],
+    "photo_descriptions": [
+      "Sun-kissed selfie by window",
+      "Traditional dance event pic"
+    ],
+    "about": "I’m cheerful, grounded, and love dancing! Folk music, reels, and family dinners are my comfort zone."
+  },
+  {
+    "name": "Ananya Reddy",
+    "age": 27,
+    "gender": "Female",
+    "languages": ["Telugu", "English", "Kannada"],
+    "city": "Bangalore",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115365/photo_6057828870683477635_y_btkxbk.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115365/photo_6057828870683477636_y_ittkfb.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115367/photo_6057828870683477637_y_p2pxh0.jpg"
+    ],
+    "photo_descriptions": [
+      "Techie casual look in a co-working space",
+      "Lakeside sunset candid"
+    ],
+    "about": "UI/UX designer by profession, nature lover by heart. I live for filter coffee, coding sprints, and weekend treks around Nandi Hills."
+  },
+  {
+    "name": "Nivedita Rao",
+    "age": 29,
+    "gender": "Female",
+    "languages": ["Kannada", "English", "Hindi"],
+    "city": "Bangalore",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115364/photo_6057828870683477638_y_bmgilj.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115356/photo_6057828870683477639_y_mlq2i0.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115356/photo_6057828870683477641_y_apxaqm.jpg"
+    ],
+    "photo_descriptions": [
+      "Saree portrait with a traditional vibe",
+      "Natural selfie with minimal makeup"
+    ],
+    "about": "Grounded and calm—I teach classical music and enjoy gardening, temple visits, and making fresh dosas every Sunday."
+  },
+  {
+    "name": "Sneha Nair",
+    "age": 25,
+    "gender": "Female",
+    "languages": ["Malayalam", "English", "Hindi"],
+    "city": "Bangalore",
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115355/photo_6057828870683477645_y_orwdfe.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115355/photo_6057828870683477643_y_aof3nq.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115355/photo_6057828870683477644_y_yqdwqi.jpg"
+    ],
+    "photo_descriptions": [
+      "Rooftop shot in pastel outfit",
+      "Headphones on, candid at a café"
+    ],
+    "about": "Calm but curious. I’m a book editor who lives for playlists, poha mornings, and thrift shopping in Church Street."
+  },
+  {
+    "name": "Meera Iyer",
+    "age": 30,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["Kannada", "Tamil", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115355/photo_6057828870683477646_y_jzuopt.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115332/photo_6057828870683477648_y_jmehsi.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115332/photo_6057828870683477647_y_dfhibq.jpg"
+    ],
+    "photo_descriptions": [
+      "Elegant photo in office attire",
+      "Laughing candid with a coffee cup"
+    ],
+    "about": "Entrepreneur in love with productivity hacks, minimalist design, and building meaningful conversations over filter coffee."
+  },
+  {
+    "name": "Roshni Sharma",
+    "age": 26,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["Hindi", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115332/photo_6057828870683477650_y_lms6oz.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115332/photo_6057828870683477650_y_lms6oz.jpg"
+    ],
+    "photo_descriptions": [
+      "Gym mirror selfie",
+      "Monsoon walk photo on MG Road"
+    ],
+    "about": "Fit, fearless, and full of energy. You’ll usually find me lifting weights, exploring vegan cafes, or dancing to Afrobeats."
+  },
+  {
+    "name": "Anika D’Souza",
+    "age": 24,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["English", "Konkani", "Hindi"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115332/photo_6057828870683477651_y_urxabu.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115331/photo_6057828870683477652_y_wzgbda.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115332/photo_6057828870683477653_y_mkqwa8.jpg"
+    ],
+    "photo_descriptions": ["Beach trip selfie", "Mirror shot in western wear"],
+    "about": "Fun, flirty, and occasionally deep. I’m into photography, EDM gigs, and planning last-minute travel with zero regrets."
+  },
+  {
+    "name": "Kavya Narayan",
+    "age": 28,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["Kannada", "Hindi", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115331/photo_6057828870683477654_y_xkzv8s.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115331/photo_6057828870683477655_y_fpf2qz.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115331/photo_6057828870683477655_y_fpf2qz.jpg"
+    ],
+    "photo_descriptions": [
+      "Saree shot during festive event",
+      "Portrait with books in background"
+    ],
+    "about": "Poet, reader, dreamer. Quietly obsessed with old-school music, indie films, and chai at 4 PM."
+  },
+  {
+    "name": "Tara Joseph",
+    "age": 31,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["Tamil", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115331/photo_6057828870683477657_y_ws52ax.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115331/photo_6057828870683477658_y_i7eacz.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115331/photo_6057828870683477659_y_d4rxcw.jpg"
+    ],
+    "photo_descriptions": [
+      "Airport selfie in athleisure",
+      "Coffee shop photo with laptop"
+    ],
+    "about": "Full-time product manager, part-time travel junkie. I balance spreadsheets with sunsets and meetings with matcha."
+  },
+  {
+    "name": "Priya Kulkarni",
+    "age": 27,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["Marathi", "Kannada", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115330/photo_6057828870683477661_y_r0yfln.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115329/photo_6057828870683477662_y_p5f672.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115330/photo_6057828870683477663_y_qq4dix.jpg"
+    ],
+    "photo_descriptions": [
+      "Traditional outfit photo at a wedding",
+      "Polaroid-style candid at home"
+    ],
+    "about": "Down-to-earth and optimistic. I love creating DIY art, bingeing thriller series, and family game nights."
+  },
+  {
+    "name": "Aarthi Venkatesh",
+    "age": 22,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["Tamil", "Kannada", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115329/photo_6057828870683477664_y_xsb0vb.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115330/photo_6057828870683477665_y_kz8kjq.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764115330/photo_6057828870683477666_y_jk7n1x.jpg"
+    ],
+    "photo_descriptions": [
+      "University campus group photo",
+      "Wind-blown hair selfie on terrace"
+    ],
+    "about": "Student of architecture and lover of aesthetics. I document sunsets, Pinterest boards, and write poetry no one reads."
+  },
+  {
+    "name": "Divya Shetty",
+    "age": 30,
+    "gender": "Female",
+    "city": "Bangalore",
+    "languages": ["Tulu", "Kannada", "English"],
+    "profile_photos_URL": [
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764119218/photo_6057828870683477667_y_a3ukys.jpg",
+      "https://res.cloudinary.com/djveuyp8n/image/upload/v1764119218/photo_6057828870683477668_y_dqkmo2.jpg"
+    ],
+    "photo_descriptions": [
+      "Traditional coastal attire by plants",
+      "Evening walk snap in athleisure"
+    ],
+    "about": "Loyal, shy, but lively once you know me. I’m a teacher who enjoys long walks, writing handwritten letters, and laughing till my belly hurts."
+  }
+]

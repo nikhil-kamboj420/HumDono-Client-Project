@@ -1,10 +1,11 @@
-// routes/auth.js
+// routes/auth.js - EMAIL + PASSWORD + OTP AUTHENTICATION
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import Otp from "../models/Otp.js";
 import User from "../models/User.js";
+import { sendOtpEmail } from "../utils/emailService.js";
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ function genOtp() {
 
 // create and store refresh token (hashed) on user and set httpOnly cookie
 async function createAndStoreRefreshToken(user, res, { device = "web" } = {}) {
-  const plain = crypto.randomBytes(40).toString("hex"); // long random token
+  const plain = crypto.randomBytes(40).toString("hex");
   const hash = await bcrypt.hash(plain, 10);
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
@@ -30,12 +31,11 @@ async function createAndStoreRefreshToken(user, res, { device = "web" } = {}) {
   });
   await user.save();
 
-  // set cookie for path /api/auth so refresh endpoint can read it
   res.cookie("refreshToken", plain, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    path: "/api/auth",
+    path: "/",  // Changed from /api/auth to / so cookie is available everywhere
     maxAge: 30 * 24 * 60 * 60 * 1000,
   });
 
@@ -44,10 +44,10 @@ async function createAndStoreRefreshToken(user, res, { device = "web" } = {}) {
 
 // clear a refresh token cookie
 function clearRefreshCookie(res) {
-  res.clearCookie("refreshToken", { path: "/api/auth" });
+  res.clearCookie("refreshToken", { path: "/" });  // Match the cookie path
 }
 
-// compute whether profile is "complete" (simple heuristic)
+// compute whether profile is "complete"
 function isProfileComplete(user) {
   if (!user) return false;
   const hasName = Boolean(user.name && String(user.name).trim().length > 0);
@@ -55,57 +55,103 @@ function isProfileComplete(user) {
   return hasName && hasPhoto;
 }
 
+// validate email format
+function isValidEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
 /* ---------- routes ---------- */
 
-// SEND OTP
-router.post("/send-otp", async (req, res) => {
+/**
+ * POST /api/auth/register
+ * Register new user with email + password
+ * Does NOT create user yet - just validates and sends OTP
+ */
+router.post("/register", async (req, res) => {
   try {
-    const rawPhone = req.body?.phone;
-    const phone = rawPhone ? String(rawPhone).trim() : null;
+    const { email, password } = req.body;
 
-    if (!phone) {
-      return res.status(400).json({ ok: false, error: "Phone is required" });
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ ok: false, error: "Email and password are required" });
     }
 
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    if (!isValidEmail(cleanEmail)) {
+      return res.status(400).json({ ok: false, error: "Invalid email format" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ ok: false, error: "Password must be at least 6 characters" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: cleanEmail });
+    if (existingUser) {
+      return res.status(400).json({ ok: false, error: "Email already registered" });
+    }
+
+    // Generate and send OTP
     const otp = genOtp();
     const otpHash = await bcrypt.hash(otp, 10);
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // remove older OTPs for this phone
-    await Otp.deleteMany({ phone });
+    // Remove old OTPs for this email
+    await Otp.deleteMany({ email: cleanEmail });
 
-    await Otp.create({ phone, otpHash, expiresAt });
+    // Store OTP
+    await Otp.create({ email: cleanEmail, otpHash, expiresAt });
 
-    // NOTE: remove demoOtp in production
+    // Send OTP email
+    try {
+      await sendOtpEmail(cleanEmail, otp);
+    } catch (emailError) {
+      console.error("Email send failed:", emailError.message);
+    }
+
+    // Return success message
     return res.json({
       ok: true,
-      message: "OTP sent successfully",
-      demoOtp: otp,
+      message: "Verification code sent to your email"
+    });
+
+    return res.json({
+      ok: true,
+      message: "Verification code sent to your email",
+      ...(process.env.NODE_ENV !== 'production' && { demoOtp: otp })
     });
   } catch (err) {
-    console.error("Error in send-otp:", err);
+    console.error("Error in /register:", err);
     return res.status(500).json({ ok: false, error: "Server error" });
   }
 });
 
-// VERIFY OTP
-router.post("/verify-otp", async (req, res) => {
+/**
+ * POST /api/auth/verify-registration
+ * Verify OTP and create user account
+ */
+router.post("/verify-registration", async (req, res) => {
   try {
-    const rawPhone = req.body?.phone;
-    const rawOtp = req.body?.otp;
-    const phone = rawPhone ? String(rawPhone).trim() : null;
-    const otp = rawOtp ? String(rawOtp).trim() : null;
+    const { email, password, otp } = req.body;
 
-    if (!phone || !otp) {
-      return res.status(400).json({ ok: false, error: "Phone and OTP are required" });
+    if (!email || !password || !otp) {
+      return res.status(400).json({ ok: false, error: "Email, password, and OTP are required" });
     }
 
-    const otpDoc = await Otp.findOne({ phone }).sort({ createdAt: -1 });
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanOtp = String(otp).trim();
 
-    if (!otpDoc) return res.status(400).json({ ok: false, error: "OTP not requested" });
+    // Find OTP
+    const otpDoc = await Otp.findOne({ email: cleanEmail }).sort({ createdAt: -1 });
+
+    if (!otpDoc) {
+      return res.status(400).json({ ok: false, error: "OTP not found or expired" });
+    }
 
     if (otpDoc.expiresAt < new Date()) {
-      await Otp.deleteMany({ phone });
+      await Otp.deleteMany({ email: cleanEmail });
       return res.status(400).json({ ok: false, error: "OTP expired" });
     }
 
@@ -113,55 +159,127 @@ router.post("/verify-otp", async (req, res) => {
       return res.status(429).json({ ok: false, error: "Too many attempts" });
     }
 
-    const valid = await bcrypt.compare(otp, otpDoc.otpHash);
+    // Verify OTP
+    const valid = await bcrypt.compare(cleanOtp, otpDoc.otpHash);
     if (!valid) {
       otpDoc.attempts = (otpDoc.attempts || 0) + 1;
       await otpDoc.save();
       return res.status(400).json({ ok: false, error: "Incorrect OTP" });
     }
 
-    // valid OTP -> create or return user
-    let user = await User.findOne({ phone });
-    let isNewUser = false;
-    
-    if (!user) {
-      // Create new user with 0 coins (must subscribe first)
-      user = await User.create({ 
-        phone,
-        coins: 0, // No free coins - must subscribe
-        requiresFirstSubscription: true // Flag for first-time subscription requirement
-      });
-      isNewUser = true;
-      console.log(`🎉 New user registered! Phone: ${phone}, Coins: 0 (requires subscription)`);
+    // Check if user already exists (double-check)
+    let user = await User.findOne({ email: cleanEmail });
+    if (user) {
+      return res.status(400).json({ ok: false, error: "Email already registered" });
     }
 
-    // create access token (shorter lifetime)
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user
+    user = await User.create({
+      email: cleanEmail,
+      password: passwordHash,
+      coins: 0,
+      requiresFirstSubscription: true,
+      verification: {
+        emailVerified: true,
+        phoneVerified: false,
+        photoVerified: false,
+        idVerified: false
+      }
+    });
+
+
+
+    // Generate tokens (7 days expiry for better UX)
     const accessToken = jwt.sign(
-      { userId: user._id, phone: user.phone },
+      { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" } // access = 1 hour
+      { expiresIn: "7d" }
     );
 
-    // create & store refresh token (cookie + hashed in DB)
     await createAndStoreRefreshToken(user, res);
 
-    // cleanup OTPs for this phone
-    await Otp.deleteMany({ phone });
+    // Cleanup OTPs
+    await Otp.deleteMany({ email: cleanEmail });
 
     return res.json({
       ok: true,
       token: accessToken,
-      user,
-      isNewUser, // Flag to show welcome message on frontend
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        coins: user.coins,
+        requiresFirstSubscription: user.requiresFirstSubscription
+      },
+      isNewUser: true,
       isProfileComplete: isProfileComplete(user),
     });
   } catch (err) {
-    console.error("Error in verify-otp:", err);
+    console.error("Error in /verify-registration:", err);
     return res.status(500).json({ ok: false, error: "Server error" });
   }
 });
 
-// GET /me  => returns current user; expects Authorization: Bearer <token>
+/**
+ * POST /api/auth/login
+ * Login with email + password
+ */
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ ok: false, error: "Email and password are required" });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    // Find user
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) {
+      return res.status(401).json({ ok: false, error: "Invalid email or password" });
+    }
+
+    // Verify password
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ ok: false, error: "Invalid email or password" });
+    }
+
+    // Generate tokens (7 days expiry for better UX)
+    const accessToken = jwt.sign(
+      { userId: user._id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    await createAndStoreRefreshToken(user, res);
+
+    return res.json({
+      ok: true,
+      token: accessToken,
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+        coins: user.coins,
+        subscription: user.subscription
+      },
+      isProfileComplete: isProfileComplete(user),
+    });
+  } catch (err) {
+    console.error("Error in /login:", err);
+    return res.status(500).json({ ok: false, error: "Server error" });
+  }
+});
+
+/**
+ * GET /api/auth/me
+ * Get current user
+ */
 router.get("/me", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -174,7 +292,7 @@ router.get("/me", async (req, res) => {
 
     try {
       const payload = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(payload.userId).select("-refreshTokens");
+      const user = await User.findById(payload.userId).select("-refreshTokens -password");
       if (!user) return res.status(404).json({ ok: false, error: "User not found" });
       return res.json({ ok: true, user, isProfileComplete: isProfileComplete(user) });
     } catch (e) {
@@ -186,45 +304,48 @@ router.get("/me", async (req, res) => {
   }
 });
 
-// REFRESH: exchange httpOnly refresh cookie for new access token (rotates refresh)
+/**
+ * POST /api/auth/refresh
+ * Refresh access token
+ */
 router.post("/refresh", async (req, res) => {
   try {
     const plain = req.cookies?.refreshToken;
     if (!plain) return res.status(401).json({ ok: false, error: "No refresh token" });
 
-    // find user with matching hashed token (and not expired)
     const users = await User.find({ "refreshTokens.expiresAt": { $gt: new Date() } });
     for (const user of users) {
       for (const rt of user.refreshTokens) {
         const ok = await bcrypt.compare(plain, rt.tokenHash);
         if (ok) {
-          // rotate: remove old token entry
           user.refreshTokens = user.refreshTokens.filter(
             (x) => x._id.toString() !== rt._id.toString()
           );
           await user.save();
 
-          // create new access token
           const accessToken = jwt.sign(
-            { userId: user._id, phone: user.phone },
+            { userId: user._id, email: user.email },
             process.env.JWT_SECRET,
-            { expiresIn: "1h" }
+            { expiresIn: "7d" }
           );
 
-          // create & store a new refresh token (sets cookie)
           await createAndStoreRefreshToken(user, res);
 
           return res.json({
             ok: true,
             token: accessToken,
-            user,
+            user: {
+              _id: user._id,
+              email: user.email,
+              name: user.name,
+              coins: user.coins
+            },
             isProfileComplete: isProfileComplete(user),
           });
         }
       }
     }
 
-    // no match
     clearRefreshCookie(res);
     return res.status(401).json({ ok: false, error: "Invalid refresh token" });
   } catch (err) {
@@ -233,19 +354,21 @@ router.post("/refresh", async (req, res) => {
   }
 });
 
-// LOGOUT: remove matching refresh token and clear cookie
+/**
+ * POST /api/auth/logout
+ * Logout user
+ */
 router.post("/logout", async (req, res) => {
   try {
     const plain = req.cookies?.refreshToken;
     if (plain) {
-      // find user with matching token
       const users = await User.find({ "refreshTokens.expiresAt": { $gt: new Date() } });
       for (const user of users) {
         for (let i = 0; i < user.refreshTokens.length; i++) {
           const rt = user.refreshTokens[i];
           const ok = await bcrypt.compare(plain, rt.tokenHash);
           if (ok) {
-            user.refreshTokens.splice(i, 1); // remove it
+            user.refreshTokens.splice(i, 1);
             await user.save();
             break;
           }

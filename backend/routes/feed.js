@@ -52,13 +52,30 @@ router.get("/", auth, async (req, res) => {
       ? new mongoose.Types.ObjectId(String(meId))
       : meId;
 
+    // Get current user's gender for default filtering
+    const currentUser = await User.findById(meObjectId).select("gender lookingFor boosts").lean();
+    const myGender = currentUser?.gender?.toLowerCase();
+
     const limit = Math.min(Number(req.query.limit) || 10, 30);
     const skip = Number(req.query.skip) || 0;
     const minAge = req.query.minAge ? Number(req.query.minAge) : null;
     const maxAge = req.query.maxAge ? Number(req.query.maxAge) : null;
     const city = req.query.city ? String(req.query.city).trim() : null;
     const relationshipStatus = req.query.relationshipStatus ? String(req.query.relationshipStatus) : null;
-    const gender = req.query.gender ? String(req.query.gender) : null;
+    
+    // Gender filter with smart defaults
+    let gender = req.query.gender ? String(req.query.gender) : null;
+    
+    // DEFAULT BEHAVIOR: Show opposite gender only
+    if (!gender || gender === "any") {
+      if (myGender === "male") {
+        gender = "female"; // Males see only females by default
+      } else if (myGender === "female") {
+        gender = "male"; // Females see only males by default
+      }
+      // If user manually sets gender in filters, respect that choice
+    }
+    
     const verifiedOnly = req.query.verifiedOnly === "true";
     const hasPhotos = req.query.hasPhotos === "true";
     const education = req.query.education ? String(req.query.education).trim() : null;
@@ -130,16 +147,35 @@ router.get("/", auth, async (req, res) => {
     });
     console.log(`📈 Total users with gender=${gender}, relationship=${relationshipStatus}: ${totalMatchingUsers}`);
 
-    // get users current user already interacted with (to exclude)
-    const interacted = await Interaction.find({ from: meObjectId }).select("to").lean();
-    const interactedIds = interacted.map((x) => String(x.to));
-    if (interactedIds.length > 0) {
+    // get users current user already interacted with
+    // Only exclude recent interactions (last 10) for "dislike" action
+    // This allows skipped profiles to reappear after 10 new interactions
+    const recentInteractions = await Interaction.find({ from: meObjectId })
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select("to action")
+      .lean();
+    
+    const recentSkippedIds = recentInteractions
+      .filter(x => x.action === "dislike")
+      .map(x => String(x.to));
+    
+    // Always exclude liked users (to prevent duplicate likes)
+    const likedUsers = await Interaction.find({ 
+      from: meObjectId, 
+      action: "like" 
+    }).select("to").lean();
+    const likedIds = likedUsers.map(x => String(x.to));
+    
+    // Combine: exclude recent skips + all likes
+    const excludeIds = [...new Set([...recentSkippedIds, ...likedIds])];
+    
+    if (excludeIds.length > 0) {
       // Mongoose will cast string ids to ObjectId for the query
-      filter._id.$nin = interactedIds;
+      filter._id.$nin = excludeIds;
     }
 
-    // Get current user's preferences for better matching
-    const currentUser = await User.findById(meObjectId).select("lookingFor boosts").lean();
+    // Sort criteria (currentUser already fetched above)
     let sortCriteria = { lastActiveAt: -1, createdAt: -1 };
 
     // If user has visibility boost, prioritize their profile in others' feeds

@@ -39,7 +39,7 @@ export default function Wallet() {
       const script = document.createElement('script');
       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.onload = () => {
-        console.log('Razorpay script loaded successfully');
+  
         resolve(true);
       };
       script.onerror = () => {
@@ -255,32 +255,7 @@ export default function Wallet() {
     );
   }
 
-  // Check if user requires first subscription
-  if (user?.requiresFirstSubscription) {
-    return (
-      <div className="min-h-screen bg-sunset-gradient lg:pr-64 pb-20 lg:pb-0">
-        <div className="max-w-md mx-auto px-4 py-6">
-          <div className="card-romantic p-8 text-center">
-            <div className="text-6xl mb-4">🔒</div>
-            <h2 className="text-2xl font-bold text-passion mb-4">
-              Subscription Required
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Please subscribe first to unlock coin purchases and start chatting!
-            </p>
-            <button
-              onClick={() => navigate('/subscription?required=true')}
-              className="btn-romantic py-3 px-6 w-full"
-            >
-              View Subscription Plans
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect females - they don't need to buy coins
+  // Redirect females - they don't need to buy coins (CHECK THIS FIRST!)
   if (user?.gender?.toLowerCase() === 'female') {
     return (
       <div className="min-h-screen bg-sunset-gradient lg:pr-64 pb-20 lg:pb-0">
@@ -343,6 +318,34 @@ export default function Wallet() {
             <p className="text-gray-700 text-sm leading-relaxed">
               We believe in creating a balanced community. Female users get free access to encourage more genuine connections and conversations. 💕
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if male user has lifetime subscription (ONLY FOR MALE USERS)
+  // If no lifetime subscription, redirect to subscription page
+  const hasLifetimeSubscription = user?.subscription?.isLifetime === true;
+  
+  if (user?.gender?.toLowerCase() === 'male' && !hasLifetimeSubscription) {
+    return (
+      <div className="min-h-screen bg-sunset-gradient lg:pr-64 pb-20 lg:pb-0">
+        <div className="max-w-md mx-auto px-4 py-6">
+          <div className="card-romantic p-8 text-center">
+            <div className="text-6xl mb-4">🔒</div>
+            <h2 className="text-2xl font-bold text-passion mb-4">
+              Subscription Required
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please subscribe first to unlock coin purchases and start chatting!
+            </p>
+            <button
+              onClick={() => navigate('/subscription?required=true')}
+              className="btn-romantic py-3 px-6 w-full"
+            >
+              View Subscription Plans
+            </button>
           </div>
         </div>
       </div>

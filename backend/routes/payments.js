@@ -39,11 +39,13 @@ router.post('/create-order', protect, async (req, res) => {
       });
     }
 
-    // Validation
-    if (!amount || !coins) {
+    // Validation - Allow subscription without coins
+    const { type } = req.body;
+    
+    if (!amount) {
       return res.status(400).json({
         success: false,
-        error: 'Amount and coins are required'
+        error: 'Amount is required'
       });
     }
 
@@ -54,10 +56,11 @@ router.post('/create-order', protect, async (req, res) => {
       });
     }
 
-    if (coins < 1) {
+    // Coins required only for coin purchases, not subscriptions
+    if (type !== 'lifetime_subscription' && type !== 'subscription' && !coins) {
       return res.status(400).json({
         success: false,
-        error: 'Coins must be at least 1'
+        error: 'Coins are required for coin purchases'
       });
     }
 
@@ -81,11 +84,12 @@ router.post('/create-order', protect, async (req, res) => {
       payment_capture: 1, // Auto capture
       notes: {
         userId: userId.toString(),
-        coins: coins.toString(),
+        coins: coins ? coins.toString() : '0',
         userName: user.name || 'User',
         couponCode: couponCode || '',
         originalAmount: originalAmount || amount,
-        discountAmount: discountAmount || 0
+        discountAmount: discountAmount || 0,
+        type: type || 'coins'
       }
     };
 
@@ -99,7 +103,7 @@ router.post('/create-order', protect, async (req, res) => {
       amount: amount,
       originalAmount: originalAmount || amount,
       currency: order.currency,
-      coins: coins,
+      coins: coins || 0,
       status: 'created',
       couponCode: couponCode || null,
       discountAmount: discountAmount || 0,
@@ -107,13 +111,15 @@ router.post('/create-order', protect, async (req, res) => {
         orderCreatedAt: new Date(),
         userEmail: user.email,
         userName: user.name,
-        couponApplied: !!couponCode
+        couponApplied: !!couponCode,
+        type: type || 'coins'
       }
     });
 
     res.json({
       success: true,
-      order_id: order.id,
+      orderId: order.id,
+      order_id: order.id, // Keep for backward compatibility
       amount: order.amount,
       currency: order.currency,
       transactionId: transaction._id
@@ -471,6 +477,103 @@ router.get('/transaction/:id', protect, async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch transaction'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/payments/verify-subscription
+ * @desc    Verify lifetime subscription payment and activate
+ * @access  Private
+ */
+router.post('/verify-subscription', protect, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, isLifetime, couponCode } = req.body;
+    const userId = req.user.userId || req.user._id;
+
+    // Verify signature
+    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(body.toString())
+      .digest("hex");
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid payment signature'
+      });
+    }
+
+    // Payment verified - Activate lifetime subscription
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: 'User not found'
+      });
+    }
+
+    // Update user subscription
+    user.subscription = {
+      active: true,
+      plan: 'lifetime',
+      isLifetime: true,
+      expiresAt: null, // Never expires
+      features: {
+        unlimitedLikes: true,
+        unlimitedMessages: true,
+        prioritySupport: true,
+        profileBoost: true,
+        seeWhoLikedYou: true,
+        rewindFeature: true
+      }
+    };
+
+    // Add 200 coins silently (hidden from user)
+    user.coins = (user.coins || 0) + 200;
+    user.messagesSent = 0; // Reset message count
+
+    await user.save();
+
+    // Create transaction record
+    await Transaction.create({
+      user: userId,
+      orderId: `sub_${Date.now()}`,
+      amount: 699, // Lifetime subscription price
+      coins: 200, // Hidden bonus coins
+      status: 'paid',
+      razorpayOrderId: razorpay_order_id,
+      razorpayPaymentId: razorpay_payment_id,
+      razorpaySignature: razorpay_signature,
+      metadata: {
+        type: 'subscription',
+        isLifetime: true,
+        couponCode: couponCode || null,
+        description: 'Lifetime Subscription Purchase'
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Lifetime subscription activated',
+      user: {
+        subscription: user.subscription,
+        coins: user.coins // Don't expose this to frontend
+      }
+    });
+
+  } catch (error) {
+    console.error('Subscription verification error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Subscription verification failed'
     });
   }
 });

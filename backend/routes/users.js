@@ -59,6 +59,7 @@ router.get("/me", auth, async (req, res) => {
 /**
  * GET /api/users/random-females
  * Returns random female profiles for new user popups
+ * IMPORTANT: This must come BEFORE /:id route to avoid route collision
  */
 router.get("/random-females", auth, async (req, res) => {
   try {
@@ -77,18 +78,48 @@ router.get("/random-females", auth, async (req, res) => {
         $project: {
           name: 1,
           age: 1,
-          photo: { $arrayElemAt: ["$photos.url", 0] },
-          location: "$location.city",
+          photos: 1,
+          location: 1,
           message: { $literal: "is interested in connecting with you! 💕" }
         }
       }
     ]);
     
-    console.log(`✅ Fetched ${females.length} random female profiles`);
-    res.json({ success: true, profiles: females });
+    // Transform the data to match expected format
+    const transformedFemales = females.map(f => ({
+      _id: f._id,
+      name: f.name,
+      age: f.age,
+      photo: f.photos && f.photos.length > 0 ? f.photos[0].url : null,
+      location: f.location?.city || "",
+      message: f.message
+    }));
+
+    res.json({ success: true, profiles: transformedFemales });
   } catch (error) {
     console.error("GET /api/users/random-females error:", error);
     res.status(500).json({ success: false, error: "Server error" });
+  }
+});
+
+/**
+ * GET /api/users/:id
+ * Returns a specific user's profile by ID (for viewing other users)
+ * IMPORTANT: This must come AFTER specific routes like /random-females
+ */
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("name age bio photos interests gender location relationshipStatus education occupation socialLinks");
+    
+    if (!user) {
+      return res.status(404).json({ ok: false, error: "User not found" });
+    }
+    
+    return res.json({ ok: true, user });
+  } catch (err) {
+    console.error("GET /api/users/:id error:", err);
+    return res.status(500).json({ ok: false, error: "Server error" });
   }
 });
 
@@ -175,6 +206,11 @@ router.post("/", auth, async (req, res) => {
 
     if (visibilitySettings !== undefined) {
       user.visibilitySettings = { ...user.visibilitySettings, ...visibilitySettings };
+    }
+
+    // Clear subscription requirement for female users
+    if (gender !== undefined && gender.toLowerCase() === 'female') {
+      user.requiresFirstSubscription = false;
     }
 
     await user.save();

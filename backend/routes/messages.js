@@ -26,12 +26,44 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
     const sender = await User.findById(senderId);
     if (!sender) return res.status(404).json({ ok: false, error: "Sender not found" });
 
-    // Check if sender is female
+    // Check gender and handle coin deduction for males
+    const isMale = sender.gender?.toLowerCase() === 'male';
     const isFemale = sender.gender?.toLowerCase() === 'female';
-    if (!isFemale) {
+    
+    // FEMALES - COMPLETELY FREE, NO RESTRICTIONS
+    if (isFemale) {
+      // Females can message unlimited, completely free
+      // No subscription, no coins, no limits
+    } 
+    // MALES - Require subscription and coins
+    else if (isMale) {
+      // Male users need lifetime subscription
+      if (!sender.subscription?.isLifetime) {
+        return res.status(403).json({ 
+          ok: false, 
+          error: "Lifetime subscription required",
+          requiresSubscription: true
+        });
+      }
+      
+      // Check coins (10 coins per message - hidden from user)
+      if (sender.coins < 10) {
+        return res.status(402).json({ 
+          ok: false, 
+          error: "Insufficient coins",
+          requiresCoins: true
+        });
+      }
+      
+      // Deduct 10 coins silently
+      sender.coins -= 10;
+      sender.messagesSent = (sender.messagesSent || 0) + 1;
+      await sender.save();
+    } else {
+      // Not male or female - require match
       return res.status(403).json({ 
         ok: false, 
-        error: "Only female users can send direct messages. Please match first." 
+        error: "Please match first to send messages." 
       });
     }
 
@@ -76,7 +108,7 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
         recipient: receiverId,
         sender: senderId,
         type: 'message',
-        message: `${sender.name} sent you a message: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+        message: sender.name + " sent you a message: \"" + content.substring(0, 50) + (content.length > 50 ? '...' : '') + "\"",
         read: false
       });
       console.log('✅ Notification created for receiver:', receiverId);
@@ -92,7 +124,8 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
       ok: true, 
       message,
       matchId: match._id,
-      isFreeForFemale: true
+      coinsRemaining: sender.coins, // Hidden from user, but used for redirect logic
+      messagesSent: sender.messagesSent
     });
   } catch (err) {
     console.error("POST /api/messages/direct/:receiverId error:", err);
@@ -142,7 +175,7 @@ router.get("/:matchId", auth, async (req, res) => {
 /**
  * POST /api/messages/:matchId
  * Send a message in a match (with coins/subscription logic)
- * Females can message anyone without match - auto-creates match
+ * Females can message unlimited and completely free
  */
 router.post("/:matchId", auth, async (req, res) => {
   try {
@@ -170,37 +203,52 @@ router.post("/:matchId", auth, async (req, res) => {
     // Find receiver (the other user in the match)
     const receiverId = members.find(id => id !== String(userId));
 
-    // Check if this is the first message in the conversation
-    const existingMessages = await Message.countDocuments({ match: matchId });
-    const isFirstMessage = existingMessages === 0;
-
     // Coins/Subscription Logic for sending messages
-    const MESSAGE_COST = 10; // Cost per message in coins
-    const hasActiveSubscription = sender.subscription?.active && 
-      sender.subscription?.expiresAt && 
-      new Date(sender.subscription.expiresAt) > new Date();
-
-    // Females get free messaging - no coins required
+    const MESSAGE_COST = 10; // Cost per message in coins (hidden from user)
+    const isMale = sender.gender?.toLowerCase() === 'male';
     const isFemale = sender.gender?.toLowerCase() === 'female';
+    const hasLifetimeSubscription = sender.subscription?.isLifetime === true;
     
     let coinsDeducted = 0;
 
-    // If not first message, not female, and user doesn't have subscription, check coins
-    if (!isFirstMessage && !isFemale && !hasActiveSubscription) {
+    // FEMALE USERS - COMPLETELY FREE, NO RESTRICTIONS AT ALL
+    if (isFemale) {
+      // Females can message unlimited and completely free
+      // No subscription required, no coins required, no limits
+      // Just skip all checks
+    } 
+    // MALE USER LOGIC - Requires lifetime subscription + coins
+    else if (isMale) {
+      // Check lifetime subscription
+      if (!hasLifetimeSubscription) {
+        return res.status(403).json({ 
+          ok: false, 
+          error: "Lifetime subscription required",
+          requiresSubscription: true
+        });
+      }
+      
+      // Check coins (hidden from user)
       if (sender.coins < MESSAGE_COST) {
         return res.status(402).json({ 
           ok: false, 
-          error: "Insufficient coins to send message",
-          coinsRequired: MESSAGE_COST,
-          currentCoins: sender.coins,
-          needSubscription: true
+          error: "Insufficient coins",
+          requiresCoins: true
         });
       }
 
-      // Deduct coins for sending message (males only)
+      // Deduct coins silently
       sender.coins -= MESSAGE_COST;
+      sender.messagesSent = (sender.messagesSent || 0) + 1;
       coinsDeducted = MESSAGE_COST;
       await sender.save();
+    }
+    // OTHER GENDERS - Require match
+    else {
+      return res.status(403).json({ 
+        ok: false, 
+        error: "Messaging requires a valid match." 
+      });
     }
 
     const message = new Message({
@@ -224,7 +272,7 @@ router.post("/:matchId", auth, async (req, res) => {
         recipient: receiverId,
         sender: userId,
         type: 'message',
-        message: `${sender.name} sent you a message: "${content.substring(0, 50)}${content.length > 50 ? '...' : ''}"`,
+        message: sender.name + " sent you a message: \"" + content.substring(0, 50) + (content.length > 50 ? '...' : '') + "\"",
         read: false
       });
       console.log('✅ Notification created for receiver:', receiverId);
@@ -239,9 +287,8 @@ router.post("/:matchId", auth, async (req, res) => {
     res.json({ 
       ok: true, 
       message,
-      coinsDeducted,
-      remainingCoins: sender.coins,
-      isFreeForFemale: isFemale
+      coinsRemaining: sender.coins, // Hidden from user, used for redirect logic
+      messagesSent: sender.messagesSent
     });
   } catch (err) {
     console.error("POST /api/messages/:matchId error:", err);

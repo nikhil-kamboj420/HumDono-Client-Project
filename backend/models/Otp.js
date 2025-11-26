@@ -2,9 +2,9 @@
 import mongoose from "mongoose";
 
 /**
- * OTP schema used for phone verification.
+ * OTP schema used for email verification.
  * We store:
- *  - phone (string)
+ *  - email (string)
  *  - otpHash (bcrypt hash of OTP)
  *  - createdAt
  *  - expiresAt (TTL index)
@@ -12,10 +12,10 @@ import mongoose from "mongoose";
  */
 
 const OtpSchema = new mongoose.Schema({
-  phone: { type: String, required: true, index: true },
+  email: { type: String, required: true, index: true, lowercase: true, trim: true },
   otpHash: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
-  expiresAt: { type: Date, index: true },
+  expiresAt: { type: Date },
   attempts: { type: Number, default: 0 },
 });
 

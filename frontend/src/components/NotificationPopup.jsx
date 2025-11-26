@@ -49,9 +49,10 @@ export default function NotificationPopup({ notification, onClose, onAction }) {
   if (!notification || !isVisible) return null;
 
   const getNotificationContent = () => {
-    const { type, fromUser, data } = notification;
-    const userName = fromUser?.name || "Someone";
-    const userPhoto = fromUser?.photos?.[0]?.url;
+    const { type, sender, data } = notification;
+    // Use sender populated data, fallback to data snapshot, then generic
+    const userName = sender?.name || data?.senderName || "Someone";
+    const userPhoto = sender?.photos?.[0]?.url || data?.senderPhoto;
 
     switch (type) {
       case "like":
@@ -102,7 +103,7 @@ export default function NotificationPopup({ notification, onClose, onAction }) {
         return {
           icon: <ChatBubbleLeftRightIcon className="w-6 h-6 text-blue-500" />,
           title: "New Message! 💬",
-          message: `${userName} sent you a message`,
+          message: notification.message || `${userName} sent you a message`,
           actions: [
             { label: "Reply", action: "reply_message", primary: true },
             { label: "View Chat", action: "view_chat", secondary: true },
@@ -131,9 +132,12 @@ export default function NotificationPopup({ notification, onClose, onAction }) {
   };
 
   const content = getNotificationContent();
+  const { sender, data } = notification;
+  const userPhoto = sender?.photos?.[0]?.url || data?.senderPhoto;
+  const userName = sender?.name || data?.senderName || "?";
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] max-w-sm w-full">
+    <div className="fixed top-4 right-4 z-[9999] max-w-sm w-full cursor-pointer" onClick={() => handleAction('view_profile')}>
       <div
         className={`bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden transform transition-all duration-300 ${
           isLeaving ? "translate-x-full opacity-0" : "translate-x-0 opacity-100"
@@ -146,7 +150,10 @@ export default function NotificationPopup({ notification, onClose, onAction }) {
             <span className="font-semibold text-sm">{content.title}</span>
           </div>
           <button
-            onClick={handleClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClose();
+            }}
             className="text-white hover:text-gray-200 transition-colors"
           >
             <XMarkIcon className="w-4 h-4" />
@@ -157,23 +164,21 @@ export default function NotificationPopup({ notification, onClose, onAction }) {
         <div className="p-4">
           <div className="flex items-start gap-3">
             {/* User Avatar */}
-            {notification.fromUser && (
-              <div className="flex-shrink-0">
-                {notification.fromUser.photos?.[0]?.url ? (
-                  <img
-                    src={notification.fromUser.photos[0].url}
-                    alt={notification.fromUser.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-gray-600 font-medium">
-                      {notification.fromUser.name?.[0] || "?"}
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="flex-shrink-0">
+              {userPhoto ? (
+                <img
+                  src={userPhoto}
+                  alt={userName}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-pink-100"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-100">
+                  <span className="text-gray-600 font-medium">
+                    {userName[0]}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Message */}
             <div className="flex-1 min-w-0">
@@ -190,7 +195,10 @@ export default function NotificationPopup({ notification, onClose, onAction }) {
               {content.actions.map((action, index) => (
                 <button
                   key={index}
-                  onClick={() => handleAction(action.action)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAction(action.action);
+                  }}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
                     action.primary
                       ? "bg-pink-500 text-white hover:bg-pink-600"
@@ -207,3 +215,4 @@ export default function NotificationPopup({ notification, onClose, onAction }) {
     </div>
   );
 }
+

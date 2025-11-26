@@ -21,17 +21,15 @@ const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [friendRequestCount, setFriendRequestCount] = useState(0);
+
   const [notificationCount, setNotificationCount] = useState(0);
   const [userGender, setUserGender] = useState(null);
 
   useEffect(() => {
-    fetchFriendRequestCount();
     fetchNotificationCount();
     fetchUserGender();
     // Refresh counts every 10 seconds (more frequent)
     const interval = setInterval(() => {
-      fetchFriendRequestCount();
       fetchNotificationCount();
     }, 10000);
     return () => clearInterval(interval);
@@ -39,7 +37,6 @@ const Navigation = () => {
 
   // Refresh counts when location changes (user navigates)
   useEffect(() => {
-    fetchFriendRequestCount();
     fetchNotificationCount();
   }, [location.pathname]);
 
@@ -52,16 +49,7 @@ const Navigation = () => {
     }
   };
 
-  const fetchFriendRequestCount = async () => {
-    try {
-      const response = await api.getFriendRequests();
-      const count = response.requests?.length || 0;
-      setFriendRequestCount(count);
-    } catch (error) {
-      // Silent fail - don't show error to user
-      setFriendRequestCount(0);
-    }
-  };
+
 
   const fetchNotificationCount = async () => {
     try {
@@ -80,25 +68,21 @@ const Navigation = () => {
     { path: "/", icon: HomeIcon, label: "Discover" },
     { path: "/matches", icon: HeartIcon, label: "Matches" },
     { path: "/messages", icon: ChatBubbleLeftRightIcon, label: "Messages" },
-    {
-      path: "/friends",
-      icon: UserGroupIcon,
-      label: "Friends",
-      badge: friendRequestCount,
-    },
   ];
 
   // Items that show on mobile bottom nav (first 4 + ellipsis)
   const mobileNavItems = mainNavItems.slice(0, 3);
 
   // Additional items for desktop sidebar and mobile overflow menu
-  // Filter wallet for females
+  // Filter wallet, gifts, and boosts for females
   const additionalItems = [
     { path: "/notifications", icon: BellIcon, label: "Notifications", badge: notificationCount },
-    { path: "/gifts", icon: GiftIcon, label: "Gifts" },
-    { path: "/boosts", icon: SparklesIcon, label: "Boosts" },
+    ...(userGender !== 'female' ? [
+      { path: "/gifts", icon: GiftIcon, label: "Gifts" },
+      { path: "/boosts", icon: SparklesIcon, label: "Boosts" },
+      { path: "/wallet", icon: WalletIcon, label: "Wallet" }
+    ] : []),
     { path: "/profile", icon: UserIcon, label: "My Profile" },
-    ...(userGender !== 'female' ? [{ path: "/wallet", icon: WalletIcon, label: "Wallet" }] : []),
     { path: "/settings", icon: CogIcon, label: "Settings" },
   ];
 
@@ -107,20 +91,9 @@ const Navigation = () => {
 
   // Overflow items for mobile (items not shown in bottom nav)
   const overflowItems = [
-    {
-      path: "/friends",
-      icon: UserGroupIcon,
-      label: "Friends",
-      badge: friendRequestCount,
-    },
     ...additionalItems,
     { path: "/liked", label: "People I Liked" },
     { path: "/disliked", label: "People I Disliked" },
-    {
-      path: "/friend-requests",
-      label: "Friend Requests",
-      badge: friendRequestCount,
-    },
     { path: "/referrals", label: "Invite Friends" },
   ];
 
@@ -194,23 +167,6 @@ const Navigation = () => {
               </button>
 
               <button
-                onClick={() => navigate("/friend-requests")}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors relative ${
-                  isActive("/friend-requests")
-                    ? "bg-pink-50 text-pink-600"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                <UserGroupIcon className="w-5 h-5 flex-shrink-0" />
-                <span className="font-medium">Friend Requests</span>
-                {friendRequestCount > 0 && (
-                  <div className="ml-auto bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {friendRequestCount > 9 ? "9+" : friendRequestCount}
-                  </div>
-                )}
-              </button>
-
-              <button
                 onClick={() => navigate("/referrals")}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
                   isActive("/referrals")
@@ -272,11 +228,6 @@ const Navigation = () => {
           >
             <EllipsisHorizontalIcon className="w-4 h-4" />
             <span className="text-xs mt-1">More</span>
-            {friendRequestCount > 0 && (
-              <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {friendRequestCount > 9 ? "9+" : friendRequestCount}
-              </div>
-            )}
           </button>
         </div>
       </div>

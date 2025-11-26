@@ -291,13 +291,16 @@ const Settings = () => {
               <span className="text-gray-400">→</span>
             </button>
             
-            <button
-              onClick={() => navigate('/wallet')}
-              className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between"
-            >
-              <span>Buy Coins</span>
-              <span className="text-gray-400">→</span>
-            </button>
+            {/* Buy Coins - Only for Male Users */}
+            {user?.gender?.toLowerCase() !== 'female' && (
+              <button
+                onClick={() => navigate('/wallet')}
+                className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between"
+              >
+                <span>Buy Coins</span>
+                <span className="text-gray-400">→</span>
+              </button>
+            )}
             
             <button
               onClick={() => navigate('/referrals')}

@@ -10,8 +10,8 @@ export default function SwipeDeck({ children }) {
   const cards = React.Children.toArray(children);
 
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <div className="relative w-full h-full max-w-md">
+    <div className="w-full h-[95%] flex items-center justify-center">
+      <div className="relative w-full h-[95%] max-w-md">
         {cards.map((child, idx) => {
           // top card = last in array
           const depth = cards.length - idx;

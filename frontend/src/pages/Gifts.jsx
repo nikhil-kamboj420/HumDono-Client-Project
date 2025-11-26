@@ -4,17 +4,37 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon, GiftIcon } from '@heroicons/react/24/outline';
 import api from '../lib/api';
 import Navigation from '../components/Navigation';
+import { useCustomAlert } from '../hooks/useCustomAlert';
+import CustomAlert from '../components/CustomAlert';
 
 const Gifts = () => {
   const [gifts, setGifts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userCoins, setUserCoins] = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+  const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
   useEffect(() => {
+    checkUserGender();
     fetchGifts();
     fetchUserCoins();
   }, []);
+
+  const checkUserGender = async () => {
+    try {
+      const response = await api.getUserProfile();
+      setCurrentUser(response.user);
+      
+      // Redirect females away from gifts page
+      if (response.user?.gender?.toLowerCase() === 'female') {
+        showError('Gift purchases not required for female users', 'Free Access');
+        setTimeout(() => navigate('/'), 1500);
+      }
+    } catch (error) {
+      console.error('Error fetching user:', error);
+    }
+  };
 
   const fetchGifts = async () => {
     try {
@@ -57,6 +77,13 @@ const Gifts = () => {
 
   return (
     <div className="min-h-screen bg-sunset-gradient pb-20 lg:pb-0 lg:pr-64">
+      <CustomAlert 
+        isOpen={alertConfig.isOpen}
+        type={alertConfig.type}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        onClose={hideAlert}
+      />
       <div className="bg-white/10 backdrop-blur-sm shadow-romantic">
         <div className="max-w-md mx-auto px-4 py-6">
           <div className="flex items-center justify-between">

@@ -46,7 +46,10 @@ const SocialLinksSchema = new mongoose.Schema({
  * User schema
  */
 const UserSchema = new mongoose.Schema({
-  phone: { type: String, required: true, unique: true, index: true },
+  // Authentication fields
+  email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
+  password: { type: String, required: true }, // bcrypt hashed
+  phone: { type: String, unique: true, sparse: true, index: true }, // Optional now
 
   // profile fields
   name: { type: String, default: "" },
@@ -101,7 +104,8 @@ const UserSchema = new mongoose.Schema({
   // Premium features
   subscription: {
     active: { type: Boolean, default: false },
-    plan: { type: String, enum: ["free", "basic", "premium", "gold"], default: "free" },
+    plan: { type: String, enum: ["free", "basic", "premium", "gold", "lifetime"], default: "free" },
+    isLifetime: { type: Boolean, default: false }, // Lifetime subscription flag
     expiresAt: { type: Date },
     razorpaySubscriptionId: { type: String, default: null },
     features: {
@@ -114,6 +118,9 @@ const UserSchema = new mongoose.Schema({
     },
   },
   
+  // Message tracking (hidden from user)
+  messagesSent: { type: Number, default: 0 },
+  
   // Profile boost tracking
   boosts: {
     visibility: { type: Date }, // when visibility boost expires
@@ -121,7 +128,8 @@ const UserSchema = new mongoose.Schema({
   },
   
   verification: {
-    phoneVerified: { type: Boolean, default: true },
+    emailVerified: { type: Boolean, default: false }, // Changed from phoneVerified
+    phoneVerified: { type: Boolean, default: false },
     photoVerified: { type: Boolean, default: false },
     idVerified: { type: Boolean, default: false },
   },
