@@ -128,13 +128,17 @@ export default function Register() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={registerMutation.isLoading}
+            disabled={registerMutation.isPending}
             className="w-full py-3 rounded-xl text-white font-semibold
                        bg-gradient-to-r from-[#cc0033] to-[#ff1971]
                        shadow-md hover:opacity-90 active:scale-95
-                       transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                       transition-all disabled:opacity-60 disabled:cursor-not-allowed
+                       flex items-center justify-center gap-2"
           >
-            {registerMutation.isLoading ? "Creating Account..." : "Sign Up"}
+            {registerMutation.isPending && (
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+            )}
+            {registerMutation.isPending ? "Signing up..." : "Sign Up"}
           </button>
 
           {/* Login Link */}
