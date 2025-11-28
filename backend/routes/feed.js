@@ -31,9 +31,9 @@ function maskPhone(phone) {
 router.get("/", auth, async (req, res) => {
   try {
     const meId = req.user.userId;
-    
+
     // Debug: Log all query parameters
-    console.log('🔍 Feed Filter Request:', {
+    console.log("🔍 Feed Filter Request:", {
       minAge: req.query.minAge,
       maxAge: req.query.maxAge,
       gender: req.query.gender,
@@ -44,7 +44,7 @@ router.get("/", auth, async (req, res) => {
       smoking: req.query.smoking,
       eating: req.query.eating,
       verifiedOnly: req.query.verifiedOnly,
-      hasPhotos: req.query.hasPhotos
+      hasPhotos: req.query.hasPhotos,
     });
 
     // ensure proper ObjectId usage
@@ -53,7 +53,9 @@ router.get("/", auth, async (req, res) => {
       : meId;
 
     // Get current user's gender for default filtering
-    const currentUser = await User.findById(meObjectId).select("gender lookingFor boosts").lean();
+    const currentUser = await User.findById(meObjectId)
+      .select("gender lookingFor boosts")
+      .lean();
     const myGender = currentUser?.gender?.toLowerCase();
 
     const limit = Math.min(Number(req.query.limit) || 10, 30);
@@ -61,25 +63,27 @@ router.get("/", auth, async (req, res) => {
     const minAge = req.query.minAge ? Number(req.query.minAge) : null;
     const maxAge = req.query.maxAge ? Number(req.query.maxAge) : null;
     const city = req.query.city ? String(req.query.city).trim() : null;
-    const relationshipStatus = req.query.relationshipStatus ? String(req.query.relationshipStatus) : null;
-    
-    // Gender filter with smart defaults
-    let gender = req.query.gender ? String(req.query.gender) : null;
-    
-    // DEFAULT BEHAVIOR: Show opposite gender only
-    if (!gender || gender === "any") {
-      if (myGender === "male") {
-        gender = "female"; // Males see only females by default
-      } else if (myGender === "female") {
-        gender = "male"; // Females see only males by default
-      }
-      // If user manually sets gender in filters, respect that choice
+    const relationshipStatus = req.query.relationshipStatus
+      ? String(req.query.relationshipStatus)
+      : null;
+
+    // ENFORCED: Show opposite gender only - users cannot override this
+    let gender = null;
+    if (myGender === "male") {
+      gender = "female"; // Males see only females
+    } else if (myGender === "female") {
+      gender = "male"; // Females see only males
     }
-    
+    // Gender filter from query is IGNORED - opposite gender is enforced
+
     const verifiedOnly = req.query.verifiedOnly === "true";
     const hasPhotos = req.query.hasPhotos === "true";
-    const education = req.query.education ? String(req.query.education).trim() : null;
-    const profession = req.query.profession ? String(req.query.profession).trim() : null;
+    const education = req.query.education
+      ? String(req.query.education).trim()
+      : null;
+    const profession = req.query.profession
+      ? String(req.query.profession).trim()
+      : null;
     const drinking = req.query.drinking ? String(req.query.drinking) : null;
     const smoking = req.query.smoking ? String(req.query.smoking) : null;
     const eating = req.query.eating ? String(req.query.eating) : null;
@@ -90,83 +94,95 @@ router.get("/", auth, async (req, res) => {
     // Age filters
     if (minAge !== null) filter.age = { ...filter.age, $gte: minAge };
     if (maxAge !== null) filter.age = { ...filter.age, $lte: maxAge };
-    
+
     // Location filter
     if (city) filter["location.city"] = new RegExp(`^${city}`, "i");
-    
+
     // Relationship status filter
     if (relationshipStatus && relationshipStatus !== "any") {
       filter.relationshipStatus = relationshipStatus;
     }
-    
+
     // Gender filter
     if (gender && gender !== "any") {
       filter.gender = gender;
     }
-    
+
     // Verified users only
     if (verifiedOnly) {
       filter["verification.phoneVerified"] = true;
     }
-    
+
     // Users with photos only
     if (hasPhotos) {
       filter.photos = { $exists: true, $not: { $size: 0 } };
     }
-    
+
     // Education filter
     if (education) {
       filter.education = new RegExp(education, "i");
     }
-    
+
     // Profession filter
     if (profession) {
       filter.profession = new RegExp(profession, "i");
     }
-    
+
     // Lifestyle filters
     if (drinking && drinking !== "any") {
       filter["lifestyle.drinking"] = drinking;
     }
-    
+
     if (smoking && smoking !== "any") {
       filter["lifestyle.smoking"] = smoking;
     }
-    
+
     if (eating && eating !== "any") {
       filter["lifestyle.eating"] = eating;
     }
-    
+
     // Debug: Log final filter object
-    console.log('📊 MongoDB Filter Object:', JSON.stringify(filter, null, 2));
-    
+    console.log("📊 MongoDB Filter Object:", JSON.stringify(filter, null, 2));
+
     // Debug: Check total users matching basic criteria
     const totalMatchingUsers = await User.countDocuments({
       gender: gender && gender !== "any" ? gender : { $exists: true },
-      relationshipStatus: relationshipStatus && relationshipStatus !== "any" ? relationshipStatus : { $exists: true }
+      relationshipStatus:
+        relationshipStatus && relationshipStatus !== "any"
+          ? relationshipStatus
+          : { $exists: true },
     });
-    console.log(`📈 Total users with gender=${gender}, relationship=${relationshipStatus}: ${totalMatchingUsers}`);
+    console.log(
+      `📈 Total users with gender=${gender}, relationship=${relationshipStatus}: ${totalMatchingUsers}`
+    );
 
     // Exclude ALL users current user already interacted with (like or dislike)
     // No repeats - once interacted, never show again in feed
-    const allInteractions = await Interaction.find({ 
-      from: meObjectId
-    }).select("to").lean();
-    
-    const excludeIds = allInteractions.map(x => String(x.to));
-    
+    const allInteractions = await Interaction.find({
+      from: meObjectId,
+    })
+      .select("to")
+      .lean();
+
+    const excludeIds = allInteractions.map((x) => String(x.to));
+
     if (excludeIds.length > 0) {
       // Mongoose will cast string ids to ObjectId for the query
       filter._id.$nin = excludeIds;
     }
-    
-    console.log(`🚫 Excluding ${excludeIds.length} already interacted profiles`);
+
+    console.log(
+      `🚫 Excluding ${excludeIds.length} already interacted profiles`
+    );
 
     // Sort criteria (currentUser already fetched above)
     let sortCriteria = { lastActiveAt: -1, createdAt: -1 };
 
     // If user has visibility boost, prioritize their profile in others' feeds
-    if (currentUser?.boosts?.visibility && new Date(currentUser.boosts.visibility) > new Date()) {
+    if (
+      currentUser?.boosts?.visibility &&
+      new Date(currentUser.boosts.visibility) > new Date()
+    ) {
       sortCriteria = { "boosts.visibility": -1, ...sortCriteria };
     }
 
@@ -175,26 +191,34 @@ router.get("/", auth, async (req, res) => {
       .sort(sortCriteria)
       .skip(skip)
       .limit(limit)
-      .select("name age photos bio interests location visibilitySettings phone email verification relationshipStatus gender education profession lifestyle")
+      .select(
+        "name age photos bio interests location visibilitySettings phone email verification relationshipStatus gender education profession lifestyle"
+      )
       .lean();
-    
+
     // Debug: Log results count
     console.log(`✅ Found ${candidates.length} candidates matching filters`);
 
     // prepare keys to check matches
     const candidateIds = candidates.map((c) => String(c._id));
-    const usersKeyPairs = candidateIds.map((id) => [String(meId), id].sort().join("_"));
+    const usersKeyPairs = candidateIds.map((id) =>
+      [String(meId), id].sort().join("_")
+    );
 
-    const matches = await Match.find({ usersKey: { $in: usersKeyPairs } }).select("users usersKey").lean();
+    const matches = await Match.find({ usersKey: { $in: usersKeyPairs } })
+      .select("users usersKey")
+      .lean();
     const matchedKeys = new Set(matches.map((m) => m.usersKey));
-    
+
     // Check which profiles user already liked
     const likedProfiles = await Interaction.find({
       from: meObjectId,
       to: { $in: candidateIds },
-      action: "like"
-    }).select("to").lean();
-    const likedIds = new Set(likedProfiles.map(x => String(x.to)));
+      action: "like",
+    })
+      .select("to")
+      .lean();
+    const likedIds = new Set(likedProfiles.map((x) => String(x.to)));
 
     // prepare response
     const prepared = candidates.map((c) => {
@@ -204,7 +228,7 @@ router.get("/", auth, async (req, res) => {
 
       // Check if user wants to show age (default: true)
       const showAge = c.visibilitySettings?.showAge !== false;
-      
+
       return {
         _id: c._id,
         name: c.name,
@@ -221,7 +245,7 @@ router.get("/", auth, async (req, res) => {
         lifestyle: c.lifestyle || {},
         isMatched,
         alreadyLiked, // Flag to show user already liked this profile
-        phone: isMatched ? (c.phone || null) : maskPhone(c.phone),
+        phone: isMatched ? c.phone || null : maskPhone(c.phone),
         phoneVerified: c.verification?.phoneVerified ?? false,
       };
     });
@@ -240,10 +264,10 @@ router.get("/", auth, async (req, res) => {
 router.get("/filters", auth, async (req, res) => {
   try {
     const filterOptions = {
-      relationshipStatus: ["single", "married", "divorced", "widowed", "complicated"],
-      gender: ["male", "female", "other"],
+      relationshipStatus: ["single", "married"],
       ageRange: { min: 18, max: 80 },
-      cities: [] // Could be populated from database
+      cities: [], // Could be populated from database
+      // Note: Gender filter removed - opposite gender is enforced automatically
     };
 
     // Get popular cities from user data
@@ -252,10 +276,10 @@ router.get("/filters", auth, async (req, res) => {
       { $group: { _id: "$location.city", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 20 },
-      { $project: { city: "$_id", _id: 0 } }
+      { $project: { city: "$_id", _id: 0 } },
     ]);
 
-    filterOptions.cities = popularCities.map(item => item.city);
+    filterOptions.cities = popularCities.map((item) => item.city);
 
     res.json({ ok: true, filterOptions });
   } catch (err) {

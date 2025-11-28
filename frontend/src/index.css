@@ -748,3 +748,8 @@ img[src="/logo.png"] {
 div button {
   color: inherit;
 }
+
+
+img{
+  aspect-ratio: 1/1;
+}

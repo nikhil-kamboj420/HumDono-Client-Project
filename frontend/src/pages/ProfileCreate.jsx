@@ -436,20 +436,6 @@ export default function ProfileCreate() {
             </select>
           </div>
 
-          {/* Gender - Only Male/Female */}
-          <div>
-            <label className="block text-sm text-[#77001c] mb-1">Gender</label>
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-              className="w-full p-3 rounded-xl border border-[#ff4c91] bg-white text-black"
-            >
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-          </div>
-
           {/* Education - Dropdown */}
           <div>
             <label className="block text-sm text-[#77001c] mb-1">

@@ -27,6 +27,8 @@ import Subscription from "./pages/Subscription";
 import LifetimeSubscription from "./pages/LifetimeSubscription";
 import ScanToPayPage from "./pages/ScanToPayPage";
 import ManualPaymentFormPage from "./pages/ManualPaymentFormPage";
+import GenericScanToPayPage from "./pages/GenericScanToPayPage";
+import GenericSubmitTransactionPage from "./pages/GenericSubmitTransactionPage";
 import RequireAuth from "./components/RequireAuth";
 import Notifications from "./pages/Notifications";
 import NotificationPopup from "./components/NotificationPopup";
@@ -194,11 +196,26 @@ function App() {
 
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/wallet" element={<Wallet />} />
+          
+          {/* Manual Payment Routes for Wallet (Coins) */}
+          <Route path="/wallet/scan-to-pay" element={<GenericScanToPayPage />} />
+          <Route path="/wallet/submit-transaction" element={<GenericSubmitTransactionPage />} />
+          
+          {/* Manual Payment Routes for Boosts */}
+          <Route path="/boosts/scan-to-pay" element={<GenericScanToPayPage />} />
+          <Route path="/boosts/submit-transaction" element={<GenericSubmitTransactionPage />} />
+          
+          {/* Lifetime Subscription Routes */}
           <Route path="/lifetime-access" element={<LifetimeSubscription />} />
           <Route path="/lifetime-access/scan-to-pay" element={<ScanToPayPage />} />
           <Route path="/lifetime-access/submit-transaction" element={<ManualPaymentFormPage />} />
+          
+          {/* Subscription Routes */}
           <Route path="/subscription" element={<LifetimeSubscription />} />
           <Route path="/subscription/plans" element={<Subscription />} />
+          <Route path="/subscription/scan-to-pay" element={<GenericScanToPayPage />} />
+          <Route path="/subscription/submit-transaction" element={<GenericSubmitTransactionPage />} />
+          
           <Route path="/buy" element={<div className="p-6">Buy coins page (placeholder)</div>} />
         </Route>
 

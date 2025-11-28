@@ -52,10 +52,10 @@ export default function useAuthUser() {
 
             return refreshed?.user ?? null;
           } catch (e) {
-            // refresh failed → logout locally
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            setAxiosAuthToken(null);
+            // refresh failed → but keep user logged in locally per user request
+            console.warn('Refresh failed in useAuthUser, but keeping session active');
+            // DO NOT clear localStorage or token
+            // User will see errors but won't be auto-logged out
             return null;
           }
         }

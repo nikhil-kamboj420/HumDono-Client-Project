@@ -263,6 +263,13 @@ router.post("/login", async (req, res) => {
         .json({ ok: false, error: "Invalid email or password" });
     }
 
+    // Check if user has a password (might be old phone-only user)
+    if (!user.password) {
+      return res
+        .status(401)
+        .json({ ok: false, error: "Please register with email first. This account was created with phone authentication." });
+    }
+
     // Verify password
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
@@ -342,40 +349,60 @@ router.get("/me", async (req, res) => {
 router.post("/refresh", async (req, res) => {
   try {
     const plain = req.cookies?.refreshToken;
-    if (!plain)
+    if (!plain) {
       return res.status(401).json({ ok: false, error: "No refresh token" });
+    }
 
+    // Find users with non-expired refresh tokens
     const users = await User.find({
       "refreshTokens.expiresAt": { $gt: new Date() },
     });
+
     for (const user of users) {
+      // Skip if no refresh tokens
+      if (!user.refreshTokens || !Array.isArray(user.refreshTokens)) {
+        continue;
+      }
+
       for (const rt of user.refreshTokens) {
-        const ok = await bcrypt.compare(plain, rt.tokenHash);
-        if (ok) {
-          user.refreshTokens = user.refreshTokens.filter(
-            (x) => x._id.toString() !== rt._id.toString()
-          );
-          await user.save();
+        // Skip invalid entries
+        if (!rt || !rt.tokenHash) {
+          continue;
+        }
 
-          const accessToken = jwt.sign(
-            { userId: user._id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-          );
+        try {
+          const ok = await bcrypt.compare(plain, rt.tokenHash);
+          if (ok) {
+            // Remove the used refresh token
+            user.refreshTokens = user.refreshTokens.filter(
+              (x) => x && x._id && x._id.toString() !== rt._id.toString()
+            );
+            await user.save();
 
-          await createAndStoreRefreshToken(user, res);
+            const accessToken = jwt.sign(
+              { userId: user._id, email: user.email },
+              process.env.JWT_SECRET,
+              { expiresIn: "7d" }
+            );
 
-          return res.json({
-            ok: true,
-            token: accessToken,
-            user: {
-              _id: user._id,
-              email: user.email,
-              name: user.name,
-              coins: user.coins,
-            },
-            isProfileComplete: isProfileComplete(user),
-          });
+            await createAndStoreRefreshToken(user, res);
+
+            return res.json({
+              ok: true,
+              token: accessToken,
+              user: {
+                _id: user._id,
+                email: user.email,
+                name: user.name,
+                coins: user.coins,
+              },
+              isProfileComplete: isProfileComplete(user),
+            });
+          }
+        } catch (compareErr) {
+          // Skip this token if comparison fails
+          console.warn("Token comparison failed:", compareErr.message);
+          continue;
         }
       }
     }

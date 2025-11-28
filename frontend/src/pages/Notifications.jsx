@@ -103,13 +103,13 @@ export default function Notifications() {
       case "gift":
         // Navigate to user profile
         if (sender?._id) {
-          navigate(`/user/${sender._id}`);
+          navigate(`/profile/${sender._id}`);
         }
         break;
       default:
         // For other types, navigate to user profile if sender exists
         if (sender?._id) {
-          navigate(`/user/${sender._id}`);
+          navigate(`/profile/${sender._id}`);
         }
         break;
     }

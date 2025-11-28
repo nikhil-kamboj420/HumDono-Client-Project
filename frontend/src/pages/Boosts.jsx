@@ -143,27 +143,52 @@ const Boosts = () => {
     const boost = boostOptions.find((b) => b.type === boostType);
     if (!boost) return;
 
+    // Store selected boost in sessionStorage for the payment page
+    const paymentData = {
+      type: "boost",
+      boostType: boost.type,
+      price: boost.price,
+      description: boost.description,
+      duration: boost.duration,
+      couponCode: appliedCoupon?.coupon?.code || null,
+      discountAmount: appliedCoupon?.discount?.amount || 0,
+      finalAmount: appliedCoupon
+        ? boost.price - appliedCoupon.discount.amount
+        : boost.price,
+    };
+
+    sessionStorage.setItem("pendingPayment", JSON.stringify(paymentData));
+
+    // Redirect to manual payment page
+    navigate("/boosts/scan-to-pay");
+  };
+
+  /*
+   * RAZORPAY PAYMENT - TEMPORARILY DISABLED
+   * Keep this code for future use when payment gateway is re-enabled
+   *
+  const purchaseBoostRazorpay = async (boostType) => {
+    if (purchasing) return;
+
+    const boost = boostOptions.find((b) => b.type === boostType);
+    if (!boost) return;
+
     setPurchasing(boostType);
 
     let finalAmount = boost.price;
     let discountAmount = 0;
 
-    // Apply coupon if available
     if (appliedCoupon) {
       finalAmount = boost.price - appliedCoupon.discount.amount;
       discountAmount = appliedCoupon.discount.amount;
     }
 
     try {
-      // Ensure Razorpay script is loaded
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded || !window.Razorpay) {
-        throw new Error(
-          "Payment gateway not available. Please refresh the page."
-        );
+        throw new Error("Payment gateway not available. Please refresh the page.");
       }
 
-      // Create order
       const orderResponse = await api.post("/payments/create-order", {
         amount: finalAmount,
         originalAmount: boost.price,
@@ -177,7 +202,6 @@ const Boosts = () => {
         throw new Error(orderResponse.error || "Failed to create order");
       }
 
-      // Initialize Razorpay checkout
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_Ri6GYh8gLqAcT0",
         amount: orderResponse.amount,
@@ -187,7 +211,6 @@ const Boosts = () => {
         order_id: orderResponse.order_id,
         handler: async function (response) {
           try {
-            // Verify and activate boost
             const verifyResponse = await api.post("/boosts/purchase", {
               boostType,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -197,30 +220,17 @@ const Boosts = () => {
 
             if (verifyResponse.ok) {
               playNotificationSound("boost");
-              showSuccess(
-                `${boostType} boost activated successfully! 🚀`,
-                "Boost Activated"
-              );
-
-              // Clear applied coupon
+              showSuccess(`${boostType} boost activated successfully! 🚀`, "Boost Activated");
               setAppliedCoupon(null);
               setCouponCode("");
-
-              fetchBoostData(); // Refresh data
+              fetchBoostData();
             } else {
-              throw new Error(
-                verifyResponse.error || "Boost activation failed"
-              );
+              throw new Error(verifyResponse.error || "Boost activation failed");
             }
           } catch (error) {
             console.error("Boost verification error:", error);
             playNotificationSound("error");
-            showError(
-              error.response?.data?.error ||
-                error.message ||
-                "Boost activation failed",
-              "Activation Failed"
-            );
+            showError(error.response?.data?.error || error.message || "Boost activation failed", "Activation Failed");
           } finally {
             setPurchasing(null);
           }
@@ -230,9 +240,7 @@ const Boosts = () => {
           email: currentUser?.email || "",
           contact: currentUser?.phone || "",
         },
-        theme: {
-          color: "#ec4899",
-        },
+        theme: { color: "#ec4899" },
         modal: {
           ondismiss: function () {
             setPurchasing(null);
@@ -247,26 +255,16 @@ const Boosts = () => {
       console.error("Payment error:", error);
       playNotificationSound("error");
 
-      if (
-        error.response?.status === 403 &&
-        error.response?.data?.requiresSubscription
-      ) {
-        showError(
-          "Please subscribe first to purchase boosts! 🔒",
-          "Subscription Required"
-        );
+      if (error.response?.status === 403 && error.response?.data?.requiresSubscription) {
+        showError("Please subscribe first to purchase boosts! 🔒", "Subscription Required");
         setTimeout(() => navigate("/subscription?required=true"), 2000);
       } else {
-        showError(
-          error.response?.data?.error ||
-            error.message ||
-            "Failed to initiate payment",
-          "Payment Failed"
-        );
+        showError(error.response?.data?.error || error.message || "Failed to initiate payment", "Payment Failed");
       }
       setPurchasing(null);
     }
   };
+  */
 
   const getBoostIcon = (type) => {
     switch (type) {
@@ -311,7 +309,7 @@ const Boosts = () => {
         <div className="max-w-md mx-auto px-4 py-6">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/")}
               className="text-gray-600 hover:text-gray-900"
             >
               <ArrowLeftIcon className="w-6 h-6" />

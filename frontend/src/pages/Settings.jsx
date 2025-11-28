@@ -17,7 +17,7 @@ const Settings = () => {
   const [loading, setLoading] = useState(true);
   const [preferences, setPreferences] = useState({
     lookingFor: {
-      gender: 'any',
+      relationshipStatus: 'any',
       minAge: 18,
       maxAge: 60
     },
@@ -151,14 +151,13 @@ const Settings = () => {
                 Looking for
               </label>
               <select
-                value={preferences.lookingFor.gender}
-                onChange={(e) => updatePreferences('lookingFor', { gender: e.target.value })}
+                value={preferences.lookingFor.relationshipStatus || 'any'}
+                onChange={(e) => updatePreferences('lookingFor', { relationshipStatus: e.target.value })}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2"
               >
                 <option value="any">Anyone</option>
-                <option value="male">Men</option>
-                <option value="female">Women</option>
-                <option value="other">Other</option>
+                <option value="single">Single</option>
+                <option value="married">Married</option>
               </select>
             </div>
 

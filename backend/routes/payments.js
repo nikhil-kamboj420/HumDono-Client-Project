@@ -8,24 +8,40 @@ import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+// Initialize Razorpay instance only if credentials are available
+let razorpay = null;
 
-// Log Razorpay initialization (without exposing secrets)
-console.log('Razorpay initialized:', {
-  key_id: process.env.RAZORPAY_KEY_ID ? `${process.env.RAZORPAY_KEY_ID.substring(0, 8)}...` : 'MISSING',
-  key_secret: process.env.RAZORPAY_KEY_SECRET ? 'SET' : 'MISSING'
-});
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+  });
+  console.log('✅ Razorpay initialized:', {
+    key_id: `${process.env.RAZORPAY_KEY_ID.substring(0, 8)}...`,
+    key_secret: 'SET'
+  });
+} else {
+  console.warn('⚠️ Razorpay NOT initialized - missing RAZORPAY_KEY_ID or RAZORPAY_KEY_SECRET');
+  console.warn('Payment features will be disabled until credentials are configured.');
+}
+
+// Middleware to check if Razorpay is configured
+const requireRazorpay = (req, res, next) => {
+  if (!razorpay) {
+    return res.status(503).json({
+      success: false,
+      error: 'Payment service not configured. Please contact support.'
+    });
+  }
+  next();
+};
 
 /**
  * @route   POST /api/payments/create-order
  * @desc    Create Razorpay order for coin purchase
  * @access  Private
  */
-router.post('/create-order', protect, async (req, res) => {
+router.post('/create-order', protect, requireRazorpay, async (req, res) => {
   try {
     const { amount, coins, originalAmount, couponCode, discountAmount } = req.body;
 

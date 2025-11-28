@@ -47,7 +47,6 @@ export default function HomeFeed() {
     minAge: 18,
     maxAge: 60,
     relationshipStatus: "any",
-    gender: "any",
   });
   const [draftFilters, setDraftFilters] = useState({ ...filters });
 
@@ -358,45 +357,24 @@ export default function HomeFeed() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Relationship Status
-                  </label>
-                  <select
-                    value={draftFilters.relationshipStatus}
-                    onChange={(e) =>
-                      setDraftFilters((prev) => ({
-                        ...prev,
-                        relationshipStatus: e.target.value,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  >
-                    <option value="any">Any</option>
-                    <option value="single">Single</option>
-                    <option value="married">Married</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gender
-                  </label>
-                  <select
-                    value={draftFilters.gender}
-                    onChange={(e) =>
-                      setDraftFilters((prev) => ({
-                        ...prev,
-                        gender: e.target.value,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  >
-                    <option value="any">Any</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Relationship Status
+                </label>
+                <select
+                  value={draftFilters.relationshipStatus}
+                  onChange={(e) =>
+                    setDraftFilters((prev) => ({
+                      ...prev,
+                      relationshipStatus: e.target.value,
+                    }))
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                >
+                  <option value="any">Any</option>
+                  <option value="single">Single</option>
+                  <option value="married">Married</option>
+                </select>
               </div>
               <button
                 onClick={() => {

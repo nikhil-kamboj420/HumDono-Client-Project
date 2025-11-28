@@ -48,7 +48,7 @@ const SocialLinksSchema = new mongoose.Schema({
 const UserSchema = new mongoose.Schema({
   // Authentication fields
   email: { type: String, required: true, unique: true, index: true, lowercase: true, trim: true },
-  password: { type: String, required: true }, // bcrypt hashed
+  password: { type: String }, // bcrypt hashed - optional for legacy phone-only users
   phone: { type: String, unique: true, sparse: true, index: true }, // Optional now
 
   // profile fields

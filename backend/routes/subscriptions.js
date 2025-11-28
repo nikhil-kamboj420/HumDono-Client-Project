@@ -8,11 +8,18 @@ import Razorpay from "razorpay";
 
 const router = express.Router();
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Initialize Razorpay only if credentials are available
+let razorpay = null;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+  razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+  console.log("✅ Razorpay initialized for subscriptions");
+} else {
+  console.log("⚠️ Razorpay NOT initialized for subscriptions - missing credentials");
+  console.log("Manual payment flow will be used instead.");
+}
 
 // Subscription plans configuration
 const SUBSCRIPTION_PLANS = {
@@ -85,6 +92,22 @@ router.post("/create", auth, async (req, res) => {
 
     const plan = SUBSCRIPTION_PLANS[planId];
     const orderAmount = finalAmount || plan.price;
+
+    // Check if Razorpay is available
+    if (!razorpay) {
+      // Return manual payment info instead
+      return res.json({
+        success: true,
+        useManualPayment: true,
+        amount: orderAmount * 100,
+        currency: "INR",
+        planDetails: {
+          id: planId,
+          ...plan,
+        },
+        message: "Please use manual payment (UPI/QR code) to complete this subscription.",
+      });
+    }
 
     // Create Razorpay order
     const orderOptions = {

@@ -309,10 +309,44 @@ const Subscription = () => {
                     <div>
                       <p className="text-lg text-gray-500 line-through">₹{plan.price}</p>
                       <p className="text-3xl font-bold text-green-600">
-                        ₹{plan.price - appliedCoupon.discount.amount}
+                        ₹
+                        {(() => {
+                          let discount = 0;
+                          if (appliedCoupon.coupon.discountType === "percentage") {
+                            discount = Math.floor(
+                              (plan.price * appliedCoupon.coupon.discountValue) / 100
+                            );
+                          } else {
+                            discount = appliedCoupon.coupon.discountValue;
+                          }
+                          if (
+                            appliedCoupon.coupon.maxDiscount &&
+                            discount > appliedCoupon.coupon.maxDiscount
+                          ) {
+                            discount = appliedCoupon.coupon.maxDiscount;
+                          }
+                          return plan.price - discount;
+                        })()}
                       </p>
                       <p className="text-sm text-green-600 font-medium">
-                        Save ₹{appliedCoupon.discount.amount}
+                        Save ₹
+                        {(() => {
+                          let discount = 0;
+                          if (appliedCoupon.coupon.discountType === "percentage") {
+                            discount = Math.floor(
+                              (plan.price * appliedCoupon.coupon.discountValue) / 100
+                            );
+                          } else {
+                            discount = appliedCoupon.coupon.discountValue;
+                          }
+                          if (
+                            appliedCoupon.coupon.maxDiscount &&
+                            discount > appliedCoupon.coupon.maxDiscount
+                          ) {
+                            discount = appliedCoupon.coupon.maxDiscount;
+                          }
+                          return discount;
+                        })()}
                       </p>
                     </div>
                   ) : (

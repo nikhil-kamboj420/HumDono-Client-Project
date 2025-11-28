@@ -1,15 +1,15 @@
 // pages/Profile.jsx - Improved layout with proper scrolling in 100vh
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeftIcon, 
-  PencilIcon, 
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeftIcon,
+  PencilIcon,
   CameraIcon,
   TrashIcon,
-  EyeIcon
-} from '@heroicons/react/24/outline';
-import api from '../lib/api';
-import Navigation from '../components/Navigation';
+  EyeIcon,
+} from "@heroicons/react/24/outline";
+import api from "../lib/api";
+import Navigation from "../components/Navigation";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -28,18 +28,20 @@ const Profile = () => {
       const response = await api.getUserProfile();
       setUser(response.user);
       setFormData({
-        name: response.user.name || '',
-        age: response.user.age || '',
-        bio: response.user.bio || '',
-        relationshipStatus: response.user.relationshipStatus || 'single',
-        gender: response.user.gender || '',
-        occupation: response.user.occupation || '',
-        education: response.user.education || '',
-        interests: response.user.interests?.join(', ') || '',
-        visibilitySettings: response.user.visibilitySettings || { showAge: true }
+        name: response.user.name || "",
+        age: response.user.age || "",
+        bio: response.user.bio || "",
+        relationshipStatus: response.user.relationshipStatus || "single",
+        gender: response.user.gender || "",
+        occupation: response.user.occupation || "",
+        education: response.user.education || "",
+        interests: response.user.interests?.join(", ") || "",
+        visibilitySettings: response.user.visibilitySettings || {
+          showAge: true,
+        },
       });
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
     } finally {
       setLoading(false);
     }
@@ -50,18 +52,18 @@ const Profile = () => {
       const updateData = {
         ...formData,
         interests: formData.interests
-          .split(',')
-          .map(i => i.trim())
-          .filter(Boolean)
+          .split(",")
+          .map((i) => i.trim())
+          .filter(Boolean),
       };
-      
+
       await api.updateProfile(updateData);
       await fetchUserProfile();
       setEditing(false);
-      alert('Profile updated! ✅');
+      alert("Profile updated! ✅");
     } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('Failed to update profile');
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile");
     }
   };
 
@@ -70,31 +72,42 @@ const Profile = () => {
     if (!file) return;
 
     const formDataObj = new FormData();
-    formDataObj.append('photo', file);
+    formDataObj.append("photo", file);
 
     setUploading(true);
     try {
       const response = await api.uploadPhoto(formDataObj, true);
       setUser(response.user);
-      alert('Photo uploaded! ✅');
+      alert("Photo uploaded! ✅");
     } catch (error) {
-      console.error('Error uploading photo:', error);
-      alert('Failed to upload photo');
+      console.error("Error uploading photo:", error);
+      alert("Failed to upload photo");
     } finally {
       setUploading(false);
     }
   };
 
+  const handleSetProfilePhoto = async (publicId) => {
+    try {
+      await api.setProfilePhoto(publicId);
+      await fetchUserProfile();
+      alert("Profile picture updated! ✅");
+    } catch (error) {
+      console.error("Error setting profile photo:", error);
+      alert("Failed to set profile photo");
+    }
+  };
+
   const handlePhotoDelete = async (publicId) => {
-    if (!confirm('Delete this photo?')) return;
+    if (!confirm("Delete this photo?")) return;
 
     try {
       await api.deletePhoto(publicId);
       await fetchUserProfile();
-      alert('Photo deleted! ✅');
+      alert("Photo deleted! ✅");
     } catch (error) {
-      console.error('Error deleting photo:', error);
-      alert('Failed to delete photo');
+      console.error("Error deleting photo:", error);
+      alert("Failed to delete photo");
     }
   };
 
@@ -174,17 +187,31 @@ const Profile = () => {
                     className="w-full h-full object-cover"
                   />
                   {photo.isProfile && (
-                    <div className="absolute top-2 left-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full">
+                    <div className="absolute top-2 left-2 bg-pink-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
                       Profile
                     </div>
                   )}
                   {editing && (
-                    <button
-                      onClick={() => handlePhotoDelete(photo.public_id)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </button>
+                    <>
+                      {!photo.isProfile && (
+                        <button
+                          onClick={() => handleSetProfilePhoto(photo.public_id)}
+                          className="absolute bottom-2 left-2 bg-pink-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-pink-600 shadow-lg"
+                          title="Set as profile picture"
+                        >
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handlePhotoDelete(photo.public_id)}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                        title="Delete photo"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
                 </div>
               ))}
@@ -230,49 +257,22 @@ const Profile = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Age
-                </label>
-                {editing ? (
-                  <input
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, age: e.target.value }))
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  />
-                ) : (
-                  <p className="text-gray-900">{user?.age}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Gender
-                </label>
-                {editing ? (
-                  <select
-                    value={formData.gender}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        gender: e.target.value,
-                      }))
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
-                  >
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                  </select>
-                ) : (
-                  <p className="text-gray-900 capitalize">{user?.gender}</p>
-                )}
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Age
+              </label>
+              {editing ? (
+                <input
+                  type="number"
+                  value={formData.age}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, age: e.target.value }))
+                  }
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                />
+              ) : (
+                <p className="text-gray-900">{user?.age}</p>
+              )}
             </div>
 
             <div>
@@ -289,9 +289,7 @@ const Profile = () => {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2"
                 />
               ) : (
-                <p className="text-gray-900">
-                  {user?.bio || 'No bio added'}
-                </p>
+                <p className="text-gray-900">{user?.bio || "No bio added"}</p>
               )}
             </div>
 
@@ -338,7 +336,7 @@ const Profile = () => {
                 />
               ) : (
                 <p className="text-gray-900">
-                  {user?.education || 'Not added'}
+                  {user?.education || "Not added"}
                 </p>
               )}
             </div>
@@ -361,7 +359,7 @@ const Profile = () => {
                 />
               ) : (
                 <p className="text-gray-900">
-                  {user?.occupation || 'Not added'}
+                  {user?.occupation || "Not added"}
                 </p>
               )}
             </div>
@@ -430,8 +428,11 @@ const Profile = () => {
                       const refreshed = await api.getUserProfile();
                       setUser(refreshed.user);
                     } catch (err) {
-                      console.error('Failed to update visibility setting:', err);
-                      alert('Failed to update visibility setting');
+                      console.error(
+                        "Failed to update visibility setting:",
+                        err
+                      );
+                      alert("Failed to update visibility setting");
                     }
                   }
                 }}
