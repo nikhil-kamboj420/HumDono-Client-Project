@@ -90,7 +90,8 @@ router.post("/send", auth, async (req, res) => {
           gift: {
             type: gift.name,
             value: gift.coinValue,
-            image: gift.image
+            image: gift.image,
+            emoji: gift.emoji || "🎁"
           }
         });
         await giftMessage.save();
@@ -112,7 +113,7 @@ router.post("/send", auth, async (req, res) => {
         senderName: user.name,
         senderPhoto: user.photos?.[0]?.url
       }
-    });
+    }, req.app?.locals?.io);
 
     res.json({ 
       success: true,

@@ -25,21 +25,6 @@ const Navigation = () => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [userGender, setUserGender] = useState(null);
 
-  useEffect(() => {
-    fetchNotificationCount();
-    fetchUserGender();
-    // Refresh counts every 10 seconds (more frequent)
-    const interval = setInterval(() => {
-      fetchNotificationCount();
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Refresh counts when location changes (user navigates)
-  useEffect(() => {
-    fetchNotificationCount();
-  }, [location.pathname]);
-
   const fetchUserGender = async () => {
     try {
       const response = await api.getUserProfile();
@@ -49,19 +34,33 @@ const Navigation = () => {
     }
   };
 
-
-
   const fetchNotificationCount = async () => {
     try {
       const response = await api.getNotificationCounts();
-      // API returns totalUnread field
-      const count = response.totalUnread || response.unread || response.unreadCount || 0;
+      const count =
+        response.totalUnread || response.unread || response.unreadCount || 0;
       setNotificationCount(count);
-    } catch (error) {
-      // Silent fail - don't show error to user
+    } catch {
       setNotificationCount(0);
     }
   };
+
+  useEffect(() => {
+    setTimeout(() => fetchNotificationCount(), 0);
+    setTimeout(() => fetchUserGender(), 0);
+  }, []);
+
+  // Listen for real-time notification events to refresh badge
+  useEffect(() => {
+    const handler = () => fetchNotificationCount();
+    window.addEventListener("humdono:notification", handler);
+    return () => window.removeEventListener("humdono:notification", handler);
+  }, []);
+
+  // Refresh counts when location changes (user navigates)
+  useEffect(() => {
+    setTimeout(() => fetchNotificationCount(), 0);
+  }, [location.pathname]);
 
   // Main navigation items for both desktop and mobile
   const mainNavItems = [
@@ -76,12 +75,19 @@ const Navigation = () => {
   // Additional items for desktop sidebar and mobile overflow menu
   // Filter wallet, gifts, and boosts for females
   const additionalItems = [
-    { path: "/notifications", icon: BellIcon, label: "Notifications", badge: notificationCount },
-    ...(userGender !== 'female' ? [
-      { path: "/gifts", icon: GiftIcon, label: "Gifts" },
-      { path: "/boosts", icon: SparklesIcon, label: "Boosts" },
-      { path: "/wallet", icon: WalletIcon, label: "Wallet" }
-    ] : []),
+    {
+      path: "/notifications",
+      icon: BellIcon,
+      label: "Notifications",
+      badge: notificationCount,
+    },
+    ...(userGender !== "female"
+      ? [
+          { path: "/gifts", icon: GiftIcon, label: "Gifts" },
+          { path: "/boosts", icon: SparklesIcon, label: "Boosts" },
+          { path: "/wallet", icon: WalletIcon, label: "Wallet" },
+        ]
+      : []),
     { path: "/profile", icon: UserIcon, label: "My Profile" },
     { path: "/settings", icon: CogIcon, label: "Settings" },
   ];
@@ -92,8 +98,8 @@ const Navigation = () => {
   // Overflow items for mobile (items not shown in bottom nav)
   const overflowItems = [
     ...additionalItems,
-    { path: "/liked", label: "People I Liked" },
-    { path: "/disliked", label: "People I Disliked" },
+    { path: "/likes", label: "People I Liked" },
+    { path: "/dislikes", label: "People I Disliked" },
     { path: "/referrals", label: "Invite Friends" },
   ];
 
@@ -143,9 +149,9 @@ const Navigation = () => {
             {/* Additional Menu Items */}
             <div className="pt-4 border-t border-gray-200 mt-4">
               <button
-                onClick={() => navigate("/liked")}
+                onClick={() => navigate("/likes")}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                  isActive("/liked")
+                  isActive("/likes")
                     ? "bg-pink-50 text-pink-600"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
@@ -155,9 +161,9 @@ const Navigation = () => {
               </button>
 
               <button
-                onClick={() => navigate("/disliked")}
+                onClick={() => navigate("/dislikes")}
                 className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                  isActive("/disliked")
+                  isActive("/dislikes")
                     ? "bg-pink-50 text-pink-600"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}

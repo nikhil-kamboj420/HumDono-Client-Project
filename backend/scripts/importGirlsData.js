@@ -35,8 +35,10 @@ const INTERESTS = [
   'Fashion', 'Food', 'Nature', 'Yoga', 'Shopping', 'Painting'
 ];
 
-// Relationship statuses
-const RELATIONSHIP_STATUSES = ['single', 'divorced', 'widowed'];
+// Relationship statuses - Only single and married allowed
+// For 27+ age females: 20-25% married, rest single
+const RELATIONSHIP_STATUSES_SINGLE = ['single'];
+const RELATIONSHIP_STATUSES_MARRIED = ['married'];
 
 // Education levels
 const EDUCATION_LEVELS = [
@@ -109,6 +111,17 @@ async function importGirlsData() {
         // Get random interests (3-5)
         const interests = getRandomElements(INTERESTS, Math.floor(Math.random() * 3) + 3);
 
+        // Determine relationship status based on age
+        // For 27+ age: 20-25% chance of married, rest single
+        // For <27 age: Always single
+        let relationshipStatus = 'single';
+        if (girl.age >= 27) {
+          const randomChance = Math.random() * 100; // 0-100
+          if (randomChance < 22.5) { // 22.5% chance (between 20-25%)
+            relationshipStatus = 'married';
+          }
+        }
+
         // Create user
         const user = await User.create({
           email: email,
@@ -124,7 +137,7 @@ async function importGirlsData() {
             city: location.city,
             state: location.state
           },
-          relationshipStatus: getRandomElement(RELATIONSHIP_STATUSES),
+          relationshipStatus: relationshipStatus,
           education: getRandomElement(EDUCATION_LEVELS),
           profession: getRandomElement(PROFESSIONS),
           drinking: getRandomElement(DRINKING),

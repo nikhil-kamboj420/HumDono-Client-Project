@@ -56,8 +56,8 @@ router.post('/create-order', protect, async (req, res) => {
       });
     }
 
-    // Coins required only for coin purchases, not subscriptions
-    if (type !== 'lifetime_subscription' && type !== 'subscription' && !coins) {
+    // Coins required only for coin purchases, not subscriptions or boosts
+    if (type !== 'lifetime_subscription' && type !== 'subscription' && type !== 'boost' && !coins) {
       return res.status(400).json({
         success: false,
         error: 'Coins are required for coin purchases'
@@ -541,7 +541,7 @@ router.post('/verify-subscription', protect, async (req, res) => {
     await Transaction.create({
       user: userId,
       orderId: `sub_${Date.now()}`,
-      amount: 699, // Lifetime subscription price
+      amount: 1, // Lifetime subscription price
       coins: 200, // Hidden bonus coins
       status: 'paid',
       razorpayOrderId: razorpay_order_id,

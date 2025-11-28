@@ -1,11 +1,16 @@
 // pages/Boosts.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeftIcon, SparklesIcon, EyeIcon, HeartIcon } from '@heroicons/react/24/outline';
-import api from '../lib/api';
-import CustomAlert from '../components/CustomAlert';
-import { useCustomAlert } from '../hooks/useCustomAlert';
-import { playNotificationSound } from '../utils/notificationSound';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeftIcon,
+  SparklesIcon,
+  EyeIcon,
+  HeartIcon,
+} from "@heroicons/react/24/outline";
+import api from "../lib/api";
+import CustomAlert from "../components/CustomAlert";
+import { useCustomAlert } from "../hooks/useCustomAlert";
+import { playNotificationSound } from "../utils/notificationSound";
 
 const Boosts = () => {
   const [boostOptions, setBoostOptions] = useState([]);
@@ -14,7 +19,7 @@ const Boosts = () => {
   const [superLikes, setSuperLikes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null);
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [showCoupons, setShowCoupons] = useState(false);
@@ -23,53 +28,69 @@ const Boosts = () => {
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
   useEffect(() => {
-    checkUserGender();
+    checkUserAndSubscription();
     fetchBoostData();
     fetchAvailableCoupons();
-    checkSubscriptionRequirement();
+    loadRazorpayScript();
   }, []);
 
-  const checkUserGender = async () => {
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const checkUserAndSubscription = async () => {
     try {
       const response = await api.getUserProfile();
       setCurrentUser(response.user);
-      
-      // Redirect females away from boosts page
-      if (response.user?.gender?.toLowerCase() === 'female') {
-        showError('Boost purchases not required for female users', 'Free Access');
-        setTimeout(() => navigate('/'), 1500);
-      }
-    } catch (error) {
-      console.error('Error fetching user:', error);
-    }
-  };
 
-  const checkSubscriptionRequirement = async () => {
-    try {
-      const response = await api.getUserProfile();
-      if (response.user?.requiresFirstSubscription) {
+      // Redirect females away from boosts page - they get free features
+      if (response.user?.gender?.toLowerCase() === "female") {
+        showError(
+          "Boost purchases not required for female users",
+          "Free Access"
+        );
+        setTimeout(() => navigate("/"), 1500);
+        return;
+      }
+
+      // Check if male user has lifetime subscription
+      const isMale = response.user?.gender?.toLowerCase() === "male";
+      const hasLifetimeSubscription =
+        response.user?.subscription?.isLifetime === true;
+
+      if (isMale && !hasLifetimeSubscription) {
         showError(
           "Please subscribe first to unlock boosts! 🔒",
           "Subscription Required"
         );
         setTimeout(() => {
-          navigate('/subscription?required=true');
+          navigate("/subscription?required=true");
         }, 2000);
       }
     } catch (error) {
-      console.error("Error checking subscription:", error);
+      console.error("Error fetching user:", error);
     }
   };
 
   const fetchBoostData = async () => {
     try {
-      const response = await api.get('/boosts/available');
+      const response = await api.get("/boosts/available");
       setBoostOptions(response.boostOptions || []);
       setActiveBoosts(response.activeBoosts || []);
       setUserCoins(response.userCoins || 0);
       setSuperLikes(response.superLikes || 0);
     } catch (error) {
-      console.error('Error fetching boost data:', error);
+      console.error("Error fetching boost data:", error);
     } finally {
       setLoading(false);
     }
@@ -77,35 +98,35 @@ const Boosts = () => {
 
   const fetchAvailableCoupons = async () => {
     try {
-      const response = await api.get('/coupons/available?orderType=boosts');
+      const response = await api.get("/coupons/available?orderType=boosts");
       if (response.success) {
         setAvailableCoupons(response.coupons || []);
       }
     } catch (error) {
-      console.error('Error fetching coupons:', error);
+      console.error("Error fetching coupons:", error);
     }
   };
 
   const validateCoupon = async (code, amount) => {
     try {
-      const response = await api.post('/coupons/validate', {
+      const response = await api.post("/coupons/validate", {
         code,
         orderAmount: amount,
-        orderType: 'boosts'
+        orderType: "boosts",
       });
-      
+
       if (response.success) {
         setAppliedCoupon(response);
         showSuccess(
           `Coupon applied! You save ${response.discount.amount} coins`,
-          'Coupon Applied'
+          "Coupon Applied"
         );
         return response;
       }
     } catch (error) {
       showError(
-        error.response?.data?.error || 'Invalid coupon code',
-        'Coupon Error'
+        error.response?.data?.error || "Invalid coupon code",
+        "Coupon Error"
       );
       return null;
     }
@@ -113,70 +134,148 @@ const Boosts = () => {
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
-    setCouponCode('');
+    setCouponCode("");
   };
 
   const purchaseBoost = async (boostType) => {
-    setPurchasing(boostType);
-    
-    const boost = boostOptions.find(b => b.type === boostType);
+    if (purchasing) return;
+
+    const boost = boostOptions.find((b) => b.type === boostType);
     if (!boost) return;
-    
-    let finalCost = boost.coinCost;
+
+    setPurchasing(boostType);
+
+    let finalAmount = boost.price;
     let discountAmount = 0;
-    
+
     // Apply coupon if available
     if (appliedCoupon) {
-      finalCost = boost.coinCost - appliedCoupon.discount.amount;
+      finalAmount = boost.price - appliedCoupon.discount.amount;
       discountAmount = appliedCoupon.discount.amount;
     }
-    
+
     try {
-      const response = await api.post('/boosts/purchase', { 
+      // Ensure Razorpay script is loaded
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded || !window.Razorpay) {
+        throw new Error(
+          "Payment gateway not available. Please refresh the page."
+        );
+      }
+
+      // Create order
+      const orderResponse = await api.post("/payments/create-order", {
+        amount: finalAmount,
+        originalAmount: boost.price,
+        type: "boost",
         boostType,
         couponCode: appliedCoupon?.coupon?.code || null,
-        originalCost: boost.coinCost,
-        finalCost,
-        discountAmount
+        discountAmount,
       });
-      
-      playNotificationSound('boost');
-      
-      const message = appliedCoupon 
-        ? `${boostType} boost activated! You saved ${discountAmount} coins with coupon ${appliedCoupon.coupon.code}! 🚀`
-        : `${boostType} boost activated! 🚀`;
-        
-      showSuccess(response.message || message, 'Boost Activated');
-      
-      // Clear applied coupon
-      setAppliedCoupon(null);
-      setCouponCode('');
-      
-      fetchBoostData(); // Refresh data
-    } catch (error) {
-      console.error('Error purchasing boost:', error);
-      playNotificationSound('error');
-      if (error.response?.data?.error === 'Insufficient coins') {
-        showError(
-          `You need ${error.response.data.required} coins but only have ${error.response.data.balance} coins. 💰`,
-          'Insufficient Coins'
-        );
-      } else {
-        showError('Failed to purchase boost. Please try again.', 'Purchase Failed');
+
+      if (!orderResponse.success) {
+        throw new Error(orderResponse.error || "Failed to create order");
       }
-    } finally {
+
+      // Initialize Razorpay checkout
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_Ri6GYh8gLqAcT0",
+        amount: orderResponse.amount,
+        currency: orderResponse.currency,
+        name: "HumDono Boost",
+        description: `${boost.type} Boost - ${boost.description}`,
+        order_id: orderResponse.order_id,
+        handler: async function (response) {
+          try {
+            // Verify and activate boost
+            const verifyResponse = await api.post("/boosts/purchase", {
+              boostType,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyResponse.ok) {
+              playNotificationSound("boost");
+              showSuccess(
+                `${boostType} boost activated successfully! 🚀`,
+                "Boost Activated"
+              );
+
+              // Clear applied coupon
+              setAppliedCoupon(null);
+              setCouponCode("");
+
+              fetchBoostData(); // Refresh data
+            } else {
+              throw new Error(
+                verifyResponse.error || "Boost activation failed"
+              );
+            }
+          } catch (error) {
+            console.error("Boost verification error:", error);
+            playNotificationSound("error");
+            showError(
+              error.response?.data?.error ||
+                error.message ||
+                "Boost activation failed",
+              "Activation Failed"
+            );
+          } finally {
+            setPurchasing(null);
+          }
+        },
+        prefill: {
+          name: currentUser?.name || "",
+          email: currentUser?.email || "",
+          contact: currentUser?.phone || "",
+        },
+        theme: {
+          color: "#ec4899",
+        },
+        modal: {
+          ondismiss: function () {
+            setPurchasing(null);
+            showError("Payment cancelled", "Cancelled");
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Payment error:", error);
+      playNotificationSound("error");
+
+      if (
+        error.response?.status === 403 &&
+        error.response?.data?.requiresSubscription
+      ) {
+        showError(
+          "Please subscribe first to purchase boosts! 🔒",
+          "Subscription Required"
+        );
+        setTimeout(() => navigate("/subscription?required=true"), 2000);
+      } else {
+        showError(
+          error.response?.data?.error ||
+            error.message ||
+            "Failed to initiate payment",
+          "Payment Failed"
+        );
+      }
       setPurchasing(null);
     }
   };
 
   const getBoostIcon = (type) => {
     switch (type) {
-      case 'visibility':
+      case "visibility":
         return EyeIcon;
-      case 'superlike':
+      case "superlike":
         return HeartIcon;
-      case 'rewind':
-        return ArrowLeftIcon;
+      case "spotlight":
+        return SparklesIcon;
       default:
         return SparklesIcon;
     }
@@ -184,14 +283,14 @@ const Boosts = () => {
 
   const getBoostColor = (type) => {
     switch (type) {
-      case 'visibility':
-        return 'text-purple-500 bg-purple-50 border-purple-200';
-      case 'superlike':
-        return 'text-blue-500 bg-blue-50 border-blue-200';
-      case 'rewind':
-        return 'text-green-500 bg-green-50 border-green-200';
+      case "visibility":
+        return "text-purple-500 bg-purple-50 border-purple-200";
+      case "superlike":
+        return "text-blue-500 bg-blue-50 border-blue-200";
+      case "spotlight":
+        return "text-yellow-500 bg-yellow-50 border-yellow-200";
       default:
-        return 'text-pink-500 bg-pink-50 border-pink-200';
+        return "text-pink-500 bg-pink-50 border-pink-200";
     }
   };
 
@@ -221,15 +320,11 @@ const Boosts = () => {
               src="/logo.png"
               alt="HumDono Logo"
               className="h-8 w-8 object-contain cursor-pointer"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
             />
             <div className="flex-1">
               <h1 className="text-2xl font-bold text-gray-900">Boosts</h1>
               <p className="text-gray-600 mt-1">Increase your popularity</p>
-            </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Your coins</p>
-              <p className="text-lg font-bold text-yellow-600">{userCoins}</p>
             </div>
           </div>
         </div>
@@ -239,21 +334,33 @@ const Boosts = () => {
         {/* Active Boosts */}
         {activeBoosts.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Active Boosts</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Active Boosts
+            </h2>
             <div className="space-y-3">
               {activeBoosts.map((boost) => {
                 const Icon = getBoostIcon(boost.type);
                 const timeLeft = new Date(boost.expiresAt) - new Date();
-                const minutesLeft = Math.max(0, Math.floor(timeLeft / (1000 * 60)));
-                
+                const minutesLeft = Math.max(
+                  0,
+                  Math.floor(timeLeft / (1000 * 60))
+                );
+
                 return (
-                  <div key={boost._id} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div
+                    key={boost._id}
+                    className="bg-green-50 border border-green-200 rounded-lg p-4"
+                  >
                     <div className="flex items-center space-x-3">
                       <Icon className="w-6 h-6 text-green-600" />
                       <div className="flex-1">
-                        <h3 className="font-semibold text-green-900 capitalize">{boost.type} Boost</h3>
+                        <h3 className="font-semibold text-green-900 capitalize">
+                          {boost.type} Boost
+                        </h3>
                         <p className="text-green-700 text-sm">
-                          {minutesLeft > 0 ? `${minutesLeft} minutes left` : 'Expired'}
+                          {minutesLeft > 0
+                            ? `${minutesLeft} minutes left`
+                            : "Expired"}
                         </p>
                       </div>
                     </div>
@@ -271,154 +378,72 @@ const Boosts = () => {
               <div className="flex items-center space-x-3">
                 <HeartIcon className="w-6 h-6 text-blue-600" />
                 <div>
-                  <h3 className="font-semibold text-blue-900">Super Likes Available</h3>
-                  <p className="text-blue-700 text-sm">You have {superLikes} super likes to use</p>
+                  <h3 className="font-semibold text-blue-900">
+                    Super Likes Available
+                  </h3>
+                  <p className="text-blue-700 text-sm">
+                    You have {superLikes} super likes to use
+                  </p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Coupon Section */}
-        <div className="mb-6">
-          <div className="bg-white rounded-lg p-4 shadow-sm border border-pink-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">🎫 Coupons & Offers</h3>
-            
-            {/* Applied Coupon Display */}
-            {appliedCoupon && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-green-800">{appliedCoupon.coupon.code}</p>
-                    <p className="text-green-600 text-sm">{appliedCoupon.coupon.description}</p>
-                    <p className="text-green-700 text-sm font-medium">
-                      You save {appliedCoupon.discount.amount} coins ({appliedCoupon.discount.percentage}% off)
-                    </p>
-                  </div>
-                  <button
-                    onClick={removeCoupon}
-                    className="text-red-500 hover:text-red-700 text-sm font-medium"
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Coupon Input */}
-            {!appliedCoupon && (
-              <div className="space-y-3">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    placeholder="Enter coupon code"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                    className="flex-1 px-3 py-2 border border-pink-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  />
-                  <button
-                    onClick={() => couponCode && validateCoupon(couponCode, boostOptions[0]?.coinCost || 50)}
-                    disabled={!couponCode}
-                    className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Apply
-                  </button>
-                </div>
-
-                {/* Available Coupons */}
-                {availableCoupons.length > 0 && (
-                  <div>
-                    <button
-                      onClick={() => setShowCoupons(!showCoupons)}
-                      className="text-pink-600 text-sm font-medium hover:text-pink-700"
-                    >
-                      {showCoupons ? 'Hide' : 'Show'} available coupons ({availableCoupons.length})
-                    </button>
-                    
-                    {showCoupons && (
-                      <div className="mt-3 space-y-2">
-                        {availableCoupons.map((coupon) => (
-                          <div
-                            key={coupon.code}
-                            className="bg-pink-50 border border-pink-200 rounded-lg p-3 cursor-pointer hover:bg-pink-100"
-                            onClick={() => {
-                              setCouponCode(coupon.code);
-                              setShowCoupons(false);
-                            }}
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-semibold text-pink-800">{coupon.code}</p>
-                                <p className="text-pink-600 text-sm">{coupon.description}</p>
-                              </div>
-                              <div className="text-right">
-                                <p className="text-pink-700 text-sm font-medium">
-                                  {coupon.discountType === 'percentage' 
-                                    ? `${coupon.discountValue}% OFF` 
-                                    : `${coupon.discountValue} coins OFF`}
-                                </p>
-                                {coupon.minOrderAmount > 0 && (
-                                  <p className="text-pink-500 text-xs">Min {coupon.minOrderAmount} coins</p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Boost Options */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Available Boosts</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            🚀 Available Boosts
+          </h2>
           <div className="space-y-4">
             {boostOptions.map((boost) => {
               const Icon = getBoostIcon(boost.type);
               const colorClass = getBoostColor(boost.type);
-              
+
               return (
-                <div key={boost.type} className={`border rounded-lg p-4 ${colorClass}`}>
+                <div
+                  key={boost.type}
+                  className={`border-2 rounded-xl p-5 ${colorClass}`}
+                >
                   <div className="flex items-start space-x-4">
-                    <Icon className="w-8 h-8 mt-1" />
-                    
+                    <div className="p-3 rounded-full bg-white shadow-sm">
+                      <Icon className="w-8 h-8" />
+                    </div>
+
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 capitalize mb-1">
-                        {boost.type} {boost.type === 'superlike' ? 'Pack' : 'Boost'}
+                      <h3 className="font-bold text-gray-900 capitalize text-lg mb-1">
+                        {boost.type === "superlike"
+                          ? "5 Super Likes Pack"
+                          : boost.type === "visibility"
+                          ? "Visibility Boost"
+                          : boost.type === "spotlight"
+                          ? "Spotlight Feature"
+                          : boost.type}
                       </h3>
-                      <p className="text-gray-700 text-sm mb-3">{boost.description}</p>
-                      
+                      <p className="text-gray-700 text-sm mb-4">
+                        {boost.description}
+                      </p>
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          {/* Price Display with Coupon */}
-                          {appliedCoupon ? (
-                            <div>
-                              <span className="text-gray-500 line-through text-sm">{boost.coinCost} coins</span>
-                              <span className="text-green-600 font-semibold ml-2">
-                                {boost.coinCost - appliedCoupon.discount.amount} coins
-                              </span>
-                              <span className="text-green-600 text-xs ml-1">
-                                (Save {appliedCoupon.discount.amount})
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-yellow-600 font-semibold">{boost.coinCost} coins</span>
-                          )}
+                          <span className="text-2xl font-bold text-passion">
+                            ₹{boost.price}
+                          </span>
                           {boost.duration > 0 && (
-                            <span className="text-gray-600 text-sm">• {boost.duration} min</span>
+                            <span className="text-gray-500 text-sm">
+                              • {boost.duration} min
+                            </span>
                           )}
                         </div>
-                        
+
                         <button
                           onClick={() => purchaseBoost(boost.type)}
-                          disabled={purchasing === boost.type || userCoins < (appliedCoupon ? boost.coinCost - appliedCoupon.discount.amount : boost.coinCost)}
-                          className="bg-pink-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={purchasing === boost.type}
+                          className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-2.5 rounded-full font-semibold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all"
                         >
-                          {purchasing === boost.type ? 'Purchasing...' : 'Buy Now'}
+                          {purchasing === boost.type
+                            ? "Processing..."
+                            : "Buy Now"}
                         </button>
                       </div>
                     </div>
@@ -429,15 +454,20 @@ const Boosts = () => {
           </div>
         </div>
 
-        {/* Need More Coins */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 mb-4">Need more coins?</p>
-          <button
-            onClick={() => navigate('/wallet')}
-            className="bg-yellow-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-yellow-600"
-          >
-            Buy Coins
-          </button>
+        {/* Info Section */}
+        <div className="mt-8 bg-blue-50 rounded-xl p-4 border border-blue-200">
+          <div className="flex items-start space-x-3">
+            <div className="text-2xl">ℹ️</div>
+            <div>
+              <p className="font-semibold text-blue-800">How Boosts Work</p>
+              <p className="text-blue-600 text-sm mt-1">
+                Boosts increase your visibility and help you get more matches.
+                Visibility boost shows your profile to more users for 30
+                minutes. Super Likes let the other person know you're really
+                interested!
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -112,6 +112,14 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    const hasAuthHeader = Boolean(
+      (originalRequest && originalRequest.headers && originalRequest.headers["Authorization"]) ||
+      axiosInstance.defaults.headers.common["Authorization"]
+    );
+    if (!hasAuthHeader) {
+      return Promise.reject(error);
+    }
+
     // Prevent infinite loops
     if (originalRequest._retry) {
       // already retried once -> fail

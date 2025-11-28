@@ -105,57 +105,62 @@ const Messages = () => {
           </div>
         ) : (
           <div className="space-y-2">
-            {conversations.map((conversation) => (
-              <div
-                key={conversation.matchId}
-                onClick={() => openChat(conversation.matchId, conversation.user)}
-                className="bg-white rounded-lg p-4 shadow-sm border cursor-pointer hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
-                    <img
-                      src={conversation.user.photos?.[0]?.url || '/default-avatar.png'}
-                      alt={conversation.user.name}
-                      className="w-14 h-14 rounded-full object-cover"
-                    />
-                    {conversation.user.lastActiveAt && 
-                     new Date() - new Date(conversation.user.lastActiveAt) < 5 * 60 * 1000 && (
-                      <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                    )}
-                    {conversation.unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-gray-900 truncate">
-                        {conversation.user.name}
-                      </h3>
-                      <span className="text-xs text-gray-400">
-                        {conversation.lastMessageAt ? 
-                          new Date(conversation.lastMessageAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
-                          : ''
-                        }
-                      </span>
+            {conversations.map((conversation) => {
+              // Handle both 'user' and 'otherUser' property names from API
+              const otherUser = conversation.otherUser || conversation.user || {};
+              
+              return (
+                <div
+                  key={conversation.matchId || conversation._id}
+                  onClick={() => openChat(conversation.matchId, otherUser)}
+                  className="bg-white rounded-lg p-4 shadow-sm border cursor-pointer hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <img
+                        src={otherUser.photos?.[0]?.url || '/default-avatar.png'}
+                        alt={otherUser.name || 'User'}
+                        className="w-14 h-14 rounded-full object-cover"
+                      />
+                      {otherUser.lastActiveAt &&
+                       new Date() - new Date(otherUser.lastActiveAt) < 5 * 60 * 1000 && (
+                        <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                      )}
+                      {conversation.unreadCount > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                          {conversation.unreadCount > 9 ? '9+' : conversation.unreadCount}
+                        </div>
+                      )}
                     </div>
                     
-                    {conversation.lastMessage ? (
-                      <p className={`text-sm truncate ${conversation.unreadCount > 0 ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
-                        {conversation.lastMessage.messageType === 'gift' 
-                          ? `🎁 ${conversation.lastMessage.content}`
-                          : conversation.lastMessage.content
-                        }
-                      </p>
-                    ) : (
-                      <p className="text-gray-400 text-sm">Say hello! 👋</p>
-                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-gray-900 truncate">
+                          {otherUser.name || 'Unknown User'}
+                        </h3>
+                        <span className="text-xs text-gray-400">
+                          {conversation.lastMessageAt ?
+                            new Date(conversation.lastMessageAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                            : ''
+                          }
+                        </span>
+                      </div>
+                      
+                      {conversation.lastMessage ? (
+                        <p className={`text-sm truncate ${conversation.unreadCount > 0 ? 'font-medium text-gray-900' : 'text-gray-600'}`}>
+                          {conversation.lastMessage.messageType === 'gift'
+                            ? `🎁 ${conversation.lastMessage.content}`
+                            : conversation.lastMessage.content
+                          }
+                        </p>
+                      ) : (
+                        <p className="text-gray-400 text-sm">Say hello! 👋</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

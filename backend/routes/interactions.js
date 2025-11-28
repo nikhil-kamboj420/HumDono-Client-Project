@@ -32,11 +32,13 @@ router.post("/", auth, async (req, res) => {
     if (!target) return res.status(404).json({ ok: false, error: "Target user not found" });
 
     // Upsert interaction (insert or update action)
-    await Interaction.findOneAndUpdate(
+    const interaction = await Interaction.findOneAndUpdate(
       { from: fromId, to },
       { action, createdAt: new Date() },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
+    
+    console.log(`✅ Interaction saved: ${fromId} → ${action} → ${to}`);
 
     // If action is like/superlike -> check for reverse like and create notifications
     if (action === "like" || action === "superlike") {
@@ -57,7 +59,7 @@ router.post("/", auth, async (req, res) => {
           senderName: sender.name,
           senderPhoto: sender.photos?.[0]?.url || null
         }
-      });
+      }, req.app?.locals?.io);
 
       const reverse = await Interaction.findOne({ from: to, to: fromId, action: { $in: ["like", "superlike"] } });
       if (reverse) {
@@ -82,7 +84,7 @@ router.post("/", auth, async (req, res) => {
           type: "match",
           message: `It's a match with ${matchedUser.name}! 🎉`,
           data: { matchId: match._id }
-        });
+        }, req.app?.locals?.io);
 
         await createNotification({
           recipient: to,
@@ -90,7 +92,7 @@ router.post("/", auth, async (req, res) => {
           type: "match",
           message: `It's a match with ${sender.name}! 🎉`,
           data: { matchId: match._id }
-        });
+        }, req.app?.locals?.io);
 
         // return match + minimal matched user info for immediate UI reveal
         const responseUser = {

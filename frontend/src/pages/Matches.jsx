@@ -82,7 +82,8 @@ const Matches = () => {
                     <img
                       src={match.user.photos?.[0]?.url || '/default-avatar.png'}
                       alt={match.user.name}
-                      className="w-16 h-16 rounded-full object-cover"
+                      className="w-16 h-16 rounded-full object-cover cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); navigate(`/profile/${match.user._id}`); }}
                     />
                     {match.unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">

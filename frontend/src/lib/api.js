@@ -75,8 +75,13 @@ export const uploadPhoto = async (formData, save = false) => {
 
 /** Get /users/me (authenticated user from users route) */
 export const getUserProfile = async () => {
-  const res = await axiosInstance.get("/users/me");
-  return res.data;
+  try {
+    const res = await axiosInstance.get("/users/me");
+    return res.data;
+  } catch (err) {
+    console.warn("getUserProfile failed:", err?.response?.data || err);
+    return { ok: false, user: null };
+  }
 };
 
 /** Set profile photo by public_id */
@@ -101,7 +106,17 @@ export const deletePhoto = async (public_id) => {
  */
 
 /** Get feed */
-export const getFeed = async ({ limit = 10, skip = 0, minAge, maxAge, city, relationshipStatus, gender, verifiedOnly, hasPhotos } = {}) => {
+export const getFeed = async ({
+  limit = 10,
+  skip = 0,
+  minAge,
+  maxAge,
+  city,
+  relationshipStatus,
+  gender,
+  verifiedOnly,
+  hasPhotos,
+} = {}) => {
   const params = { limit, skip };
   if (minAge) params.minAge = minAge;
   if (maxAge) params.maxAge = maxAge;
@@ -110,8 +125,13 @@ export const getFeed = async ({ limit = 10, skip = 0, minAge, maxAge, city, rela
   if (gender) params.gender = gender;
   if (verifiedOnly) params.verifiedOnly = verifiedOnly;
   if (hasPhotos) params.hasPhotos = hasPhotos;
-  const res = await axiosInstance.get("/feed", { params });
-  return res.data; // { ok, results: [...] }
+  try {
+    const res = await axiosInstance.get("/feed", { params });
+    return res.data; // { ok, results: [...] }
+  } catch (err) {
+    console.error("Feed fetch failed:", err?.response?.data || err);
+    return { ok: false, results: [] };
+  }
 };
 
 /** Post interaction (like/dislike/superlike) */
@@ -134,13 +154,48 @@ export const requestPhoneAccess = async (to) => {
   return res.data;
 };
 
+/** Get liked users */
+export const getLikedUsers = async ({ page = 1, limit = 20 } = {}) => {
+  try {
+    const res = await axiosInstance.get("/interactions/liked", {
+      params: { page, limit },
+    });
+    return res.data; // { ok, likedUsers }
+  } catch (err) {
+    console.error("getLikedUsers failed:", err?.response?.data || err);
+    return { ok: false, likedUsers: [] };
+  }
+};
+
+/** Get disliked users */
+export const getDislikedUsers = async ({ page = 1, limit = 20 } = {}) => {
+  try {
+    const res = await axiosInstance.get("/interactions/disliked", {
+      params: { page, limit },
+    });
+    return res.data; // { ok, dislikedUsers }
+  } catch (err) {
+    console.error("getDislikedUsers failed:", err?.response?.data || err);
+    return { ok: false, dislikedUsers: [] };
+  }
+};
+
+/** Remove an interaction (undo) */
+export const removeInteraction = async (userId) => {
+  try {
+    const res = await axiosInstance.delete(`/interactions/${userId}`);
+    return res.data; // { ok }
+  } catch (err) {
+    console.error("removeInteraction failed:", err?.response?.data || err);
+    return { ok: false };
+  }
+};
+
 /**
  * -------------------------------
  * FRIENDS APIs
  * -------------------------------
  */
-
-
 
 /**
  * -------------------------------
@@ -149,11 +204,16 @@ export const requestPhoneAccess = async (to) => {
  */
 
 /** Get notifications */
-export const getNotifications = async ({ page = 1, limit = 20, type, unreadOnly = false } = {}) => {
+export const getNotifications = async ({
+  page = 1,
+  limit = 20,
+  type,
+  unreadOnly = false,
+} = {}) => {
   const params = { page, limit };
   if (type) params.type = type;
-  if (unreadOnly) params.unreadOnly = 'true';
-  
+  if (unreadOnly) params.unreadOnly = "true";
+
   const res = await axiosInstance.get("/notifications", { params });
   return res.data;
 };
@@ -197,26 +257,35 @@ export const getConversations = async () => {
 /** Get messages for a match */
 export const getMessages = async (matchId, page = 1, limit = 50) => {
   const res = await axiosInstance.get(`/messages/${matchId}`, {
-    params: { page, limit }
+    params: { page, limit },
   });
   return res.data;
 };
 
 /** Send message */
-export const sendMessage = async (matchId, content, messageType = "text", gift = null) => {
+export const sendMessage = async (
+  matchId,
+  content,
+  messageType = "text",
+  gift = null
+) => {
   const res = await axiosInstance.post(`/messages/${matchId}`, {
     content,
     messageType,
-    gift
+    gift,
   });
   return res.data;
 };
 
 /** Send direct message to any user (females only - auto-creates match) */
-export const sendDirectMessage = async (receiverId, content, messageType = "text") => {
+export const sendDirectMessage = async (
+  receiverId,
+  content,
+  messageType = "text"
+) => {
   const res = await axiosInstance.post(`/messages/direct/${receiverId}`, {
     content,
-    messageType
+    messageType,
   });
   return res.data;
 };
@@ -273,8 +342,6 @@ const api = {
   openMatchChat,
 
   requestPhoneAccess,
-
-
 
   // notifications
   getNotifications,

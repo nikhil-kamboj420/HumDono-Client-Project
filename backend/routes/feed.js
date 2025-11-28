@@ -147,33 +147,20 @@ router.get("/", auth, async (req, res) => {
     });
     console.log(`📈 Total users with gender=${gender}, relationship=${relationshipStatus}: ${totalMatchingUsers}`);
 
-    // get users current user already interacted with
-    // Only exclude recent interactions (last 10) for "dislike" action
-    // This allows skipped profiles to reappear after 10 new interactions
-    const recentInteractions = await Interaction.find({ from: meObjectId })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select("to action")
-      .lean();
-    
-    const recentSkippedIds = recentInteractions
-      .filter(x => x.action === "dislike")
-      .map(x => String(x.to));
-    
-    // Always exclude liked users (to prevent duplicate likes)
-    const likedUsers = await Interaction.find({ 
-      from: meObjectId, 
-      action: "like" 
+    // Exclude ALL users current user already interacted with (like or dislike)
+    // No repeats - once interacted, never show again in feed
+    const allInteractions = await Interaction.find({ 
+      from: meObjectId
     }).select("to").lean();
-    const likedIds = likedUsers.map(x => String(x.to));
     
-    // Combine: exclude recent skips + all likes
-    const excludeIds = [...new Set([...recentSkippedIds, ...likedIds])];
+    const excludeIds = allInteractions.map(x => String(x.to));
     
     if (excludeIds.length > 0) {
       // Mongoose will cast string ids to ObjectId for the query
       filter._id.$nin = excludeIds;
     }
+    
+    console.log(`🚫 Excluding ${excludeIds.length} already interacted profiles`);
 
     // Sort criteria (currentUser already fetched above)
     let sortCriteria = { lastActiveAt: -1, createdAt: -1 };
@@ -188,7 +175,7 @@ router.get("/", auth, async (req, res) => {
       .sort(sortCriteria)
       .skip(skip)
       .limit(limit)
-      .select("name age photos bio interests location visibilitySettings phone verification relationshipStatus gender education profession lifestyle")
+      .select("name age photos bio interests location visibilitySettings phone email verification relationshipStatus gender education profession lifestyle")
       .lean();
     
     // Debug: Log results count
@@ -200,26 +187,40 @@ router.get("/", auth, async (req, res) => {
 
     const matches = await Match.find({ usersKey: { $in: usersKeyPairs } }).select("users usersKey").lean();
     const matchedKeys = new Set(matches.map((m) => m.usersKey));
+    
+    // Check which profiles user already liked
+    const likedProfiles = await Interaction.find({
+      from: meObjectId,
+      to: { $in: candidateIds },
+      action: "like"
+    }).select("to").lean();
+    const likedIds = new Set(likedProfiles.map(x => String(x.to)));
 
     // prepare response
     const prepared = candidates.map((c) => {
       const usersKey = [String(meId), String(c._id)].sort().join("_");
       const isMatched = matchedKeys.has(usersKey);
+      const alreadyLiked = likedIds.has(String(c._id));
 
+      // Check if user wants to show age (default: true)
+      const showAge = c.visibilitySettings?.showAge !== false;
+      
       return {
         _id: c._id,
         name: c.name,
-        age: c.age,
+        age: showAge ? c.age : null, // Hide age if user disabled it
         photos: c.photos || [],
         bio: c.bio,
         interests: c.interests || [],
         location: c.location || {},
+        email: c.email, // Add email for display
         relationshipStatus: c.relationshipStatus,
         gender: c.gender,
         education: c.education,
         profession: c.profession,
         lifestyle: c.lifestyle || {},
         isMatched,
+        alreadyLiked, // Flag to show user already liked this profile
         phone: isMatched ? (c.phone || null) : maskPhone(c.phone),
         phoneVerified: c.verification?.phoneVerified ?? false,
       };

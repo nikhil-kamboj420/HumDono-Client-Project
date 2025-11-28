@@ -1,7 +1,8 @@
 // frontend/src/App.jsx
 import { useEffect, useState, useRef } from "react";
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { io } from "socket.io-client";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import VerifyRegistration from "./pages/VerifyRegistration";
@@ -11,8 +12,8 @@ import Matches from "./pages/Matches";
 import Messages from "./pages/Messages";
 import Chat from "./pages/Chat";
 
-import Liked from "./pages/Liked";
-import Disliked from "./pages/Disliked";
+import Likes from "./pages/Likes";
+import Dislikes from "./pages/Dislikes";
 import Boosts from "./pages/Boosts";
 import Referrals from "./pages/Referrals";
 import Gifts from "./pages/Gifts";
@@ -24,6 +25,9 @@ import api from "./lib/api";
 import Wallet from "./pages/Wallet";
 import Subscription from "./pages/Subscription";
 import LifetimeSubscription from "./pages/LifetimeSubscription";
+import ScanToPayPage from "./pages/ScanToPayPage";
+import ManualPaymentFormPage from "./pages/ManualPaymentFormPage";
+import RequireAuth from "./components/RequireAuth";
 import Notifications from "./pages/Notifications";
 import NotificationPopup from "./components/NotificationPopup";
 import OfflineIndicator from "./components/OfflineIndicator";
@@ -34,82 +38,103 @@ function App() {
   const location = useLocation();
   const [currentNotification, setCurrentNotification] = useState(null);
   const lastNotificationId = useRef(null);
+  const queryClient = useQueryClient();
 
   // Handle notification actions
   const handleNotificationAction = (action, notification) => {
     switch (action) {
-      case 'view_chat':
-      case 'reply_message':
+      case "view_chat":
+      case "reply_message":
         // Navigate to messages or specific chat
         if (notification.sender?._id) {
           // Find match with this user and navigate to chat
-          nav('/messages');
+          nav("/messages");
         } else {
-          nav('/messages');
+          nav("/messages");
         }
         break;
-      
-      case 'view_profile':
+
+      case "view_profile":
         if (notification.sender?._id) {
           nav(`/profile/${notification.sender._id}`);
         }
         break;
-      
+
       default:
         break;
     }
   };
 
-  // Check if user is on authenticated page
-  const isAuthPage = !['/login', '/register', '/verify-registration'].includes(location.pathname);
-
-  // Global notification polling (only on authenticated pages)
-  const { data: notificationData } = useQuery({
-    queryKey: ["global-notifications"],
-    queryFn: () => api.getNotifications({ limit: 1, unreadOnly: true }),
-    refetchInterval: 5000, // Check every 5 seconds
-    staleTime: 0,
-    enabled: isAuthPage && !!localStorage.getItem("token"), // Only poll when logged in
-  });
-
-  // Show notification popup when new notification arrives
+  // Socket.io: listen for real-time notifications (no polling)
   useEffect(() => {
-    if (notificationData?.notifications?.length > 0) {
-      const latestNotification = notificationData.notifications[0];
-      
-      // Only show if it's a new notification
+    const isAuthPage = ![
+      "/login",
+      "/register",
+      "/verify-registration",
+    ].includes(location.pathname);
+    if (!isAuthPage) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+    const socket = io(socketUrl, { withCredentials: true });
+
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (user && user._id) {
+        socket.emit("user:join", user._id);
+      }
+    } catch (err) {
+      void err;
+    }
+
+    socket.on("notification:new", (latestNotification) => {
+      if (!latestNotification) return;
       if (latestNotification._id !== lastNotificationId.current) {
         lastNotificationId.current = latestNotification._id;
         setCurrentNotification(latestNotification);
-        
-        // Play sound based on notification type
-        const soundType = latestNotification.type === 'message' ? 'message' : 
-                         latestNotification.type === 'match' ? 'match' :
-                         latestNotification.type === 'like' ? 'notification' :
-                         'notification';
+
+        const type = latestNotification.type;
+        const soundType =
+          type === "message"
+            ? "message"
+            : type === "match"
+            ? "match"
+            : type === "like"
+            ? "notification"
+            : "notification";
         playSound(soundType);
+
+        // Refresh notification counts on event
+        queryClient.invalidateQueries({ queryKey: ["notification-counts"] });
+        // Notify other components to refresh
+        window.dispatchEvent(new CustomEvent("humdono:notification"));
       }
-    }
-  }, [notificationData]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [location.pathname, queryClient]);
 
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("token");
-      
+
       // Don't redirect if user is already on a page (not on root)
-      if (location.pathname !== '/') {
+      if (location.pathname !== "/") {
         // Just ensure token is set in axios
         if (token) api.setAuthToken(token);
         return;
       }
-      
+
       if (token) {
         api.setAuthToken(token);
         try {
           // Validate token and check profile completion
-          const response = await api.get('/auth/me');
+          const response = await api.get("/auth/me");
           const isProfileComplete = response.isProfileComplete;
-          
+
           if (isProfileComplete) {
             nav("/", { replace: true }); // Go to HomeFeed
           } else {
@@ -117,7 +142,10 @@ function App() {
           }
         } catch (error) {
           // Token invalid, BUT DO NOT LOGOUT per user request
-          console.warn('Token validation failed, but keeping session active:', error);
+          console.warn(
+            "Token validation failed, but keeping session active:",
+            error
+          );
           // We keep the token and let the user stay on the page
           // They will see errors if they try to fetch data, but won't be kicked out
         }
@@ -125,7 +153,7 @@ function App() {
         nav("/login", { replace: true });
       }
     };
-    
+
     initAuth();
   }, [nav, location.pathname]);
 
@@ -133,7 +161,7 @@ function App() {
     <div className="min-h-screen min-w-screen">
       {/* Offline/Online Indicator */}
       <OfflineIndicator />
-      
+
       {/* Global Notification Popup - Shows on all pages */}
       {currentNotification && (
         <NotificationPopup
@@ -148,28 +176,31 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/verify-registration" element={<VerifyRegistration />} />
         <Route path="/profile/create" element={<ProfileCreate />} />
-        <Route path="/" element={<HomeFeed />} />
-        <Route path="/matches" element={<Matches />} />
-        <Route path="/messages" element={<Messages />} />
-        <Route path="/chat/:matchId" element={<Chat />} />
 
-        <Route path="/liked" element={<Liked />} />
-        <Route path="/disliked" element={<Disliked />} />
-        <Route path="/boosts" element={<Boosts />} />
-        <Route path="/referrals" element={<Referrals />} />
-        <Route path="/gifts" element={<Gifts />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/:id" element={<UserProfile />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<HomeFeed />} />
+          <Route path="/matches" element={<Matches />} />
+          <Route path="/messages" element={<Messages />} />
+          <Route path="/chat/:matchId" element={<Chat />} />
 
-        <Route path="/notifications" element={<Notifications />} />
-        <Route path="/wallet" element={<Wallet />} />
-        <Route path="/subscription" element={<LifetimeSubscription />} />
-        <Route path="/subscription/plans" element={<Subscription />} />
-        <Route
-          path="/buy"
-          element={<div className="p-6">Buy coins page (placeholder)</div>}
-        />
+          <Route path="/likes" element={<Likes />} />
+          <Route path="/dislikes" element={<Dislikes />} />
+          <Route path="/boosts" element={<Boosts />} />
+          <Route path="/referrals" element={<Referrals />} />
+          <Route path="/gifts" element={<Gifts />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:id" element={<UserProfile />} />
+          <Route path="/settings" element={<Settings />} />
+
+          <Route path="/notifications" element={<Notifications />} />
+          <Route path="/wallet" element={<Wallet />} />
+          <Route path="/lifetime-access" element={<LifetimeSubscription />} />
+          <Route path="/lifetime-access/scan-to-pay" element={<ScanToPayPage />} />
+          <Route path="/lifetime-access/submit-transaction" element={<ManualPaymentFormPage />} />
+          <Route path="/subscription" element={<LifetimeSubscription />} />
+          <Route path="/subscription/plans" element={<Subscription />} />
+          <Route path="/buy" element={<div className="p-6">Buy coins page (placeholder)</div>} />
+        </Route>
 
         <Route path="*" element={<Login />} />
       </Routes>

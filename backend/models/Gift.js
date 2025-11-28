@@ -6,6 +6,7 @@ import mongoose from "mongoose";
  */
 const GiftSchema = new mongoose.Schema({
   name: { type: String, required: true },
+  emoji: { type: String, default: "🎁" }, // emoji representation
   image: { type: String, required: true }, // URL to gift image
   coinValue: { type: Number, required: true }, // cost in coins
   category: { type: String, default: "general" }, // flowers, jewelry, etc.

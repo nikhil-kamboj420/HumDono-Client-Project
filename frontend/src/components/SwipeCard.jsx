@@ -20,65 +20,61 @@ export default function SwipeCard({
   profile = {},
   currentUser = null,
   onLike,
+  onSkip,
   onDislike,
   onRequestPhone,
   onMessage,
-  onSendFriendRequest,
+  disabled = false,
 }) {
   const navigate = useNavigate();
 
   const photo =
     (profile.photos && profile.photos[0]?.url) || "/placeholder.png";
 
-  const maskPhone = (p = "") => {
-    if (!p) return "";
-    const s = String(p);
-    // keep first 3-4 digits (country code or start) and mask the rest
-    if (s.length <= 4) return "XXXX";
-    const keep = s.slice(0, Math.min(4, s.length));
-    return keep + "XXXXXXX";
+  // Helper to safely trigger actions
+  const handleAction = (e, actionFn) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (disabled || !actionFn) return;
+    actionFn(profile._id);
   };
 
   const handleMessage = () => {
-    // Check if user is male
-    const isMale = currentUser?.gender?.toLowerCase() === 'male';
-    const hasLifetimeSubscription = currentUser?.subscription?.isLifetime === true;
-    const userCoins = currentUser?.coins || 0;
+    const isMale = currentUser?.gender?.toLowerCase() === "male";
+    const isFemale = currentUser?.gender?.toLowerCase() === "female";
+    const hasLifetimeSubscription =
+      currentUser?.subscription?.isLifetime === true;
 
-    // MALE USER LOGIC
-    if (isMale) {
-      // Check if has lifetime subscription
-      if (!hasLifetimeSubscription) {
-        // No subscription -> Redirect to subscription page
-        navigate("/subscription");
-        return;
-      }
-      
-      // Has subscription, check coins (hidden from user)
-      if (userCoins < 10) {
-        // Not enough coins -> Redirect to wallet
-        navigate("/wallet");
-        return;
-      }
-      
-      // Has subscription and coins -> Allow messaging
+    // Female users can always send messages
+    if (isFemale) {
       if (typeof onMessage === "function") {
         return onMessage(profile);
       }
     }
 
-    // FEMALE USER LOGIC - Free messaging
+    // Male users need lifetime subscription to message
+    if (isMale) {
+      if (!hasLifetimeSubscription) {
+        // No subscription - redirect to subscription page
+        navigate("/subscription");
+        return;
+      }
+      // Has lifetime subscription - can message freely
+      if (typeof onMessage === "function") {
+        return onMessage(profile);
+      }
+    }
+
+    // Fallback for other cases
     if (typeof onMessage === "function") {
       return onMessage(profile);
     }
 
-    // bot -> force wallet/subscription flow
     if (profile.isBot) {
       navigate("/wallet");
       return;
     }
 
-    // matched with phone -> open whatsapp
     if (profile.isMatched && profile.phone) {
       const num = String(profile.phone).replace(/\D/g, "");
       if (num) {
@@ -87,55 +83,57 @@ export default function SwipeCard({
       }
     }
 
-    // default -> request access
     if (typeof onRequestPhone === "function") {
       onRequestPhone(profile._id);
       return;
     }
 
-    // fallback
     alert("Requesting access...");
   };
 
   return (
-    <div className="relative z-10 mx-auto w-full max-w-md lg:max-w-lg xl:max-w-xl rounded-xl bg-white shadow-lg overflow-hidden flex flex-col h-full lg:h-[75vh]">
-      {/* SEND MESSAGE button (prominent) - fixed position */}
-      <div className="px-4 sm:px-5 lg:px-6 py-3 border-b shrink-0 bg-white z-10">
+    <div className="relative z-10 mx-auto max-h-[75vh] bottom-6 w-full max-w-md lg:max-w-lg xl:max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col h-full border-[6px] border-[#E91E63]">
+      {/* Top Action: Send Message */}
+      <div className="px-4 py-3 shrink-0 bg-white z-10">
         <button
           onClick={handleMessage}
-          className="w-full flex items-center justify-center gap-3 bg-[#0b76ff] hover:bg-[#0665e6] text-white font-semibold py-3 lg:py-4 rounded-lg shadow text-sm sm:text-base"
+          className="w-full flex items-center justify-center gap-3 bg-[#1a1a1a] hover:bg-black text-white font-semibold py-3.5 rounded-full shadow-lg text-sm sm:text-base transition-colors tracking-wider"
         >
-          <svg
-            className="w-4 h-4 sm:w-5 sm:h-5"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden
-          >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <rect
+              x="3"
+              y="5"
+              width="18"
+              height="14"
+              rx="2"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
             <path
-              d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z"
+              d="M3 7l9 6 9-6"
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
-          <span>SEND MESSAGE</span>
+          <span className="font-bold">SEND MESSAGE</span>
         </button>
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto profile-scroll lg:max-h-[55vh]">
-        {/* Large profile image - now scrollable */}
-        <div className="w-full h-[45vh] sm:h-[50vh] lg:h-[55vh] bg-gray-100 relative">
+      <div className="flex-1 overflow-y-auto profile-scroll relative bg-white">
+        {/* Large profile image */}
+        <div className="w-full aspect-[4/5] bg-gray-100 relative shrink-0">
           <img
             src={photo}
             alt={profile.name || "profile"}
             className="w-full h-full object-cover"
           />
           {/* Scroll hint */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-xs animate-bounce flex items-center gap-1">
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm flex items-center gap-1.5 pointer-events-none">
             <span>Scroll</span>
-            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
               <path
                 d="M7 10l5 5 5-5"
                 stroke="currentColor"
@@ -146,350 +144,120 @@ export default function SwipeCard({
             </svg>
           </div>
         </div>
-        {/* Profile summary */}
-        <div className="px-4 sm:px-5 lg:px-6 py-4 bg-white relative z-10">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">
-                {profile.name || "Unnamed"}
-                {profile.age ? `, ${profile.age}` : ""}
-              </h3>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
-                {profile.location?.city && (
-                  <span className="text-sm sm:text-base text-gray-600">
-                    {profile.location.city}
-                  </span>
-                )}
 
-                {/* Last active indicator */}
-                {profile.lastActiveAt && (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-50 text-gray-600 rounded text-xs sm:text-sm">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Recently active</span>
-                  </div>
-                )}
+        {/* Profile Details */}
+        <div className="px-5 py-5 bg-white">
+          {/* Name and Age */}
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">
+            {profile.name || "Unnamed"}
+            {profile.age ? `, ${profile.age}` : ""}
+          </h3>
 
-                {/* verification badge */}
-                <div className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs sm:text-sm">
-                  <svg
-                    className="w-3 h-3 sm:w-4 sm:h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <path
-                      d="M9 12l2 2 4-4"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span>Verified</span>
-                </div>
-              </div>
-            </div>
+          {/* Verified Badge */}
+          <div className="flex items-center gap-1.5 mb-5">
+            <svg
+              className="w-4 h-4 text-[#E91E63]"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+            </svg>
+            <span className="text-[#E91E63] font-medium text-sm">Verified</span>
           </div>
 
           {/* Bio */}
           {profile.bio && (
-            <div className="mt-4">
-              <div className="text-sm font-medium text-gray-500 mb-2">
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
                 About
-              </div>
-              <div className="text-base text-gray-900 leading-relaxed">
-                {profile.bio}
+              </h4>
+              <p className="text-gray-800 leading-relaxed">{profile.bio}</p>
+            </div>
+          )}
+
+          {/* Info Grid */}
+          <div className="grid grid-cols-1 gap-4 mb-6">
+            {[
+              { label: "Education", value: profile.education },
+              {
+                label: "Profession",
+                value: profile.profession || profile.occupation,
+              },
+              { label: "Relationship", value: profile.relationshipStatus },
+              { label: "Gender", value: profile.gender },
+              { label: "Languages", value: profile.languages?.join(", ") },
+            ].map(
+              (item, i) =>
+                item.value && (
+                  <div key={i} className="flex flex-col">
+                    <span className="text-xs font-medium text-gray-500 uppercase">
+                      {item.label}
+                    </span>
+                    <span className="text-gray-900 capitalize">
+                      {item.value}
+                    </span>
+                  </div>
+                )
+            )}
+          </div>
+
+          {/* Interests */}
+          {profile.interests?.length > 0 && (
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Interests
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {profile.interests.map((interest, i) => (
+                  <span
+                    key={i}
+                    className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm"
+                  >
+                    {interest}
+                  </span>
+                ))}
               </div>
             </div>
           )}
 
-          {/* Basic info */}
-          <div className="mt-4 space-y-3">
-            {profile.education && (
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Education
-                </div>
-                <div className="text-base text-gray-900">
-                  {profile.education}
-                </div>
+          {/* Additional Photos */}
+          {profile.photos?.length > 1 && (
+            <div className="border-t pt-6">
+              <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                Gallery
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                {profile.photos.slice(1, 5).map((photo, index) => (
+                  <div
+                    key={index}
+                    className="aspect-square rounded-lg overflow-hidden bg-gray-100"
+                  >
+                    <img
+                      src={photo.url}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
               </div>
-            )}
-
-            {(profile.profession || profile.occupation) && (
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Profession
-                </div>
-                <div className="text-base text-gray-900">
-                  {profile.profession || profile.occupation}
-                </div>
-              </div>
-            )}
-
-            {profile.relationshipStatus && (
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Relationship Status
-                </div>
-                <div className="text-base text-gray-900 capitalize">
-                  {profile.relationshipStatus}
-                </div>
-              </div>
-            )}
-
-            {profile.gender && (
-              <div>
-                <div className="text-sm font-medium text-gray-500">Gender</div>
-                <div className="text-base text-gray-900 capitalize">
-                  {profile.gender}
-                </div>
-              </div>
-            )}
-
-            {profile.pronouns && (
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Pronouns
-                </div>
-                <div className="text-base text-gray-900">
-                  {profile.pronouns}
-                </div>
-              </div>
-            )}
-
-            {profile.languages && profile.languages.length > 0 && (
-              <div>
-                <div className="text-sm font-medium text-gray-500">
-                  Languages
-                </div>
-                <div className="text-base text-gray-900">
-                  {profile.languages.join(", ")}
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-
-        {/* Photo Gallery */}
-        {profile.photos && profile.photos.length > 1 && (
-          <div className="px-4 sm:px-5 lg:px-6 py-4 border-t">
-            <div className="text-sm font-medium text-gray-500 mb-3">
-              More Photos
-            </div>
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              {profile.photos.slice(1, 5).map((photo, index) => (
-                <div
-                  key={index}
-                  className="aspect-square bg-gray-100 rounded-lg overflow-hidden"
-                >
-                  <img
-                    src={photo.url}
-                    alt={`Photo ${index + 2}`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                  />
-                </div>
-              ))}
-            </div>
-            {profile.photos.length > 5 && (
-              <div className="text-center mt-3">
-                <span className="text-sm text-gray-500">
-                  +{profile.photos.length - 5} more photos
-                </span>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Verification section */}
-        <div className="px-4 sm:px-5 lg:px-6 py-4 border-t">
-          <div className="text-sm font-medium text-gray-500 mb-3">
-            Verification & Contact
-          </div>
-
-          {/* Verification badges */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {(profile.verification?.phoneVerified || profile.phoneVerified) && (
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded-full text-xs">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 12l2 2 4-4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Phone Verified
-              </div>
-            )}
-
-            {profile.verification?.photoVerified && (
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 12l2 2 4-4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Photo Verified
-              </div>
-            )}
-
-            {profile.verification?.idVerified && (
-              <div className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 rounded-full text-xs">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M9 12l2 2 4-4"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                ID Verified
-              </div>
-            )}
-          </div>
-
-          {/* Phone contact */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center bg-green-100 rounded-full">
-              <svg
-                className="w-6 h-6 sm:w-7 sm:h-7 text-green-600"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path
-                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <div className="flex-1">
-              <div className="text-sm sm:text-base font-semibold text-gray-800">
-                {profile.phone ? maskPhone(profile.phone) : "Hidden"}
-              </div>
-              <button
-                onClick={() => {
-                  if (profile.isBot) return navigate("/wallet");
-                  if (typeof onRequestPhone === "function")
-                    onRequestPhone(profile._id);
-                }}
-                className="text-sm sm:text-base text-blue-600 mt-1 hover:text-blue-800"
-              >
-                Request Access
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Interests */}
-        {profile.interests && profile.interests.length > 0 && (
-          <div className="px-4 sm:px-5 lg:px-6 py-4 border-t">
-            <div className="text-sm font-medium text-gray-500 mb-3">
-              Interests
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {profile.interests.map((interest, i) => (
-                <span
-                  key={i}
-                  className="text-xs sm:text-sm px-3 py-1.5 rounded-full bg-gray-100 text-gray-800"
-                >
-                  {interest}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Lifestyle preferences */}
-        {(profile.drinking || profile.smoking || profile.eating) && (
-          <div className="px-4 sm:px-5 lg:px-6 py-4 border-t">
-            <div className="text-sm font-medium text-gray-500 mb-3">
-              Lifestyle
-            </div>
-            <div className="space-y-3">
-              {profile.drinking && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">🍷</span>
-                    <span className="text-sm font-medium text-gray-700">
-                      Drinking
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-900 capitalize">
-                    {profile.drinking}
-                  </span>
-                </div>
-              )}
-
-              {profile.smoking && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">🚭</span>
-                    <span className="text-sm font-medium text-gray-700">
-                      Smoking
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-900 capitalize">
-                    {profile.smoking}
-                  </span>
-                </div>
-              )}
-
-              {profile.eating && (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">🥗</span>
-                    <span className="text-sm font-medium text-gray-700">
-                      Diet
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-900 capitalize">
-                    {profile.eating}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Premium Status */}
-        {profile.subscription?.active && (
-          <div className="px-4 sm:px-5 lg:px-6 py-4 border-t">
-            <div className="flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
-              <span className="text-2xl">👑</span>
-              <span className="text-sm font-semibold text-yellow-800 capitalize">
-                {profile.subscription.plan} Member
-              </span>
-            </div>
-          </div>
-        )}
-
-
       </div>
 
-      {/* Fixed bottom action bar */}
-      <div className="flex items-center justify-between gap-3 sm:gap-4 lg:gap-6 px-4 sm:px-5 lg:px-6 py-3 sm:py-4 border-t bg-white shrink-0 z-20">
+      {/* Fixed Bottom Action Bar - Skip & Like */}
+      <div className="flex items-center gap-4 px-5 py-4 bg-white shrink-0 z-20">
+        {/* SKIP Button - Black */}
         <button
-          onClick={() => onDislike && onDislike(profile._id)}
-          className=" flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl border border-pink-200 text-white hover:bg-pink-50 hover:border-pink-300 transition-colors text-sm sm:text-base font-medium"
+          onClick={(e) => handleAction(e, onSkip)}
+          className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#1a1a1a] hover:bg-black text-white transition-colors font-bold tracking-wider text-sm"
+          disabled={disabled}
         >
-          <svg
-            className="w-4 h-4 sm:w-5 sm:h-5"
-            viewBox="0 0 24 24"
-            fill="none"
-          >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
             <path
-              d="M18 6L6 18M6 6l12 12"
+              d="M6 18L18 6M6 6l12 12"
               stroke="currentColor"
-              strokeWidth="1.5"
+              strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -497,19 +265,21 @@ export default function SwipeCard({
           SKIP
         </button>
 
+        {/* LIKE Button - Pink/Magenta */}
         <button
-          onClick={() => onLike && onLike(profile._id)}
-          className="flex-1 flex items-center justify-center gap-2 py-3 sm:py-4 rounded-xl bg-romantic-gradient text-white hover:shadow-lg hover:scale-105 transition-all text-sm sm:text-base font-medium"
+          onClick={(e) => handleAction(e, onLike)}
+          className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-full bg-[#C2185B] hover:bg-[#AD1457] text-white transition-all transform active:scale-95 font-bold tracking-wider text-sm"
+          disabled={disabled}
         >
           <svg
-            className="w-4 h-4 sm:w-5 sm:h-5"
+            className="w-5 h-5"
             viewBox="0 0 24 24"
             fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
           >
             <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-              stroke="currentColor"
-              strokeWidth="1.5"
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
               strokeLinecap="round"
               strokeLinejoin="round"
             />

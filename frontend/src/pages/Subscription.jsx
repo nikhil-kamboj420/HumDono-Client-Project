@@ -1,7 +1,7 @@
 // pages/Subscription.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import  { ArrowLeftIcon, CheckIcon, SparklesIcon }  from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CheckIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import api from '../lib/api';
 import { useCustomAlert } from '../hooks/useCustomAlert';
 import CustomAlert from '../components/CustomAlert';
@@ -72,7 +72,7 @@ const Subscription = () => {
         orderAmount: amount,
         orderType: 'subscription'
       });
-      
+
       if (response.success) {
         setAppliedCoupon(response);
         showSuccess(
@@ -98,109 +98,9 @@ const Subscription = () => {
   const handleSubscribe = async (planId) => {
     if (purchasing) return;
 
-    setPurchasing(planId);
-    
-    const plan = plans.find(p => p.id === planId);
-    let finalAmount = plan.price;
-    let discountAmount = 0;
-    
-    // Apply coupon if available
-    if (appliedCoupon) {
-      finalAmount = appliedCoupon.orderSummary.finalAmount;
-      discountAmount = appliedCoupon.orderSummary.discountAmount;
-    }
-
-    try {
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded || !window.Razorpay) {
-        throw new Error('Payment gateway not available. Please refresh the page.');
-      }
-
-      // Create subscription order with coupon
-      const orderResponse = await api.post('/subscriptions/create', { 
-        planId,
-        couponCode: appliedCoupon?.coupon?.code || null,
-        originalAmount: plan.price,
-        finalAmount,
-        discountAmount
-      });
-
-      if (!orderResponse.success) {
-        throw new Error(orderResponse.error || 'Failed to create subscription order');
-      }
-
-      // Initialize Razorpay checkout
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Ri6GYh8gLqAcT0',
-        amount: orderResponse.amount,
-        currency: orderResponse.currency,
-        name: 'HumDono Premium',
-        description: `${plan.name} Subscription${appliedCoupon ? ` (${appliedCoupon.coupon.code} applied)` : ''}`,
-        order_id: orderResponse.orderId,
-        handler: async function (response) {
-          try {
-            const verifyResponse = await api.post('/subscriptions/verify', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              planId
-            });
-
-            if (verifyResponse.success) {
-              playSound('success');
-              const message = appliedCoupon 
-                ? `🎉 ${plan.name} activated! You got ${plan.coinsIncluded} coins and premium features! You saved ₹${discountAmount} with coupon ${appliedCoupon.coupon.code}!`
-                : `🎉 ${plan.name} activated! You got ${plan.coinsIncluded} coins and premium features!`;
-              
-              showSuccess(message, 'Subscription Activated');
-              
-              // Clear applied coupon
-              setAppliedCoupon(null);
-              setCouponCode('');
-              
-              // Refresh plans to show updated status
-              await fetchPlans();
-            } else {
-              throw new Error(verifyResponse.error || 'Subscription verification failed');
-            }
-          } catch (error) {
-            console.error('Subscription verification error:', error);
-            playSound('error');
-            showError(
-              error.response?.data?.error || error.message || 'Subscription verification failed',
-              'Verification Failed'
-            );
-          } finally {
-            setPurchasing(null);
-          }
-        },
-        prefill: {
-          name: '',
-          email: '',
-          contact: ''
-        },
-        theme: {
-          color: '#ec4899'
-        },
-        modal: {
-          ondismiss: function() {
-            setPurchasing(null);
-          }
-        }
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-
-    } catch (error) {
-      console.error('Subscription error:', error);
-      playSound('error');
-      showError(
-        error.response?.data?.error || error.message || 'Failed to initiate subscription',
-        'Subscription Failed'
-      );
-      setPurchasing(null);
-    }
+    // Redirect to manual payment page
+    navigate('/manual-payment');
+    setPurchasing(null);
   };
 
   const getPlanIcon = (planId) => {
@@ -269,7 +169,7 @@ const Subscription = () => {
                 <p className="text-gray-600 capitalize">{currentSubscription.plan} Plan</p>
               </div>
             </div>
-            
+
             <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
               <p className="text-sm text-yellow-800">
                 Your subscription expires on {new Date(currentSubscription.expiresAt).toLocaleDateString()}
@@ -281,7 +181,7 @@ const Subscription = () => {
         {/* Coupon Section */}
         <div className="card-romantic p-6">
           <h3 className="text-lg font-semibold text-passion mb-4">🎫 Coupons & Offers</h3>
-          
+
           {/* Applied Coupon Display */}
           {appliedCoupon && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
@@ -332,7 +232,7 @@ const Subscription = () => {
                   >
                     {showCoupons ? 'Hide' : 'Show'} available coupons ({availableCoupons.length})
                   </button>
-                  
+
                   {showCoupons && (
                     <div className="mt-3 space-y-2">
                       {availableCoupons.map((coupon) => (
@@ -351,8 +251,8 @@ const Subscription = () => {
                             </div>
                             <div className="text-right">
                               <p className="text-pink-700 text-sm font-medium">
-                                {coupon.discountType === 'percentage' 
-                                  ? `${coupon.discountValue}% OFF` 
+                                {coupon.discountType === 'percentage'
+                                  ? `${coupon.discountValue}% OFF`
                                   : `₹${coupon.discountValue} OFF`}
                               </p>
                               {coupon.minOrderAmount > 0 && (
@@ -373,11 +273,10 @@ const Subscription = () => {
         {/* Subscription Plans */}
         <div className="space-y-4">
           {plans.map((plan) => (
-            <div 
-              key={plan.id} 
-              className={`card-romantic p-6 relative overflow-hidden ${
-                plan.isCurrent ? 'ring-2 ring-yellow-400' : ''
-              }`}
+            <div
+              key={plan.id}
+              className={`card-romantic p-6 relative overflow-hidden ${plan.isCurrent ? 'ring-2 ring-yellow-400' : ''
+                }`}
             >
               {/* Popular Badge */}
               {plan.id === 'premium' && (
@@ -403,7 +302,7 @@ const Subscription = () => {
                     <p className="text-gray-600">{plan.duration} days</p>
                   </div>
                 </div>
-                
+
                 <div className="text-right">
                   {/* Price Display with Coupon */}
                   {appliedCoupon ? (
@@ -435,7 +334,7 @@ const Subscription = () => {
                     </div>
                   )
                 ))}
-                
+
                 <div className="flex items-center space-x-2">
                   <CheckIcon className="w-4 h-4 text-green-500" />
                   <span className="text-sm text-gray-700">
@@ -448,19 +347,18 @@ const Subscription = () => {
               <button
                 onClick={() => handleSubscribe(plan.id)}
                 disabled={purchasing !== null || plan.isCurrent}
-                className={`w-full py-3 rounded-lg font-semibold transition-all ${
-                  plan.isCurrent
-                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                    : purchasing === plan.id
+                className={`w-full py-3 rounded-lg font-semibold transition-all ${plan.isCurrent
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                  : purchasing === plan.id
                     ? 'bg-gray-400 text-white cursor-not-allowed'
                     : `bg-gradient-to-r ${getPlanColor(plan.id)} text-white hover:shadow-lg hover:scale-105`
-                }`}
+                  }`}
               >
-                {plan.isCurrent 
-                  ? 'Current Plan' 
-                  : purchasing === plan.id 
-                  ? 'Processing...' 
-                  : `Subscribe to ${plan.name}`
+                {plan.isCurrent
+                  ? 'Current Plan'
+                  : purchasing === plan.id
+                    ? 'Processing...'
+                    : `Subscribe to ${plan.name}`
                 }
               </button>
             </div>
@@ -478,7 +376,7 @@ const Subscription = () => {
                 <p className="text-sm text-gray-600">Like as many profiles as you want</p>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-3">
               <div className="text-2xl">💬</div>
               <div>
@@ -486,7 +384,7 @@ const Subscription = () => {
                 <p className="text-sm text-gray-600">Send unlimited messages without coins</p>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-3">
               <div className="text-2xl">👀</div>
               <div>
@@ -494,7 +392,7 @@ const Subscription = () => {
                 <p className="text-sm text-gray-600">Know who's interested in you</p>
               </div>
             </div>
-            
+
             <div className="flex items-start space-x-3">
               <div className="text-2xl">🚀</div>
               <div>

@@ -6,51 +6,31 @@ import Gift from '../models/Gift.js';
 const defaultGifts = [
   {
     name: "Rose",
+    emoji: "🌹",
     image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/rose.png",
     coinValue: 10,
     category: "flowers"
   },
   {
-    name: "Bouquet",
-    image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/bouquet.png",
-    coinValue: 25,
-    category: "flowers"
-  },
-  {
-    name: "Chocolate",
-    image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/chocolate.png",
-    coinValue: 15,
-    category: "sweets"
-  },
-  {
-    name: "Coffee",
-    image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/coffee.png",
-    coinValue: 20,
-    category: "drinks"
-  },
-  {
     name: "Heart",
+    emoji: "❤️",
     image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/heart.png",
     coinValue: 30,
     category: "romantic"
   },
   {
-    name: "Diamond Ring",
-    image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/ring.png",
-    coinValue: 100,
-    category: "jewelry"
-  },
-  {
     name: "Teddy Bear",
+    emoji: "🧸",
     image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/teddy.png",
-    coinValue: 40,
+    coinValue: 50,
     category: "cute"
   },
   {
-    name: "Wine",
-    image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/wine.png",
-    coinValue: 50,
-    category: "drinks"
+    name: "Diamond Ring",
+    emoji: "💍",
+    image: "https://res.cloudinary.com/demo/image/upload/v1/gifts/ring.png",
+    coinValue: 100,
+    category: "jewelry"
   }
 ];
 

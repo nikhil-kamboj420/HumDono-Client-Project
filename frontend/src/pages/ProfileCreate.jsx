@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../lib/api";
 import { uploadPhoto } from "../lib/upload";
-import LocationSearch from "../components/LocationSearch";
 import InterestSelector from "../components/InterestSelector";
+import { ChevronDownIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import CustomAlert from "../components/CustomAlert";
 import { useCustomAlert } from "../hooks/useCustomAlert";
 
@@ -47,16 +47,9 @@ const INDIAN_STATES = [
 export default function ProfileCreate() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
-  const {
-    alertConfig,
-    showSuccess,
-    showError,
-    showWarning,
-    showInfo,
-    showConfirm,
-    hideAlert,
-  } = useCustomAlert();
+  const [, setUser] = useState(null);
+  const { alertConfig, showSuccess, showError, showWarning, hideAlert } =
+    useCustomAlert();
 
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
@@ -69,7 +62,7 @@ export default function ProfileCreate() {
   const [gender, setGender] = useState("");
   const [education, setEducation] = useState("");
   const [profession, setProfession] = useState("");
-  const [location, setLocation] = useState({ city: "", state: "" });
+  const [location, setLocation] = useState({ state: "" });
   const [lifestyle, setLifestyle] = useState({
     drinking: "",
     smoking: "",
@@ -77,6 +70,52 @@ export default function ProfileCreate() {
   });
 
   const MAX_PHOTOS = 3;
+
+  const compressImage = (file) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const maxW = 1280;
+        const maxH = 1280;
+        let w = img.width;
+        let h = img.height;
+        const ratio = Math.min(maxW / w, maxH / h, 1);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url);
+            if (blob) {
+              const compressed = new File(
+                [blob],
+                file.name.replace(/\.[^.]+$/, ".jpg"),
+                {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                }
+              );
+              resolve(compressed);
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          0.7
+        );
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file);
+      };
+      img.src = url;
+    });
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -96,7 +135,6 @@ export default function ProfileCreate() {
           setEducation(u.education || "");
           setProfession(u.profession || u.occupation || "");
           setLocation({
-            city: u.location?.city || "",
             state: u.location?.state || "",
           });
           setLifestyle({
@@ -147,7 +185,8 @@ export default function ProfileCreate() {
     setPreviews((prev) => [...prev, url]);
 
     try {
-      const res = await uploadPhoto(file, true);
+      const processed = await compressImage(file);
+      const res = await uploadPhoto(processed, true);
       if (res?.ok) {
         if (res.user) {
           const userPhotos = res.user.photos || [];
@@ -166,7 +205,6 @@ export default function ProfileCreate() {
             { url: res.url, public_id: res.public_id },
           ]);
         }
-        showSuccess("Photo uploaded successfully! 📸", "Upload Success");
       } else {
         showError("Upload failed. Please try again.", "Upload Failed");
         setPreviews((prev) => prev.slice(0, -1));
@@ -215,42 +253,34 @@ export default function ProfileCreate() {
   };
 
   const deletePhoto = async (public_id) => {
-    showConfirm(
-      "Are you sure you want to delete this photo? This action cannot be undone.",
-      async () => {
-        try {
-          setLoading(true);
-          const res = await api.deletePhoto(public_id);
-          if (res?.ok) {
-            setUser(res.user);
-            const userPhotos = res.user.photos || [];
-            setPhotos(
-              userPhotos.map((p) => ({
-                url: p.url,
-                public_id: p.public_id,
-                isProfile: p.isProfile,
-              }))
-            );
-            setPreviews(userPhotos.map((p) => p.url));
-            showSuccess("Photo deleted successfully! 🗑️", "Photo Deleted");
-          } else {
-            showError(
-              "Failed to delete photo. Please try again.",
-              "Delete Failed"
-            );
-          }
-        } catch (err) {
-          console.error("Delete photo failed:", err);
-          showError(
-            "Failed to delete photo. Please try again.",
-            "Delete Failed"
-          );
-        } finally {
-          setLoading(false);
-        }
-      },
-      "Delete Photo?"
-    );
+    try {
+      setLoading(true);
+      const idx = photos.findIndex((p) => p.public_id === public_id);
+      if (idx >= 0) {
+        setPreviews((prev) => prev.filter((_, i) => i !== idx));
+      }
+      setPhotos((prev) => prev.filter((p) => p.public_id !== public_id));
+      const res = await api.deletePhoto(public_id);
+      if (res?.ok) {
+        setUser(res.user);
+        const userPhotos = res.user.photos || [];
+        setPhotos(
+          userPhotos.map((p) => ({
+            url: p.url,
+            public_id: p.public_id,
+            isProfile: p.isProfile,
+          }))
+        );
+        setPreviews(userPhotos.map((p) => p.url));
+      } else {
+        showError("Failed to delete photo. Please try again.", "Delete Failed");
+      }
+    } catch (err) {
+      console.error("Delete photo failed:", err);
+      showError("Failed to delete photo. Please try again.", "Delete Failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async () => {
@@ -295,7 +325,7 @@ export default function ProfileCreate() {
         education: education || "",
         profession: profession || "",
         location: {
-          city: location.city || "",
+          city: "",
           state: location.state || "",
         },
         drinking: lifestyle.drinking || "",
@@ -403,9 +433,6 @@ export default function ProfileCreate() {
               <option value="">Select</option>
               <option value="single">Single</option>
               <option value="married">Married</option>
-              <option value="divorced">Divorced</option>
-              <option value="widowed">Widowed</option>
-              <option value="complicated">It's Complicated</option>
             </select>
           </div>
 
@@ -464,41 +491,73 @@ export default function ProfileCreate() {
             </select>
           </div>
 
-          {/* City with GPS */}
-          <div>
-            <label className="block text-sm text-[#77001c] mb-1">City</label>
-            <div className="location-search-wrapper">
-              <LocationSearch
-                value={location.city}
-                onChange={(locationData) => {
-                  if (typeof locationData === 'string') {
-                    // Manual city input
-                    setLocation(prev => ({ ...prev, city: locationData }));
-                  } else {
-                    // GPS location with city and state
-                    setLocation({ city: locationData.city, state: locationData.state });
-                  }
-                }}
-                placeholder="Search your city or use GPS"
+          <div className="sm:col-span-2">
+            <label className="block text-sm text-[#77001c] mb-1">State</label>
+            <div className="relative">
+              <input
+                type="text"
+                value={location.state}
+                onChange={(e) =>
+                  setLocation((prev) => ({ ...prev, state: e.target.value }))
+                }
+                placeholder="e.g. Gujarat"
+                className="w-full p-3 rounded-xl border border-[#ff4c91] bg-white text-black pr-20"
               />
-            </div>
-          </div>
 
-          {/* State - Auto-filled from GPS */}
-          <div>
-            <label className="block text-sm text-[#77001c] mb-1">
-              State {location.state ? '(Auto-filled from GPS)' : '(Use GPS to auto-fill)'}
-            </label>
-            <input
-              type="text"
-              value={location.state}
-              onChange={(e) => setLocation(prev => ({ ...prev, state: e.target.value }))}
-              className={`w-full p-3 rounded-xl border border-[#ff4c91] text-black ${
-                location.state ? 'bg-green-50' : 'bg-gray-100'
-              }`}
-              placeholder={location.state ? location.state : 'Use GPS tracker to auto-fill state'}
-              readOnly={!location.state}
-            />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {location.state && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLocation((prev) => ({ ...prev, state: "" }))
+                    }
+                    className="p-1 text-gray-400 hover:text-gray-600"
+                  >
+                    <XMarkIcon className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const el = document.getElementById("state-dropdown");
+                    if (el) el.classList.toggle("hidden");
+                  }}
+                  className="p-1 text-[#cc0033] hover:text-[#ff1971]"
+                >
+                  <ChevronDownIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div
+                id="state-dropdown"
+                className="absolute z-50 w-full mt-1 bg-white border border-[#ff4c91] rounded-xl shadow-lg max-h-60 overflow-y-auto hidden"
+              >
+                <div className="px-3 py-2 text-xs font-medium text-[#77001c] bg-pink-50 border-b border-[#ff4c91]">
+                  Select Common States
+                </div>
+                <div className="grid grid-cols-2 gap-2 p-3">
+                  {INDIAN_STATES.map((st) => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => {
+                        setLocation((prev) => ({ ...prev, state: st }));
+                        const el = document.getElementById("state-dropdown");
+                        if (el) el.classList.add("hidden");
+                      }}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        location.state === st
+                          ? "bg-[#cc0033] text-white"
+                          : "bg-pink-50 text-[#77001c] hover:bg-pink-100"
+                      }`}
+                    >
+                      {st}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Drinking - Dropdown */}

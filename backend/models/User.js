@@ -92,6 +92,10 @@ const UserSchema = new mongoose.Schema({
 
   coins: { type: Number, default: 0 },
   
+  // Simple premium flags for manual Lifetime Access
+  isPremium: { type: Boolean, default: false },
+  premiumType: { type: String, default: "none" },
+  
   // First subscription tracking
   requiresFirstSubscription: { type: Boolean, default: false },
   hasCompletedFirstSubscription: { type: Boolean, default: false },

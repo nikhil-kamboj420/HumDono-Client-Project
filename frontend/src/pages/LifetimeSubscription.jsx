@@ -1,47 +1,50 @@
 // pages/LifetimeSubscription.jsx
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeftIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import api from '../lib/api';
-import { useCustomAlert } from '../hooks/useCustomAlert';
-import CustomAlert from '../components/CustomAlert';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeftIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import api from "../lib/api";
+import { useCustomAlert } from "../hooks/useCustomAlert";
+import CustomAlert from "../components/CustomAlert";
 
 export default function LifetimeSubscription() {
   const [loading, setLoading] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [finalPrice, setFinalPrice] = useState(699);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
+  const RAZORPAY_ENABLED = import.meta.env.VITE_RAZORPAY_ENABLED === "true";
 
   const LIFETIME_PRICE = 699;
 
   useEffect(() => {
-    loadRazorpayScript();
+    if (RAZORPAY_ENABLED) {
+      loadRazorpayScript();
+    }
     checkUserGender();
-  }, []);
+  }, [RAZORPAY_ENABLED]);
 
   const checkUserGender = async () => {
     try {
       const response = await api.getUserProfile();
       setCurrentUser(response.user);
-      
+
       // Redirect females away from subscription page
-      if (response.user?.gender?.toLowerCase() === 'female') {
-        showError('Subscription not required for female users', 'Free Access');
-        setTimeout(() => navigate('/'), 1500);
+      if (response.user?.gender?.toLowerCase() === "female") {
+        showError("Subscription not required for female users", "Free Access");
+        setTimeout(() => navigate("/"), 1500);
         return;
       }
 
       // Redirect users who already have lifetime subscription
       if (response.user?.subscription?.isLifetime === true) {
-        showSuccess('You already have lifetime access!', 'Active Subscription');
-        setTimeout(() => navigate('/'), 1500);
+        showSuccess("You already have lifetime access!", "Active Subscription");
+        setTimeout(() => navigate("/"), 1500);
         return;
       }
     } catch (error) {
-      console.error('Error fetching user:', error);
+      console.error("Error fetching user:", error);
     }
   };
 
@@ -52,8 +55,8 @@ export default function LifetimeSubscription() {
         return;
       }
 
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
@@ -62,31 +65,35 @@ export default function LifetimeSubscription() {
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) {
-      showError('Please enter a coupon code', 'Invalid Coupon');
+      showError("Please enter a coupon code", "Invalid Coupon");
       return;
     }
 
     try {
-      const response = await api.post('/coupons/validate', {
+      const response = await api.post("/coupons/validate", {
         code: couponCode,
         orderAmount: LIFETIME_PRICE,
-        orderType: 'subscription'
+        orderType: "subscription",
       });
 
       if (response.success) {
         const discountAmount = response.discount.amount;
         setDiscount(discountAmount);
         setFinalPrice(LIFETIME_PRICE - discountAmount);
-        showSuccess(`Coupon applied! ₹${discountAmount} off`, 'Success');
+        showSuccess(`Coupon applied! ₹${discountAmount} off`, "Success");
       }
     } catch (error) {
-      showError(error.response?.data?.error || 'Invalid coupon code', 'Coupon Error');
+      showError(
+        error.response?.data?.error || "Invalid coupon code",
+        "Coupon Error"
+      );
     }
   };
 
   const handlePurchase = async () => {
-    setLoading(true);
-
+    navigate("/lifetime-access/scan-to-pay");
+    /*
+    // EXISTING RAZORPAY LOGIC - TEMPORARILY DISABLED
     try {
       // Create order
       const orderResponse = await api.post('/payments/create-order', {
@@ -147,14 +154,17 @@ export default function LifetimeSubscription() {
     } finally {
       setLoading(false);
     }
+    */
   };
+
+  // No manual form here; handled on submit-transaction page
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 p-4">
       <div className="max-w-md mx-auto">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="mb-6 flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5" />
@@ -174,7 +184,9 @@ export default function LifetimeSubscription() {
           <div className="p-8 text-center">
             {discount > 0 && (
               <div className="mb-2">
-                <span className="text-2xl text-gray-400 line-through">₹{LIFETIME_PRICE}</span>
+                <span className="text-2xl text-gray-400 line-through">
+                  ₹{LIFETIME_PRICE}
+                </span>
               </div>
             )}
             <div className="text-5xl font-bold text-gray-900 mb-2">
@@ -217,15 +229,27 @@ export default function LifetimeSubscription() {
               disabled={loading}
               className="w-full py-4 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Processing...' : 'Get Lifetime Access'}
+              {loading ? "Processing..." : "Get Lifetime Access"}
             </button>
           </div>
 
+          {/* Manual UPI submission moved to /lifetime-access/submit-transaction */}
+
           {/* Info */}
           <div className="px-8 pb-8 text-center text-sm text-gray-500">
-            <p>✓ Secure payment via Razorpay</p>
-            <p>✓ Instant activation</p>
-            <p>✓ No recurring charges</p>
+            {RAZORPAY_ENABLED ? (
+              <>
+                <p>✓ Secure payment via Razorpay</p>
+                <p>✓ Instant activation</p>
+                <p>✓ No recurring charges</p>
+              </>
+            ) : (
+              <>
+                <p>✓ Manual UPI transaction submission</p>
+                <p>✓ Admin will verify and activate access</p>
+                <p>✓ No recurring charges</p>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -157,7 +157,7 @@ router.delete("/:id", auth, async (req, res) => {
  * Helper function to create a notification
  * This will be used by other routes
  */
-export const createNotification = async ({ recipient, sender, type, message, data = {} }) => {
+export const createNotification = async ({ recipient, sender, type, message, data = {} }, io = null) => {
   try {
     // Don't create notification if sender and recipient are the same
     if (String(sender) === String(recipient)) return null;
@@ -175,6 +175,23 @@ export const createNotification = async ({ recipient, sender, type, message, dat
       message,
       data
     });
+
+    // Emit real-time event to recipient if socket.io available
+    try {
+      const emitter = io || (globalThis.io?.emit ? globalThis.io : null);
+      if (emitter) {
+        emitter.to(`user:${recipient}`).emit('notification:new', {
+          _id: notification._id,
+          type: notification.type,
+          message: notification.message,
+          sender: notification.sender,
+          data: notification.data,
+          createdAt: notification.createdAt,
+        });
+      }
+    } catch (e) {
+      // swallow emit errors silently
+    }
 
     return notification;
   } catch (err) {

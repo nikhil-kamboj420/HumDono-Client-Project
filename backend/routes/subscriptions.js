@@ -16,48 +16,21 @@ const razorpay = new Razorpay({
 
 // Subscription plans configuration
 const SUBSCRIPTION_PLANS = {
-  basic: {
-    name: "Basic Plan",
-    price: 299,
-    duration: 30, // days
-    coinsIncluded: 200,
-    features: {
-      unlimitedLikes: true,
-      unlimitedMessages: false,
-      prioritySupport: false,
-      profileBoost: false,
-      seeWhoLikedYou: false,
-      rewindFeature: false
-    }
-  },
-  premium: {
-    name: "Premium Plan",
+  lifetime: {
+    name: "Lifetime Access",
     price: 699,
-    duration: 30, // days
-    coinsIncluded: 600,
+    duration: 36500, // ~100 years (lifetime)
+    coinsIncluded: 200,
+    isLifetime: true,
     features: {
       unlimitedLikes: true,
       unlimitedMessages: true,
       prioritySupport: true,
       profileBoost: true,
       seeWhoLikedYou: true,
-      rewindFeature: false
-    }
+      rewindFeature: true,
+    },
   },
-  gold: {
-    name: "Gold Plan",
-    price: 1299,
-    duration: 30, // days
-    coinsIncluded: 1200,
-    features: {
-      unlimitedLikes: true,
-      unlimitedMessages: true,
-      prioritySupport: true,
-      profileBoost: true,
-      seeWhoLikedYou: true,
-      rewindFeature: true
-    }
-  }
 };
 
 /**
@@ -68,7 +41,7 @@ router.get("/plans", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({ success: false, error: "User not found" });
     }
@@ -77,13 +50,13 @@ router.get("/plans", auth, async (req, res) => {
     const plans = Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => ({
       id: key,
       ...plan,
-      isCurrent: user.subscription?.plan === key && user.subscription?.active
+      isCurrent: user.subscription?.plan === key && user.subscription?.active,
     }));
 
     res.json({
       success: true,
       plans,
-      currentSubscription: user.subscription
+      currentSubscription: user.subscription,
     });
   } catch (error) {
     console.error("GET /api/subscriptions/plans error:", error);
@@ -98,7 +71,8 @@ router.get("/plans", auth, async (req, res) => {
 router.post("/create", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { planId, couponCode, originalAmount, finalAmount, discountAmount } = req.body;
+    const { planId, couponCode, originalAmount, finalAmount, discountAmount } =
+      req.body;
 
     if (!SUBSCRIPTION_PLANS[planId]) {
       return res.status(400).json({ success: false, error: "Invalid plan" });
@@ -121,10 +95,10 @@ router.post("/create", auth, async (req, res) => {
         userId,
         planId,
         type: "subscription",
-        couponCode: couponCode || '',
+        couponCode: couponCode || "",
         originalAmount: originalAmount || plan.price,
-        discountAmount: discountAmount || 0
-      }
+        discountAmount: discountAmount || 0,
+      },
     };
 
     const razorpayOrder = await razorpay.orders.create(orderOptions);
@@ -136,12 +110,14 @@ router.post("/create", auth, async (req, res) => {
       currency: razorpayOrder.currency,
       planDetails: {
         id: planId,
-        ...plan
-      }
+        ...plan,
+      },
     });
   } catch (error) {
     console.error("POST /api/subscriptions/create error:", error);
-    res.status(500).json({ success: false, error: "Failed to create subscription order" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to create subscription order" });
   }
 });
 
@@ -152,16 +128,24 @@ router.post("/create", auth, async (req, res) => {
 router.post("/verify", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      planId,
+    } = req.body;
 
     // Verify payment signature
-    const crypto = await import('crypto');
-    const expectedSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    const crypto = await import("crypto");
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
+      .digest("hex");
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false, error: "Invalid payment signature" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid payment signature" });
     }
 
     const user = await User.findById(userId);
@@ -176,7 +160,9 @@ router.post("/verify", auth, async (req, res) => {
 
     // Calculate subscription dates
     const startDate = new Date();
-    const endDate = new Date(startDate.getTime() + (plan.duration * 24 * 60 * 60 * 1000));
+    const endDate = new Date(
+      startDate.getTime() + plan.duration * 24 * 60 * 60 * 1000
+    );
 
     // Create subscription record
     const subscription = new Subscription({
@@ -188,14 +174,16 @@ router.post("/verify", auth, async (req, res) => {
       duration: plan.duration,
       startDate,
       endDate,
-      status: 'active',
+      status: "active",
       features: plan.features,
-      paymentHistory: [{
-        date: new Date(),
-        amount: plan.price,
-        status: 'paid',
-        razorpayPaymentId: razorpay_payment_id
-      }]
+      paymentHistory: [
+        {
+          date: new Date(),
+          amount: plan.price,
+          status: "paid",
+          razorpayPaymentId: razorpay_payment_id,
+        },
+      ],
     });
 
     await subscription.save();
@@ -205,7 +193,7 @@ router.post("/verify", auth, async (req, res) => {
       active: true,
       plan: planId,
       expiresAt: endDate,
-      features: plan.features
+      features: plan.features,
     };
 
     // Add coins to user account
@@ -216,7 +204,6 @@ router.post("/verify", auth, async (req, res) => {
       user.requiresFirstSubscription = false;
       user.hasCompletedFirstSubscription = true;
       user.firstSubscriptionDate = new Date();
-
     }
 
     await user.save();
@@ -233,8 +220,8 @@ router.post("/verify", auth, async (req, res) => {
         type: "subscription",
         planId,
         planName: plan.name,
-        description: `${plan.name} subscription activated`
-      }
+        description: `${plan.name} subscription activated`,
+      },
     });
 
     res.json({
@@ -244,13 +231,15 @@ router.post("/verify", auth, async (req, res) => {
         plan: planId,
         expiresAt: endDate,
         coinsAdded: plan.coinsIncluded,
-        features: plan.features
+        features: plan.features,
       },
-      totalCoins: user.coins
+      totalCoins: user.coins,
     });
   } catch (error) {
     console.error("POST /api/subscriptions/verify error:", error);
-    res.status(500).json({ success: false, error: "Failed to verify subscription" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to verify subscription" });
   }
 });
 
@@ -262,14 +251,14 @@ router.get("/current", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    const subscription = await Subscription.findOne({ 
-      user: userId, 
-      status: 'active' 
+    const subscription = await Subscription.findOne({
+      user: userId,
+      status: "active",
     }).sort({ createdAt: -1 });
 
     res.json({
@@ -277,7 +266,7 @@ router.get("/current", auth, async (req, res) => {
       subscription: user.subscription,
       details: subscription,
       isActive: subscription?.isActive() || false,
-      remainingDays: subscription?.getRemainingDays() || 0
+      remainingDays: subscription?.getRemainingDays() || 0,
     });
   } catch (error) {
     console.error("GET /api/subscriptions/current error:", error);
@@ -292,18 +281,20 @@ router.get("/current", auth, async (req, res) => {
 router.post("/cancel", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
-    
-    const subscription = await Subscription.findOne({ 
-      user: userId, 
-      status: 'active' 
+
+    const subscription = await Subscription.findOne({
+      user: userId,
+      status: "active",
     });
 
     if (!subscription) {
-      return res.status(404).json({ success: false, error: "No active subscription found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "No active subscription found" });
     }
 
     // Update subscription status
-    subscription.status = 'cancelled';
+    subscription.status = "cancelled";
     subscription.autoRenew = false;
     await subscription.save();
 
@@ -315,11 +306,13 @@ router.post("/cancel", auth, async (req, res) => {
     res.json({
       success: true,
       message: "Subscription cancelled successfully",
-      validUntil: subscription.endDate
+      validUntil: subscription.endDate,
     });
   } catch (error) {
     console.error("POST /api/subscriptions/cancel error:", error);
-    res.status(500).json({ success: false, error: "Failed to cancel subscription" });
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to cancel subscription" });
   }
 });
 

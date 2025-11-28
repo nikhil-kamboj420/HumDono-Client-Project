@@ -15,7 +15,7 @@ export default function Wallet() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null); // Track which package is being purchased
   const [transactions, setTransactions] = useState([]);
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [showCoupons, setShowCoupons] = useState(false);
@@ -36,14 +36,13 @@ export default function Wallet() {
         return;
       }
 
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
       script.onload = () => {
-  
         resolve(true);
       };
       script.onerror = () => {
-        console.error('Failed to load Razorpay script');
+        console.error("Failed to load Razorpay script");
         resolve(false);
       };
       document.body.appendChild(script);
@@ -63,7 +62,7 @@ export default function Wallet() {
 
   const fetchTransactions = async () => {
     try {
-      const response = await api.get('/payments/transactions');
+      const response = await api.get("/payments/transactions");
       if (response.success) {
         setTransactions(response.transactions || []);
       }
@@ -74,35 +73,35 @@ export default function Wallet() {
 
   const fetchAvailableCoupons = async () => {
     try {
-      const response = await api.get('/coupons/available?orderType=coins');
+      const response = await api.get("/coupons/available?orderType=coins");
       if (response.success) {
         setAvailableCoupons(response.coupons || []);
       }
     } catch (error) {
-      console.error('Error fetching coupons:', error);
+      console.error("Error fetching coupons:", error);
     }
   };
 
   const validateCoupon = async (code, amount) => {
     try {
-      const response = await api.post('/coupons/validate', {
+      const response = await api.post("/coupons/validate", {
         code,
         orderAmount: amount,
-        orderType: 'coins'
+        orderType: "coins",
       });
-      
+
       if (response.success) {
         setAppliedCoupon(response);
         showSuccess(
           `Coupon applied! You save ₹${response.discount.amount}`,
-          'Coupon Applied'
+          "Coupon Applied"
         );
         return response;
       }
     } catch (error) {
       showError(
-        error.response?.data?.error || 'Invalid coupon code',
-        'Coupon Error'
+        error.response?.data?.error || "Invalid coupon code",
+        "Coupon Error"
       );
       return null;
     }
@@ -110,7 +109,7 @@ export default function Wallet() {
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
-    setCouponCode('');
+    setCouponCode("");
   };
 
   const coinPackages = [
@@ -124,120 +123,138 @@ export default function Wallet() {
     if (purchasing) return;
 
     setPurchasing(pkg.coins + pkg.bonus); // Set to specific package total coins
-    
+
     let finalAmount = pkg.price;
     let discountAmount = 0;
-    
+
     // Apply coupon if available
     if (appliedCoupon) {
       finalAmount = appliedCoupon.orderSummary.finalAmount;
       discountAmount = appliedCoupon.orderSummary.discountAmount;
     }
 
+    // Razorpay checkout
     try {
       // Ensure Razorpay script is loaded
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded || !window.Razorpay) {
-        throw new Error('Payment gateway not available. Please refresh the page.');
+        throw new Error(
+          "Payment gateway not available. Please refresh the page."
+        );
       }
 
       // Create order with coupon
-      const orderResponse = await api.post('/payments/create-order', {
+      const orderResponse = await api.post("/payments/create-order", {
         amount: finalAmount,
         originalAmount: pkg.price,
         coins: pkg.coins + pkg.bonus,
-        currency: 'INR',
+        currency: "INR",
         couponCode: appliedCoupon?.coupon?.code || null,
-        discountAmount
+        discountAmount,
       });
 
       if (!orderResponse.success) {
-        throw new Error(orderResponse.error || 'Failed to create order');
+        throw new Error(orderResponse.error || "Failed to create order");
       }
 
       // Initialize Razorpay checkout
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_Ri6GYh8gLqAcT0',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_Ri6GYh8gLqAcT0",
         amount: orderResponse.amount,
         currency: orderResponse.currency,
-        name: 'HumDono Coins',
-        description: `${pkg.coins + pkg.bonus} Coins Package${appliedCoupon ? ` (${appliedCoupon.coupon.code} applied)` : ''}`,
+        name: "HumDono Coins",
+        description: `${pkg.coins + pkg.bonus} Coins Package${
+          appliedCoupon ? ` (${appliedCoupon.coupon.code} applied)` : ""
+        }`,
         order_id: orderResponse.order_id,
         handler: async function (response) {
           try {
             // Verify payment
-            const verifyResponse = await api.post('/payments/verify', {
+            const verifyResponse = await api.post("/payments/verify", {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature
+              razorpay_signature: response.razorpay_signature,
             });
 
             if (verifyResponse.success) {
-              playSound('gift');
-              const message = appliedCoupon 
-                ? `Payment successful! ${pkg.coins + pkg.bonus} coins added. You saved ₹${discountAmount} with coupon ${appliedCoupon.coupon.code}! 💰`
-                : `Successfully purchased ${pkg.coins + pkg.bonus} coins! 💰 Your new balance: ${verifyResponse.totalCoins} coins`;
-              
+              playSound("gift");
+              const message = appliedCoupon
+                ? `Payment successful! ${
+                    pkg.coins + pkg.bonus
+                  } coins added. You saved ₹${discountAmount} with coupon ${
+                    appliedCoupon.coupon.code
+                  }! 💰`
+                : `Successfully purchased ${
+                    pkg.coins + pkg.bonus
+                  } coins! 💰 Your new balance: ${
+                    verifyResponse.totalCoins
+                  } coins`;
+
               showSuccess(message, "Payment Successful");
-              
+
               // Clear applied coupon
               setAppliedCoupon(null);
-              setCouponCode('');
-              
+              setCouponCode("");
+
               // Refresh user data and transactions
               await fetchUserData();
               await fetchTransactions();
             } else {
-              throw new Error(verifyResponse.error || 'Payment verification failed');
+              throw new Error(
+                verifyResponse.error || "Payment verification failed"
+              );
             }
           } catch (error) {
-            console.error('Payment verification error:', error);
-            playSound('error');
+            console.error("Payment verification error:", error);
+            playSound("error");
             showError(
-              error.response?.data?.error || error.message || 'Payment verification failed. Please contact support.',
-              'Verification Failed'
+              error.response?.data?.error ||
+                error.message ||
+                "Payment verification failed. Please contact support.",
+              "Verification Failed"
             );
           } finally {
             setPurchasing(null);
           }
         },
         prefill: {
-          name: user?.name || '',
-          email: user?.email || '',
-          contact: user?.phone || ''
+          name: user?.name || "",
+          email: user?.email || "",
+          contact: user?.phone || "",
         },
         theme: {
-          color: '#ec4899' // Pink color matching app theme
+          color: "#ec4899", // Pink color matching app theme
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             setPurchasing(null);
-            showError('Payment cancelled', 'Cancelled');
-          }
-        }
+            showError("Payment cancelled", "Cancelled");
+          },
+        },
       };
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-
     } catch (error) {
-      console.error('Payment error:', error);
-      playSound('error');
-      
+      console.error("Payment error:", error);
+      playSound("error");
+
       // Handle authentication errors
       if (error.response?.status === 401) {
         showError(
-          'Your session has expired. Please login again.',
-          'Session Expired'
+          "Your session has expired. Please login again.",
+          "Session Expired"
         );
         setTimeout(() => {
           localStorage.clear();
-          window.location.href = '/login';
+          window.location.href = "/login";
         }, 2000);
       } else {
         showError(
-          error.response?.data?.error || error.message || 'Failed to initiate payment. Please try again.',
-          'Payment Failed'
+          error.response?.data?.error ||
+            error.message ||
+            "Failed to initiate payment. Please try again.",
+          "Payment Failed"
         );
       }
       setPurchasing(null);
@@ -256,7 +273,7 @@ export default function Wallet() {
   }
 
   // Redirect females - they don't need to buy coins (CHECK THIS FIRST!)
-  if (user?.gender?.toLowerCase() === 'female') {
+  if (user?.gender?.toLowerCase() === "female") {
     return (
       <div className="min-h-screen bg-sunset-gradient lg:pr-64 pb-20 lg:pb-0">
         {/* Header */}
@@ -273,10 +290,12 @@ export default function Wallet() {
                 src="/logo.png"
                 alt="HumDono Logo"
                 className="h-8 w-8 object-contain cursor-pointer"
-                onClick={() => navigate('/')}
+                onClick={() => navigate("/")}
               />
               <div>
-                <h1 className="text-2xl font-bold text-passion">💝 Free for You!</h1>
+                <h1 className="text-2xl font-bold text-passion">
+                  💝 Free for You!
+                </h1>
                 <p className="text-gray-600">Unlimited messaging</p>
               </div>
             </div>
@@ -300,12 +319,15 @@ export default function Wallet() {
 
           {/* Info Card */}
           <div className="card-romantic p-6">
-            <h3 className="text-lg font-semibold text-passion mb-3">💬 Messaging</h3>
+            <h3 className="text-lg font-semibold text-passion mb-3">
+              💬 Messaging
+            </h3>
             <p className="text-gray-600 mb-4">
-              You can send unlimited messages to all your matches without any cost!
+              You can send unlimited messages to all your matches without any
+              cost!
             </p>
             <button
-              onClick={() => navigate('/messages')}
+              onClick={() => navigate("/messages")}
               className="w-full btn-romantic py-3"
             >
               Go to Messages
@@ -314,9 +336,12 @@ export default function Wallet() {
 
           {/* Why Free Section */}
           <div className="bg-pink-50 rounded-xl p-6 border border-pink-200">
-            <h3 className="text-lg font-semibold text-passion mb-3">Why is it free?</h3>
+            <h3 className="text-lg font-semibold text-passion mb-3">
+              Why is it free?
+            </h3>
             <p className="text-gray-700 text-sm leading-relaxed">
-              We believe in creating a balanced community. Female users get free access to encourage more genuine connections and conversations. 💕
+              We believe in creating a balanced community. Female users get free
+              access to encourage more genuine connections and conversations. 💕
             </p>
           </div>
         </div>
@@ -327,8 +352,8 @@ export default function Wallet() {
   // Check if male user has lifetime subscription (ONLY FOR MALE USERS)
   // If no lifetime subscription, redirect to subscription page
   const hasLifetimeSubscription = user?.subscription?.isLifetime === true;
-  
-  if (user?.gender?.toLowerCase() === 'male' && !hasLifetimeSubscription) {
+
+  if (user?.gender?.toLowerCase() === "male" && !hasLifetimeSubscription) {
     return (
       <div className="min-h-screen bg-sunset-gradient lg:pr-64 pb-20 lg:pb-0">
         <div className="max-w-md mx-auto px-4 py-6">
@@ -338,10 +363,11 @@ export default function Wallet() {
               Subscription Required
             </h2>
             <p className="text-gray-600 mb-6">
-              Please subscribe first to unlock coin purchases and start chatting!
+              Please subscribe first to unlock coin purchases and start
+              chatting!
             </p>
             <button
-              onClick={() => navigate('/subscription?required=true')}
+              onClick={() => navigate("/subscription?required=true")}
               className="btn-romantic py-3 px-6 w-full"
             >
               View Subscription Plans
@@ -352,8 +378,9 @@ export default function Wallet() {
     );
   }
 
-  const hasActiveSubscription = user?.subscription?.active && 
-    user?.subscription?.expiresAt && 
+  const hasActiveSubscription =
+    user?.subscription?.active &&
+    user?.subscription?.expiresAt &&
     new Date(user.subscription.expiresAt) > new Date();
 
   return (
@@ -372,7 +399,7 @@ export default function Wallet() {
               src="/logo.png"
               alt="HumDono Logo"
               className="h-8 w-8 object-contain cursor-pointer"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
             />
             <div>
               <h1 className="text-2xl font-bold text-passion">💰 Wallet</h1>
@@ -402,24 +429,33 @@ export default function Wallet() {
             <div>
               <p className="font-semibold text-passion">Message Cost</p>
               <p className="text-gray-600 text-sm">10 coins per message</p>
-              <p className="text-gray-500 text-xs">First message to each match is free</p>
+              <p className="text-gray-500 text-xs">
+                First message to each match is free
+              </p>
             </div>
           </div>
         </div>
 
         {/* Coupon Section */}
         <div className="card-romantic p-6">
-          <h3 className="text-lg font-semibold text-passion mb-4">🎫 Coupons & Offers</h3>
-          
+          <h3 className="text-lg font-semibold text-passion mb-4">
+            🎫 Coupons & Offers
+          </h3>
+
           {/* Applied Coupon Display */}
           {appliedCoupon && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-semibold text-green-800">{appliedCoupon.coupon.code}</p>
-                  <p className="text-green-600 text-sm">{appliedCoupon.coupon.description}</p>
+                  <p className="font-semibold text-green-800">
+                    {appliedCoupon.coupon.code}
+                  </p>
+                  <p className="text-green-600 text-sm">
+                    {appliedCoupon.coupon.description}
+                  </p>
                   <p className="text-green-700 text-sm font-medium">
-                    You save ₹{appliedCoupon.discount.amount} ({appliedCoupon.discount.percentage}% off)
+                    You save ₹{appliedCoupon.discount.amount} (
+                    {appliedCoupon.discount.percentage}% off)
                   </p>
                 </div>
                 <button
@@ -444,7 +480,10 @@ export default function Wallet() {
                   className="flex-1 px-3 py-2 border border-pink-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
                 />
                 <button
-                  onClick={() => couponCode && validateCoupon(couponCode, coinPackages[0].price)}
+                  onClick={() =>
+                    couponCode &&
+                    validateCoupon(couponCode, coinPackages[0].price)
+                  }
                   disabled={!couponCode}
                   className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -459,9 +498,10 @@ export default function Wallet() {
                     onClick={() => setShowCoupons(!showCoupons)}
                     className="text-pink-600 text-sm font-medium hover:text-pink-700"
                   >
-                    {showCoupons ? 'Hide' : 'Show'} available coupons ({availableCoupons.length})
+                    {showCoupons ? "Hide" : "Show"} available coupons (
+                    {availableCoupons.length})
                   </button>
-                  
+
                   {showCoupons && (
                     <div className="mt-3 space-y-2">
                       {availableCoupons.map((coupon) => (
@@ -475,17 +515,23 @@ export default function Wallet() {
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-semibold text-pink-800">{coupon.code}</p>
-                              <p className="text-pink-600 text-sm">{coupon.description}</p>
+                              <p className="font-semibold text-pink-800">
+                                {coupon.code}
+                              </p>
+                              <p className="text-pink-600 text-sm">
+                                {coupon.description}
+                              </p>
                             </div>
                             <div className="text-right">
                               <p className="text-pink-700 text-sm font-medium">
-                                {coupon.discountType === 'percentage' 
-                                  ? `${coupon.discountValue}% OFF` 
+                                {coupon.discountType === "percentage"
+                                  ? `${coupon.discountValue}% OFF`
                                   : `₹${coupon.discountValue} OFF`}
                               </p>
                               {coupon.minOrderAmount > 0 && (
-                                <p className="text-pink-500 text-xs">Min ₹{coupon.minOrderAmount}</p>
+                                <p className="text-pink-500 text-xs">
+                                  Min ₹{coupon.minOrderAmount}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -501,13 +547,15 @@ export default function Wallet() {
 
         {/* Buy Coins */}
         <div className="card-romantic p-6">
-          <h3 className="text-lg font-semibold text-passion mb-4">💎 Buy Coins</h3>
+          <h3 className="text-lg font-semibold text-passion mb-4">
+            💎 Buy Coins
+          </h3>
           <div className="grid grid-cols-2 gap-3">
             {coinPackages.map((pkg, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className={`border-2 rounded-xl p-4 hover:border-pink-400 transition-all hover-romantic ${
-                  pkg.popular ? 'border-pink-400 bg-pink-50' : 'border-pink-200'
+                  pkg.popular ? "border-pink-400 bg-pink-50" : "border-pink-200"
                 }`}
               >
                 <div className="text-center">
@@ -516,33 +564,45 @@ export default function Wallet() {
                       Popular
                     </span>
                   )}
-                  <p className="text-3xl font-bold text-passion">{pkg.coins + pkg.bonus}</p>
+                  <p className="text-3xl font-bold text-passion">
+                    {pkg.coins + pkg.bonus}
+                  </p>
                   <p className="text-sm text-gray-600">coins</p>
                   {pkg.bonus > 0 && (
-                    <p className="text-xs text-green-600 font-semibold">+{pkg.bonus} bonus!</p>
+                    <p className="text-xs text-green-600 font-semibold">
+                      +{pkg.bonus} bonus!
+                    </p>
                   )}
-                  
+
                   {/* Price Display with Coupon */}
                   <div className="mt-2">
                     {appliedCoupon ? (
                       <div className="text-center">
-                        <p className="text-xs text-gray-500 line-through">₹{pkg.price}</p>
+                        <p className="text-xs text-gray-500 line-through">
+                          ₹{pkg.price}
+                        </p>
                         <p className="text-sm font-bold text-green-600">
                           ₹{pkg.price - appliedCoupon.discount.amount}
                         </p>
-                        <p className="text-xs text-green-600">Save ₹{appliedCoupon.discount.amount}</p>
+                        <p className="text-xs text-green-600">
+                          Save ₹{appliedCoupon.discount.amount}
+                        </p>
                       </div>
                     ) : (
-                      <p className="text-sm font-bold text-passion">₹{pkg.price}</p>
+                      <p className="text-sm font-bold text-passion">
+                        ₹{pkg.price}
+                      </p>
                     )}
                   </div>
-                  
+
                   <button
                     onClick={() => handleBuyCoins(pkg)}
                     disabled={purchasing !== null}
                     className="w-full mt-3 btn-romantic py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {purchasing === pkg.coins + pkg.bonus ? 'Processing...' : 'Buy Now'}
+                    {purchasing === pkg.coins + pkg.bonus
+                      ? "Processing..."
+                      : "Buy Now"}
                   </button>
                 </div>
               </div>
@@ -555,7 +615,9 @@ export default function Wallet() {
 
         {/* Transaction History */}
         <div className="card-romantic p-6">
-          <h3 className="text-lg font-semibold text-passion mb-4">📜 Recent Transactions</h3>
+          <h3 className="text-lg font-semibold text-passion mb-4">
+            📜 Recent Transactions
+          </h3>
           {transactions.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <p className="text-4xl mb-2">💳</p>
@@ -565,24 +627,32 @@ export default function Wallet() {
           ) : (
             <div className="space-y-3">
               {transactions.slice(0, 10).map((transaction) => (
-                <div key={transaction._id} className="flex items-center justify-between p-3 bg-pink-50 rounded-lg border border-pink-200">
+                <div
+                  key={transaction._id}
+                  className="flex items-center justify-between p-3 bg-pink-50 rounded-lg border border-pink-200"
+                >
                   <div>
                     <p className="font-semibold text-gray-900">
                       {transaction.coins} Coins
                     </p>
                     <p className="text-xs text-gray-500">
-                      {new Date(transaction.createdAt).toLocaleDateString()} at {new Date(transaction.createdAt).toLocaleTimeString()}
+                      {new Date(transaction.createdAt).toLocaleDateString()} at{" "}
+                      {new Date(transaction.createdAt).toLocaleTimeString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-passion">₹{transaction.amount}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      transaction.status === 'paid' 
-                        ? 'bg-green-100 text-green-700' 
-                        : transaction.status === 'failed'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <p className="font-semibold text-passion">
+                      ₹{transaction.amount}
+                    </p>
+                    <span
+                      className={`text-xs px-2 py-1 rounded-full ${
+                        transaction.status === "paid"
+                          ? "bg-green-100 text-green-700"
+                          : transaction.status === "failed"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
+                      }`}
+                    >
                       {transaction.status}
                     </span>
                   </div>
