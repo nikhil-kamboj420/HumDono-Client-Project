@@ -34,6 +34,9 @@ import Notifications from "./pages/Notifications";
 import NotificationPopup from "./components/NotificationPopup";
 import OfflineIndicator from "./components/OfflineIndicator";
 import { playSound } from "./utils/simpleSound";
+import Contact from "./pages/Contact";
+import Terms from "./pages/Terms";
+import RefundPolicy from "./pages/RefundPolicy";
 
 function App() {
   const nav = useNavigate();
@@ -101,10 +104,10 @@ function App() {
           type === "message"
             ? "message"
             : type === "match"
-            ? "match"
-            : type === "like"
-            ? "notification"
-            : "notification";
+              ? "match"
+              : type === "like"
+                ? "notification"
+                : "notification";
         playSound(soundType);
 
         // Refresh notification counts on event
@@ -179,6 +182,11 @@ function App() {
         <Route path="/verify-registration" element={<VerifyRegistration />} />
         <Route path="/profile/create" element={<ProfileCreate />} />
 
+        {/* Public Pages for KYC Verification */}
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/refund-policy" element={<RefundPolicy />} />
+
         <Route element={<RequireAuth />}>
           <Route path="/" element={<HomeFeed />} />
           <Route path="/matches" element={<Matches />} />
@@ -196,26 +204,26 @@ function App() {
 
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/wallet" element={<Wallet />} />
-          
+
           {/* Manual Payment Routes for Wallet (Coins) */}
           <Route path="/wallet/scan-to-pay" element={<GenericScanToPayPage />} />
           <Route path="/wallet/submit-transaction" element={<GenericSubmitTransactionPage />} />
-          
+
           {/* Manual Payment Routes for Boosts */}
           <Route path="/boosts/scan-to-pay" element={<GenericScanToPayPage />} />
           <Route path="/boosts/submit-transaction" element={<GenericSubmitTransactionPage />} />
-          
+
           {/* Lifetime Subscription Routes */}
           <Route path="/lifetime-access" element={<LifetimeSubscription />} />
           <Route path="/lifetime-access/scan-to-pay" element={<ScanToPayPage />} />
           <Route path="/lifetime-access/submit-transaction" element={<ManualPaymentFormPage />} />
-          
+
           {/* Subscription Routes */}
           <Route path="/subscription" element={<LifetimeSubscription />} />
           <Route path="/subscription/plans" element={<Subscription />} />
           <Route path="/subscription/scan-to-pay" element={<GenericScanToPayPage />} />
           <Route path="/subscription/submit-transaction" element={<GenericSubmitTransactionPage />} />
-          
+
           <Route path="/buy" element={<div className="p-6">Buy coins page (placeholder)</div>} />
         </Route>
 

@@ -45,16 +45,23 @@ const Chat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Socket.io for real-time messages
+  // Socket.io for real-time messages - OPTIMIZED
   useEffect(() => {
     const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
-    const socket = io(socketUrl, { withCredentials: true });
+    const socket = io(socketUrl, {
+      withCredentials: true,
+      transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
 
     // Join user's personal room
     try {
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       if (currentUser?._id) {
         socket.emit("user:join", currentUser._id);
+        console.log("✅ Joined socket room:", currentUser._id);
       }
     } catch (err) {
       console.error("Failed to join socket room:", err);
@@ -62,12 +69,31 @@ const Chat = () => {
 
     // Listen for new messages
     socket.on("message:new", (data) => {
+      console.log("📨 Received new message via socket:", data);
       const { message, matchId: incomingMatchId } = data;
 
       // Only add message if it belongs to the current chat
       if (String(incomingMatchId) === String(matchId)) {
-        setMessages((prev) => [...prev, message]);
+        setMessages((prev) => {
+          // Prevent duplicates
+          const exists = prev.some(m => m._id === message._id);
+          if (exists) return prev;
+          return [...prev, message];
+        });
       }
+    });
+
+    // Connection status logging
+    socket.on("connect", () => {
+      console.log("✅ Socket connected");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("❌ Socket disconnected");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error);
     });
 
     return () => {
@@ -108,13 +134,33 @@ const Chat = () => {
     e.preventDefault();
     if (!newMessage.trim() || sending) return;
 
+    const messageContent = newMessage.trim();
     setSending(true);
+    setNewMessage(""); // Clear input immediately for better UX
+
+    // OPTIMISTIC UPDATE - Show message immediately
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const tempMessage = {
+      _id: `temp_${Date.now()}`,
+      content: messageContent,
+      sender: {
+        _id: currentUser._id,
+        name: currentUser.name,
+        photos: currentUser.photos || [],
+      },
+      createdAt: new Date().toISOString(),
+      messageType: "text",
+      isOptimistic: true, // Flag to identify temporary message
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+
     try {
       let response;
 
       if (isDirectMessage && targetUserId) {
         // Send direct message (females only)
-        response = await api.sendDirectMessage(targetUserId, newMessage.trim());
+        response = await api.sendDirectMessage(targetUserId, messageContent);
 
         // After first message, navigate to the actual match chat
         if (response.matchId) {
@@ -126,21 +172,28 @@ const Chat = () => {
         }
       } else {
         // Regular message
-        response = await api.sendMessage(matchId, newMessage.trim());
+        response = await api.sendMessage(matchId, messageContent);
       }
 
-      setMessages((prev) => [...prev, response.message]);
-      setNewMessage(" ");
+      // Replace optimistic message with real message
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === tempMessage._id ? response.message : msg
+        )
+      );
 
-      // Show coins deduction notification if applicable
+      // Show coins deduction notification if applicable (silently)
       if (response.coinsDeducted > 0) {
-        showSuccess(
-          `Message sent! ${response.coinsDeducted} coins deducted. Remaining: ${response.remainingCoins} coins 💰`,
-          "Message Sent"
+        console.log(
+          `💰 ${response.coinsDeducted} coins deducted. Remaining: ${response.remainingCoins}`
         );
       }
     } catch (error) {
       console.error("Error sending message:", error);
+
+      // Remove optimistic message on error
+      setMessages((prev) => prev.filter((msg) => msg._id !== tempMessage._id));
+      setNewMessage(messageContent); // Restore message text
 
       if (
         error.response?.status === 403 &&

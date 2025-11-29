@@ -144,13 +144,21 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
     // Populate sender info
     await message.populate("sender", "name photos");
 
-    // Emit real-time message event to receiver
+    // Emit real-time message event to BOTH users
     const io = req.app?.locals?.io;
     if (io) {
-      io.to(`user:${receiverId}`).emit('message:new', {
+      const messageData = {
         message,
         matchId: match._id,
-      });
+      };
+      
+      // Send to receiver
+      io.to(`user:${receiverId}`).emit('message:new', messageData);
+      
+      // Also send to sender for multi-device sync
+      io.to(`user:${senderId}`).emit('message:new', messageData);
+      
+      console.log(`📤 Message emitted to sender:${senderId} and receiver:${receiverId}`);
     }
 
     res.json({
@@ -335,13 +343,21 @@ router.post("/:matchId", auth, async (req, res) => {
     // Populate sender info for response
     await message.populate("sender", "name photos");
 
-    // Emit real-time message event to receiver
+    // Emit real-time message event to BOTH users
     const io = req.app?.locals?.io;
     if (io) {
-      io.to(`user:${receiverId}`).emit('message:new', {
+      const messageData = {
         message,
         matchId,
-      });
+      };
+      
+      // Send to receiver
+      io.to(`user:${receiverId}`).emit('message:new', messageData);
+      
+      // Also send to sender for multi-device sync
+      io.to(`user:${userId}`).emit('message:new', messageData);
+      
+      console.log(`📤 Message emitted to sender:${userId} and receiver:${receiverId}`);
     }
 
     res.json({
