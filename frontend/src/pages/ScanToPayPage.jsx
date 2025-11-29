@@ -1,8 +1,10 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeftIcon, QrCodeIcon } from '@heroicons/react/24/outline';
 
 export default function ScanToPayPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { amount = 699, couponCode, discount } = location.state || {};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 p-4">
@@ -34,12 +36,14 @@ export default function ScanToPayPage() {
             <div className="mt-6 space-y-2 text-gray-700">
               <p>1. Open your UPI app (GPay, PhonePe, Paytm, etc.)</p>
               <p>2. Scan the QR code above</p>
-              <p>3. Enter the exact amount: <span className="font-semibold">₹699</span></p>
+              <p>3. Enter the exact amount: <span className="font-semibold">₹{amount}</span></p>
               <p>4. Complete the payment</p>
             </div>
 
             <button
-              onClick={() => navigate('/lifetime-access/submit-transaction')}
+              onClick={() => navigate('/lifetime-access/submit-transaction', {
+                state: { amount, couponCode, discount }
+              })}
               className="mt-6 w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
             >
               I have completed the payment – Next

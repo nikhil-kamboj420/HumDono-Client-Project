@@ -91,7 +91,13 @@ export default function LifetimeSubscription() {
   };
 
   const handlePurchase = async () => {
-    navigate("/lifetime-access/scan-to-pay");
+    navigate("/lifetime-access/scan-to-pay", {
+      state: {
+        amount: finalPrice,
+        couponCode,
+        discount,
+      },
+    });
     /*
     // EXISTING RAZORPAY LOGIC - TEMPORARILY DISABLED
     try {

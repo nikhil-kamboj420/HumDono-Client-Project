@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../lib/api';
 import { useCustomAlert } from '../hooks/useCustomAlert';
@@ -7,8 +7,11 @@ import CustomAlert from '../components/CustomAlert';
 
 export default function ManualPaymentFormPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { amount: initialAmount } = location.state || {};
+
   const [loading, setLoading] = useState(false);
-  const [amount, setAmount] = useState(699);
+  const [amount, setAmount] = useState(initialAmount !== undefined ? initialAmount : 699);
   const [transactionId, setTransactionId] = useState('');
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
