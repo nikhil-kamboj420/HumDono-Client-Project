@@ -56,6 +56,31 @@ const UserProfile = () => {
     }
   };
 
+  const handleMessage = async () => {
+    try {
+      // Check if there's already a match/conversation with this user
+      const conversations = await api.getConversations();
+      const existingMatch = conversations.conversations?.find(
+        (conv) => conv.otherUser?._id === id
+      );
+
+      if (existingMatch) {
+        // Navigate to existing chat
+        navigate(`/chat/${existingMatch._id}`, {
+          state: { user: user },
+        });
+      } else {
+        // Allow direct messaging for all users (creates match automatically/handles payment)
+        navigate(`/chat/direct_${id}`, {
+          state: { user: user, isDirectMessage: true },
+        });
+      }
+    } catch (error) {
+      console.error("Error opening chat:", error);
+      alert("Failed to open chat. Please try again.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-sunset-gradient flex items-center justify-center">
@@ -95,7 +120,7 @@ const UserProfile = () => {
           >
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
-          <h1 className="ml-4 text-xl font-bold text-gray-900">Profile</h1>
+          <h2 className="ml-4 text-2xl font-bold text-gray-900">Profile</h2>
         </div>
       </div>
 
@@ -106,7 +131,7 @@ const UserProfile = () => {
             currentUser={currentUser}
             onLike={() => handleLike()}
             onDislike={() => handlePass()}
-            onMessage={() => {}}
+            onMessage={handleMessage}
           />
         )}
       </div>

@@ -4,7 +4,7 @@ import axios from "axios";
 /**
  * Base URL
  */
-const BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 /**
  * Primary axios instance (used by the app)
@@ -190,4 +190,3 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-

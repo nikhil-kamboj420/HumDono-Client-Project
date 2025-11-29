@@ -66,7 +66,7 @@ export default function Dislikes() {
           >
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
-          <h1 className="text-2xl font-bold text-white">People I Dislike 👎</h1>
+          <h2 className="text-2xl font-bold text-white">People I Dislike 👎</h2>
         </div>
 
         {/* List */}
@@ -89,7 +89,7 @@ export default function Dislikes() {
                   onClick={() => navigate(`/profile/${user._id}`)}
                 />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-lg">
+                  <h3 className="text-black font-semibold text-lg">
                     {user.name}, {user.age}
                   </h3>
                   <p className="text-sm text-gray-600">{user.location?.city}</p>

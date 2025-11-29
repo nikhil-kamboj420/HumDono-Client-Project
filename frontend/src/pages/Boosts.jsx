@@ -321,7 +321,7 @@ const Boosts = () => {
               onClick={() => navigate("/")}
             />
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">Boosts</h1>
+              <h2 className="text-2xl font-bold text-gray-900">Boosts</h2>
               <p className="text-gray-600 mt-1">Increase your popularity</p>
             </div>
           </div>

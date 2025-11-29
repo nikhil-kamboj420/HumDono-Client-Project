@@ -177,7 +177,7 @@ export default function Notifications() {
 
         {/* Header - Simple without tabs */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+          <h2 className="text-2xl font-bold text-gray-900">Notifications</h2>
         </div>
 
         {/* Notifications List */}

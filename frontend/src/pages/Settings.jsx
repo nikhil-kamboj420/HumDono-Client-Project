@@ -1,20 +1,20 @@
 // pages/Settings.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeftIcon, 
-  BellIcon, 
-  ShieldCheckIcon, 
+import {
+  ArrowLeftIcon,
+  BellIcon,
   EyeIcon,
   UserIcon,
   HeartIcon,
-  GlobeAltIcon
 } from '@heroicons/react/24/outline';
 import api from '../lib/api';
+import CustomAlert from '../components/CustomAlert';
 
 const Settings = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
   const [preferences, setPreferences] = useState({
     lookingFor: {
       relationshipStatus: 'any',
@@ -44,7 +44,7 @@ const Settings = () => {
       const response = await api.getUserProfile();
       const userData = response.user;
       setUser(userData);
-      
+
       setPreferences({
         lookingFor: userData.lookingFor || preferences.lookingFor,
         notifications: userData.notifications || preferences.notifications,
@@ -62,7 +62,7 @@ const Settings = () => {
       const updateData = {
         [section]: { ...preferences[section], ...updates }
       };
-      
+
       await api.updateProfile(updateData);
       setPreferences(prev => ({
         ...prev,
@@ -75,10 +75,13 @@ const Settings = () => {
   };
 
   const handleLogout = () => {
-    if (confirm('Are you sure you want to logout?')) {
-      localStorage.removeItem('token');
-      navigate('/login');
-    }
+    setShowLogoutAlert(true);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
   };
 
   if (loading) {
@@ -109,7 +112,7 @@ const Settings = () => {
               className="h-8 w-8 object-contain cursor-pointer"
               onClick={() => navigate('/')}
             />
-            <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+            <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
           </div>
         </div>
       </div>
@@ -121,15 +124,11 @@ const Settings = () => {
             <UserIcon className="w-6 h-6 text-gray-600" />
             <h3 className="text-lg font-semibold text-gray-900">Account</h3>
           </div>
-          
+
           <div className="space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Name</span>
               <span className="text-gray-900 font-medium">{user?.name || 'Not set'}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700">Phone</span>
-              <span className="text-gray-900 font-medium">{user?.getMaskedPhone?.() || user?.phone}</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-700">Coins</span>
@@ -144,7 +143,7 @@ const Settings = () => {
             <HeartIcon className="w-6 h-6 text-pink-500" />
             <h3 className="text-lg font-semibold text-gray-900">Dating Preferences</h3>
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -193,7 +192,7 @@ const Settings = () => {
             <EyeIcon className="w-6 h-6 text-blue-500" />
             <h3 className="text-lg font-semibold text-gray-900">Privacy</h3>
           </div>
-          
+
           <div className="space-y-4">
             <label className="flex items-center justify-between">
               <span className="text-gray-700">Show my age</span>
@@ -204,17 +203,7 @@ const Settings = () => {
                 className="rounded"
               />
             </label>
-            
-            <label className="flex items-center justify-between">
-              <span className="text-gray-700">Show social links to matches</span>
-              <input
-                type="checkbox"
-                checked={preferences.privacy.showSocialLinks}
-                onChange={(e) => updatePreferences('privacy', { showSocialLinks: e.target.checked })}
-                className="rounded"
-              />
-            </label>
-            
+
             <label className="flex items-center justify-between">
               <span className="text-gray-700">Show distance</span>
               <input
@@ -233,7 +222,7 @@ const Settings = () => {
             <BellIcon className="w-6 h-6 text-green-500" />
             <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
           </div>
-          
+
           <div className="space-y-4">
             <label className="flex items-center justify-between">
               <span className="text-gray-700">New matches</span>
@@ -244,7 +233,7 @@ const Settings = () => {
                 className="rounded"
               />
             </label>
-            
+
             <label className="flex items-center justify-between">
               <span className="text-gray-700">New messages</span>
               <input
@@ -254,7 +243,7 @@ const Settings = () => {
                 className="rounded"
               />
             </label>
-            
+
             <label className="flex items-center justify-between">
               <span className="text-gray-700">Someone likes you</span>
               <input
@@ -264,23 +253,13 @@ const Settings = () => {
                 className="rounded"
               />
             </label>
-            
-            <label className="flex items-center justify-between">
-              <span className="text-gray-700">Marketing emails</span>
-              <input
-                type="checkbox"
-                checked={preferences.notifications.marketing}
-                onChange={(e) => updatePreferences('notifications', { marketing: e.target.checked })}
-                className="rounded"
-              />
-            </label>
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="card-romantic p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-          
+
           <div className="space-y-3">
             <button
               onClick={() => navigate('/profile')}
@@ -289,7 +268,7 @@ const Settings = () => {
               <span>Edit Profile</span>
               <span className="text-gray-400">→</span>
             </button>
-            
+
             {/* Buy Coins - Only for Male Users */}
             {user?.gender?.toLowerCase() !== 'female' && (
               <button
@@ -300,7 +279,7 @@ const Settings = () => {
                 <span className="text-gray-400">→</span>
               </button>
             )}
-            
+
             <button
               onClick={() => navigate('/referrals')}
               className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex items-center justify-between"
@@ -314,7 +293,7 @@ const Settings = () => {
         {/* Danger Zone */}
         <div className="card-romantic p-6">
           <h3 className="text-lg font-semibold text-red-600 mb-4">Account Actions</h3>
-          
+
           <div className="space-y-3">
             <button
               onClick={handleLogout}
@@ -325,6 +304,20 @@ const Settings = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Alert */}
+      <CustomAlert
+        isOpen={showLogoutAlert}
+        onClose={() => setShowLogoutAlert(false)}
+        type="warning"
+        title="Logout Confirmation"
+        message="Are you sure you want to logout? You'll need to login again to access your account."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        showCancel={true}
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutAlert(false)}
+      />
     </div>
   );
 };

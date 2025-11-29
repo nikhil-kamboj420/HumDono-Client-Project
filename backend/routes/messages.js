@@ -144,6 +144,15 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
     // Populate sender info
     await message.populate("sender", "name photos");
 
+    // Emit real-time message event to receiver
+    const io = req.app?.locals?.io;
+    if (io) {
+      io.to(`user:${receiverId}`).emit('message:new', {
+        message,
+        matchId: match._id,
+      });
+    }
+
     res.json({
       ok: true,
       message,
@@ -325,6 +334,15 @@ router.post("/:matchId", auth, async (req, res) => {
 
     // Populate sender info for response
     await message.populate("sender", "name photos");
+
+    // Emit real-time message event to receiver
+    const io = req.app?.locals?.io;
+    if (io) {
+      io.to(`user:${receiverId}`).emit('message:new', {
+        message,
+        matchId,
+      });
+    }
 
     res.json({
       ok: true,

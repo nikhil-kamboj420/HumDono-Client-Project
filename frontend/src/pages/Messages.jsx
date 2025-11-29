@@ -84,7 +84,7 @@ const Messages = () => {
               className="h-12 w-12 object-contain cursor-pointer"
               onClick={() => navigate('/')}
             />
-            <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+            <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
           </div>
           <p className="text-gray-600 mt-1">{conversations.length} conversations</p>
         </div>

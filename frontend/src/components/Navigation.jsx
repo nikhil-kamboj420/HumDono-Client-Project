@@ -16,11 +16,13 @@ import {
   BellIcon,
 } from "@heroicons/react/24/outline";
 import api from "../lib/api";
+import CustomAlert from "./CustomAlert";
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutAlert, setShowLogoutAlert] = useState(false);
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [userGender, setUserGender] = useState(null);
@@ -62,6 +64,18 @@ const Navigation = () => {
     setTimeout(() => fetchNotificationCount(), 0);
   }, [location.pathname]);
 
+  const handleLogout = () => {
+    setShowLogoutAlert(true);
+    setIsMobileMenuOpen(false);
+  };
+
+  const confirmLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+    setShowLogoutAlert(false);
+  };
+
   // Main navigation items for both desktop and mobile
   const mainNavItems = [
     { path: "/", icon: HomeIcon, label: "Discover" },
@@ -83,10 +97,10 @@ const Navigation = () => {
     },
     ...(userGender !== "female"
       ? [
-          { path: "/gifts", icon: GiftIcon, label: "Gifts" },
-          { path: "/boosts", icon: SparklesIcon, label: "Boosts" },
-          { path: "/wallet", icon: WalletIcon, label: "Wallet" },
-        ]
+        { path: "/gifts", icon: GiftIcon, label: "Gifts" },
+        { path: "/boosts", icon: SparklesIcon, label: "Boosts" },
+        { path: "/wallet", icon: WalletIcon, label: "Wallet" },
+      ]
       : []),
     { path: "/profile", icon: UserIcon, label: "My Profile" },
     { path: "/settings", icon: CogIcon, label: "Settings" },
@@ -127,11 +141,10 @@ const Navigation = () => {
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors relative ${
-                    isActive(item.path)
+                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors relative ${isActive(item.path)
                       ? "bg-white/20 text-passion border-r-4 border-red-600 shadow-lg"
                       : "text-red-800/80 hover:bg-white/10 hover:text-red-800"
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5 flex-shrink-0" />
                   <span className="font-medium">{item.label}</span>
@@ -150,11 +163,10 @@ const Navigation = () => {
             <div className="pt-4 border-t border-gray-200 mt-4">
               <button
                 onClick={() => navigate("/likes")}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                  isActive("/likes")
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${isActive("/likes")
                     ? "bg-pink-50 text-pink-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <HeartIcon className="w-5 h-5 flex-shrink-0" />
                 <span className="font-medium">People I Liked</span>
@@ -162,11 +174,10 @@ const Navigation = () => {
 
               <button
                 onClick={() => navigate("/dislikes")}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                  isActive("/dislikes")
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${isActive("/dislikes")
                     ? "bg-pink-50 text-pink-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <XMarkIcon className="w-5 h-5 flex-shrink-0" />
                 <span className="font-medium">People I Disliked</span>
@@ -174,11 +185,10 @@ const Navigation = () => {
 
               <button
                 onClick={() => navigate("/referrals")}
-                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                  isActive("/referrals")
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${isActive("/referrals")
                     ? "bg-pink-50 text-pink-600"
                     : "text-gray-700 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <UserIcon className="w-5 h-5 flex-shrink-0" />
                 <span className="font-medium">Invite Friends</span>
@@ -188,10 +198,7 @@ const Navigation = () => {
             {/* Logout Button */}
             <div className="pt-4 border-t border-gray-200 mt-4">
               <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  navigate("/login");
-                }}
+                onClick={handleLogout}
                 className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors text-red-600 hover:bg-red-50"
               >
                 <XMarkIcon className="w-5 h-5 flex-shrink-0" />
@@ -212,9 +219,8 @@ const Navigation = () => {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex-1 flex flex-col items-center py-2 px-1 relative transition-colors ${
-                  isActive(item.path) ? "text-red-700" : "text-red-800/70"
-                }`}
+                className={`flex-1 flex flex-col items-center py-2 px-1 relative transition-colors ${isActive(item.path) ? "text-red-700" : "text-red-800/70"
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 <span className="text-xs mt-1 truncate">{item.label}</span>
@@ -270,11 +276,10 @@ const Navigation = () => {
                       navigate(item.path);
                       setIsMobileMenuOpen(false);
                     }}
-                    className={`flex flex-col items-center p-4 rounded-lg border relative ${
-                      isActive(item.path)
+                    className={`flex flex-col items-center p-4 rounded-lg border relative ${isActive(item.path)
                         ? "bg-pink-50 text-pink-600 border-pink-200"
                         : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
-                    }`}
+                      }`}
                   >
                     {Icon && <Icon className="w-5 h-5 mb-2" />}
                     <span className="text-sm font-medium text-center">
@@ -292,11 +297,7 @@ const Navigation = () => {
 
               {/* Logout Button */}
               <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  navigate("/login");
-                  setIsMobileMenuOpen(false);
-                }}
+                onClick={handleLogout}
                 className="flex flex-col items-center p-4 rounded-lg border bg-red-50 text-red-600 border-red-200 hover:bg-red-100 col-span-2"
               >
                 <XMarkIcon className="w-5 h-5 mb-2" />
@@ -306,6 +307,20 @@ const Navigation = () => {
           </div>
         </div>
       )}
+
+      {/* Logout Confirmation Alert */}
+      <CustomAlert
+        isOpen={showLogoutAlert}
+        onClose={() => setShowLogoutAlert(false)}
+        type="warning"
+        title="Logout Confirmation"
+        message="Are you sure you want to logout? You'll need to login again to access your account."
+        confirmText="Yes, Logout"
+        cancelText="Cancel"
+        showCancel={true}
+        onConfirm={confirmLogout}
+        onCancel={() => setShowLogoutAlert(false)}
+      />
     </>
   );
 };

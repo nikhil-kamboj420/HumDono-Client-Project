@@ -3,7 +3,9 @@ import { useState, useEffect } from 'react';
 import { WifiIcon } from '@heroicons/react/24/outline';
 
 export default function OfflineIndicator() {
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
   const [showReconnected, setShowReconnected] = useState(false);
 
   useEffect(() => {

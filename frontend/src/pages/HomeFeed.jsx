@@ -304,7 +304,7 @@ export default function HomeFeed() {
               className="h-20 w-20 lg:h-30 lg:w-30 object-contain cursor-pointer drop-shadow-lg"
               onClick={() => navigate("/")}
             />
-            <h2 className="lg:text-2xl xl:text-3xl font-extrabold text-white truncate shadow-lg">
+            <h2 className="text-xl lg:text-2xl xl:text-3xl font-extrabold text-white truncate shadow-lg">
               💕 Discover Love
             </h2>
           </div>
@@ -411,7 +411,7 @@ export default function HomeFeed() {
         </div>
 
         {/* Load More / End Message */}
-        <div className="mt-4 lg:mt-6 flex flex-col  mb-10  items-center gap-4">
+        <div className="relative top-[-60vh] lg:mt-6 flex flex-col  mb-10  items-center gap-4">
           {profiles.length === 0 && !hasNextPage ? (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">💕</div>

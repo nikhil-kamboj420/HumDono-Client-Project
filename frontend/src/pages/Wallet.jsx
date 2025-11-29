@@ -409,7 +409,7 @@ export default function Wallet() {
               onClick={() => navigate("/")}
             />
             <div>
-              <h1 className="text-2xl font-bold text-passion">💰 Wallet</h1>
+              <h2 className="text-2xl font-bold text-passion">💰 Wallet</h2>
               <p className="text-gray-600">Manage your coins</p>
             </div>
           </div>

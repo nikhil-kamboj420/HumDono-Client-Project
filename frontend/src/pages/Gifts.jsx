@@ -86,7 +86,7 @@ const Gifts = () => {
       />
       <div className="bg-white/10 backdrop-blur-sm shadow-romantic">
         <div className="max-w-md mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+          <div className="max-w-[80vw] mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate(-1)}
@@ -101,7 +101,7 @@ const Gifts = () => {
                 onClick={() => navigate('/')}
               />
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Gifts</h1>
+                <h2 className="text-2xl font-bold text-gray-900">Gifts</h2>
                 <p className="text-gray-600 mt-1">Send virtual gifts to show you care</p>
               </div>
             </div>
@@ -134,7 +134,7 @@ const Gifts = () => {
             
             <div className="grid grid-cols-2 gap-4">
               {categoryGifts.map((gift) => (
-                <div key={gift._id} className="bg-white rounded-lg p-4 shadow-sm border">
+                <div key={gift._id} className="min-w-[80vw] mx-auto bg-white rounded-lg p-4 shadow-sm border">
                   <div className="text-center">
                     <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full flex items-center justify-center">
                       <span className="text-2xl">🎁</span>

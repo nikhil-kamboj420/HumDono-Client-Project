@@ -197,6 +197,62 @@ export const removeInteraction = async (userId) => {
  * -------------------------------
  */
 
+/** Send friend request */
+export const sendFriendRequest = async (recipientId) => {
+  try {
+    const res = await axiosInstance.post("/friends/request", { recipientId });
+    return res.data; // { ok, request }
+  } catch (err) {
+    console.error("sendFriendRequest failed:", err?.response?.data || err);
+    throw err;
+  }
+};
+
+/** Get sent friend requests */
+export const getSentFriendRequests = async () => {
+  try {
+    const res = await axiosInstance.get("/friends/sent");
+    return res.data; // { ok, sentRequests }
+  } catch (err) {
+    console.error("getSentFriendRequests failed:", err?.response?.data || err);
+    return { ok: false, sentRequests: [] };
+  }
+};
+
+/** Get received friend requests */
+export const getReceivedFriendRequests = async () => {
+  try {
+    const res = await axiosInstance.get("/friends/received");
+    return res.data; // { ok, receivedRequests }
+  } catch (err) {
+    console.error("getReceivedFriendRequests failed:", err?.response?.data || err);
+    return { ok: false, receivedRequests: [] };
+  }
+};
+
+/** Respond to friend request (accept/reject) */
+export const respondToFriendRequest = async (requestId, action) => {
+  try {
+    const res = await axiosInstance.post(`/friends/request/${requestId}/${action}`);
+    return res.data; // { ok }
+  } catch (err) {
+    console.error("respondToFriendRequest failed:", err?.response?.data || err);
+    throw err;
+  }
+};
+
+/** Get friends list */
+export const getFriends = async () => {
+  try {
+    const res = await axiosInstance.get("/friends");
+    return res.data; // { ok, friends }
+  } catch (err) {
+    console.error("getFriends failed:", err?.response?.data || err);
+    return { ok: false, friends: [] };
+  }
+};
+
+
 /**
  * -------------------------------
  * NOTIFICATIONS APIs
@@ -340,8 +396,18 @@ const api = {
   getFeed,
   postInteraction,
   openMatchChat,
+  getLikedUsers,
+  getDislikedUsers,
+  removeInteraction,
 
   requestPhoneAccess,
+
+  // friends
+  sendFriendRequest,
+  getSentFriendRequests,
+  getReceivedFriendRequests,
+  respondToFriendRequest,
+  getFriends,
 
   // notifications
   getNotifications,

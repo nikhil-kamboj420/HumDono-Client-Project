@@ -49,43 +49,50 @@ export default function MatchModal({ open, matchId, matchedUser, onClose }) {
     }
   };
 
-  const handleViewPhone = () => {
-    if (matchedUser?.phone) {
-      alert(`Phone: ${matchedUser.phone}`);
-    } else {
-      alert("Phone not available.");
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-lg">
-        <div className="flex items-center gap-3">
-          <img src={photo} alt="match" className="w-16 h-16 object-cover rounded-lg" />
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-lg">
+        {/* Match Header */}
+        <div className="text-center mb-6">
+          <div className="text-4xl mb-2">🎉</div>
+          <h2 className="text-2xl font-bold text-pink-600 mb-1">It's a Match!</h2>
+          <p className="text-gray-600 text-sm">You both liked each other</p>
+        </div>
+
+        {/* Matched User Info */}
+        <div className="flex items-center gap-4 mb-6 bg-pink-50 p-4 rounded-xl">
+          <img src={photo} alt="match" className="w-20 h-20 object-cover rounded-full border-4 border-pink-200" />
           <div>
-            <h3 className="text-lg font-bold">{matchedUser?.name}{matchedUser?.age ? `, ${matchedUser.age}` : ""}</h3>
-            <div className="text-sm text-gray-500">It's a match 🎉</div>
+            <h3 className="text-xl font-bold text-gray-900">
+              {matchedUser?.name}{matchedUser?.age ? `, ${matchedUser.age}` : ""}
+            </h3>
+            <p className="text-sm text-gray-500">Start chatting now!</p>
           </div>
         </div>
 
-        <div className="mt-4 space-y-3">
+        {/* Action Buttons */}
+        <div className="space-y-3">
           <button
             onClick={handleOpenChat}
             disabled={loading}
-            className="w-full py-2 rounded-xl bg-gradient-to-r from-[#cc0033] to-[#ff1971] text-white font-semibold"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:from-pink-600 hover:to-rose-600 transition-all transform hover:scale-105 shadow-lg"
           >
-            {loading ? "Opening..." : "Open Chat (costs coins if no subscription)"}
+            {loading ? "Opening..." : "Start Chatting 💬"}
           </button>
 
           <button
-            onClick={handleViewPhone}
-            className="w-full py-2 rounded-xl border text-[#cc0033] font-medium"
+            onClick={handleOpenChat}
+            disabled={loading}
+            className="w-full py-3 rounded-xl border-2 border-pink-500 text-pink-600 font-semibold hover:bg-pink-50 transition-all"
           >
-            View Phone
+            {loading ? "Opening..." : "Let's Chat 💕"}
           </button>
 
-          <button onClick={onClose} className="w-full py-2 rounded-xl bg-gray-100 text-gray-700">
-            Close
+          <button
+            onClick={onClose}
+            className="w-full py-3 rounded-xl bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-all"
+          >
+            Maybe Later
           </button>
         </div>
       </div>

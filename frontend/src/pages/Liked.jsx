@@ -65,7 +65,7 @@ const Liked = () => {
               onClick={() => navigate('/')}
             />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">People I Liked</h1>
+              <h2 className="text-2xl font-bold text-gray-900">People I Liked</h2>
               <p className="text-gray-600 mt-1">{likedUsers.length} people</p>
             </div>
           </div>

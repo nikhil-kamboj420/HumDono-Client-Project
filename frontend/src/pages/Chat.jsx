@@ -9,6 +9,7 @@ import {
 import api from "../lib/api";
 import CustomAlert from "../components/CustomAlert";
 import { useCustomAlert } from "../hooks/useCustomAlert";
+import { io } from "socket.io-client";
 
 const Chat = () => {
   const { matchId } = useParams();
@@ -43,6 +44,36 @@ const Chat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Socket.io for real-time messages
+  useEffect(() => {
+    const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+    const socket = io(socketUrl, { withCredentials: true });
+
+    // Join user's personal room
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      if (currentUser?._id) {
+        socket.emit("user:join", currentUser._id);
+      }
+    } catch (err) {
+      console.error("Failed to join socket room:", err);
+    }
+
+    // Listen for new messages
+    socket.on("message:new", (data) => {
+      const { message, matchId: incomingMatchId } = data;
+
+      // Only add message if it belongs to the current chat
+      if (String(incomingMatchId) === String(matchId)) {
+        setMessages((prev) => [...prev, message]);
+      }
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [matchId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -118,7 +149,7 @@ const Chat = () => {
         const errorData = error.response.data;
         showError(
           errorData.error ||
-            `You've used your free messages. Subscribe to continue messaging! 💕`,
+          `You've used your free messages. Subscribe to continue messaging! 💕`,
           "Subscription Required"
         );
         setTimeout(() => navigate("/subscription?required=true"), 2000);
@@ -209,7 +240,7 @@ const Chat = () => {
               <h3 className="font-semibold  text-gray-900">{user?.name}</h3>
               <p className="text-xs text-gray-500">
                 {user?.lastActiveAt &&
-                new Date() - new Date(user.lastActiveAt) < 5 * 60 * 1000
+                  new Date() - new Date(user.lastActiveAt) < 5 * 60 * 1000
                   ? "🟢 Online"
                   : "Last seen recently"}
               </p>
@@ -224,18 +255,16 @@ const Chat = () => {
           {messages.map((message) => (
             <div
               key={message._id}
-              className={`flex ${
-                message.sender._id === user?._id
-                  ? "justify-start"
-                  : "justify-end"
-              }`}
+              className={`flex ${message.sender._id === user?._id
+                ? "justify-start"
+                : "justify-end"
+                }`}
             >
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${
-                  message.sender._id === user?._id
-                    ? "bg-gray-200 text-gray-900"
-                    : "bg-pink-500 text-white"
-                }`}
+                className={`max-w-xs px-4 py-2 rounded-lg ${message.sender._id === user?._id
+                  ? "bg-gray-200 text-gray-900"
+                  : "bg-pink-500 text-white"
+                  }`}
               >
                 {message.messageType === "gift" ? (
                   <div className="text-center">
@@ -253,11 +282,10 @@ const Chat = () => {
                   <p>{message.content}</p>
                 )}
                 <p
-                  className={`text-xs mt-1 ${
-                    message.sender._id === user?._id
-                      ? "text-gray-500"
-                      : "text-pink-100"
-                  }`}
+                  className={`text-xs mt-1 ${message.sender._id === user?._id
+                    ? "text-gray-500"
+                    : "text-pink-100"
+                    }`}
                 >
                   {new Date(message.createdAt).toLocaleTimeString([], {
                     hour: "2-digit",
