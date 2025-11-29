@@ -147,7 +147,7 @@ export default function LifetimeSubscription() {
               disabled={loading}
               className="w-full py-4 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Processing..." : "Get Lifetime Access"}
+              {loading ? "Processing..." : "Get Premium Access"}
             </button>
           </div>
 
