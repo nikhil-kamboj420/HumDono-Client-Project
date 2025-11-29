@@ -94,7 +94,8 @@ export default function LifetimeSubscription() {
           {/* Header */}
           <div className="bg-gradient-to-r from-pink-500 to-red-500 p-6 text-white text-center">
             <SparklesIcon className="w-16 h-16 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-2">Premium Access</h1>
+            <h1 className="text-3xl font-bold mb-2">HumDono Premium Membership
+            </h1>
             <p className="text-pink-100">Unlock premium messaging features</p>
           </div>
 
