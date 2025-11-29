@@ -94,8 +94,8 @@ export default function LifetimeSubscription() {
           {/* Header */}
           <div className="bg-gradient-to-r from-pink-500 to-red-500 p-6 text-white text-center">
             <SparklesIcon className="w-16 h-16 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-2">Lifetime Access</h1>
-            <p className="text-pink-100">Unlock unlimited messaging forever</p>
+            <h1 className="text-3xl font-bold mb-2">Premium Access</h1>
+            <p className="text-pink-100">Unlock premium messaging features</p>
           </div>
 
           {/* Price */}
@@ -110,7 +110,7 @@ export default function LifetimeSubscription() {
             <div className="text-5xl font-bold text-gray-900 mb-2">
               ₹{finalPrice}
             </div>
-            <p className="text-gray-600">One-time payment</p>
+            <p className="text-gray-600">One-time Premium Upgrade</p>
             {discount > 0 && (
               <div className="mt-2 inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
                 You save ₹{discount}!
