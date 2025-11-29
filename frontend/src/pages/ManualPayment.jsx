@@ -23,6 +23,7 @@ export default function ManualPayment() {
 
                 {/* Content */}
                 <div className="p-8 flex flex-col items-center">
+                    {/* QR Code - TEMPORARILY DISABLED
                     <div className="bg-white p-4 rounded-xl shadow-lg mb-6 border-2 border-pink-100">
                         <img
                             src="/HUMDONO_UPI_SCANNER.jpg"
@@ -30,8 +31,14 @@ export default function ManualPayment() {
                             className="w-64 h-64 object-contain"
                         />
                     </div>
+                    */}
+                    <div className="bg-white p-8 rounded-xl shadow-lg mb-6 border-2 border-gray-100 text-center">
+                        <p className="text-gray-500 font-medium">QR Code Payments Currently Unavailable</p>
+                        <p className="text-gray-400 text-sm mt-2">Please check back later</p>
+                    </div>
 
                     <div className="text-center space-y-4">
+                        {/* Instructions - TEMPORARILY DISABLED
                         <div className="bg-pink-50 p-4 rounded-lg border border-pink-100">
                             <h3 className="font-semibold text-gray-800 mb-2">Instructions</h3>
                             <ol className="text-sm text-gray-600 text-left list-decimal pl-5 space-y-2">
@@ -41,9 +48,10 @@ export default function ManualPayment() {
                                 <li>Complete the payment</li>
                             </ol>
                         </div>
+                        */}
 
                         <p className="text-sm text-gray-500 italic">
-                            Note: After payment, please contact support or wait for manual verification.
+                            Note: Online payments are currently disabled.
                         </p>
                     </div>
                 </div>

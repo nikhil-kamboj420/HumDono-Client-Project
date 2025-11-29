@@ -71,94 +71,10 @@ router.get("/available", auth, async (req, res) => {
  * Purchase a boost with Razorpay (direct payment in Rupees)
  */
 router.post("/purchase", auth, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const {
-      boostType,
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-    } = req.body;
-
-    if (!BOOST_PRICES[boostType]) {
-      return res.status(400).json({ ok: false, error: "Invalid boost type" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user)
-      return res.status(404).json({ ok: false, error: "User not found" });
-
-    // Check if male user has lifetime subscription
-    const isMale = user.gender?.toLowerCase() === "male";
-    const hasLifetimeSubscription = user.subscription?.isLifetime === true;
-
-    if (isMale && !hasLifetimeSubscription) {
-      return res.status(403).json({
-        ok: false,
-        error: "Subscription required",
-        requiresSubscription: true,
-      });
-    }
-
-    const boostConfig = BOOST_PRICES[boostType];
-
-    // Handle different boost types
-    if (boostType === "visibility" || boostType === "spotlight") {
-      const expiresAt = new Date(Date.now() + boostConfig.duration * 60 * 1000);
-
-      const boost = new Boost({
-        user: userId,
-        type: boostType,
-        duration: boostConfig.duration,
-        price: boostConfig.price,
-        expiresAt,
-      });
-      await boost.save();
-
-      // Update user's boost tracking
-      if (!user.boosts) user.boosts = {};
-      user.boosts[boostType] = expiresAt;
-    } else if (boostType === "superlike") {
-      // Add 5 super likes to user's account
-      if (!user.boosts) user.boosts = {};
-      user.boosts.superLikes = (user.boosts.superLikes || 0) + 5;
-
-      const boost = new Boost({
-        user: userId,
-        type: boostType,
-        duration: 0,
-        price: boostConfig.price,
-        expiresAt: new Date(), // immediate
-      });
-      await boost.save();
-    }
-
-    await user.save();
-
-    // Record transaction
-    await Transaction.create({
-      user: userId,
-      amount: boostConfig.price,
-      orderId: `boost_${Date.now()}_${userId}`,
-      razorpayPaymentId: razorpay_payment_id || null,
-      razorpayOrderId: razorpay_order_id || null,
-      status: "paid",
-      currency: "INR",
-      metadata: {
-        boostType,
-        description: `Purchased ${boostType} boost`,
-      },
-    });
-
-    res.json({
-      ok: true,
-      message: `${boostType} boost activated successfully`,
-      superLikes: user.boosts?.superLikes || 0,
-    });
-  } catch (err) {
-    console.error("POST /api/boosts/purchase error:", err);
-    res.status(500).json({ ok: false, error: "Server error" });
-  }
+  return res.status(400).json({
+    ok: false,
+    error: "Online payments are currently disabled.",
+  });
 });
 
 /**

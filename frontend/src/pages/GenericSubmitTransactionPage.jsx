@@ -64,45 +64,9 @@ export default function GenericSubmitTransactionPage() {
   };
 
   const handleSubmit = async () => {
-    try {
-      const tx = String(transactionId).trim();
-      if (!tx) {
-        showError('Please enter the UPI Transaction ID / UTR', 'Missing Transaction ID');
-        return;
-      }
-      
-      setLoading(true);
-      
-      // Submit to manual payments API
-      const res = await api.post('/manual-payments/request', {
-        amount: Number(getAmount()),
-        transactionId: tx,
-        paymentType: paymentData?.type || 'unknown',
-        metadata: {
-          ...paymentData,
-          submittedAt: new Date().toISOString()
-        }
-      });
-      
-      if (res?.ok) {
-        // Clear the pending payment data
-        sessionStorage.removeItem('pendingPayment');
-        
-        showSuccess(
-          'Payment details submitted successfully! We will verify your payment and activate your purchase within 24 hours.',
-          'Submitted Successfully'
-        );
-        
-        setTimeout(() => navigate(getSuccessRedirect()), 2500);
-      } else {
-        showError(res?.error || 'Submission failed', 'Error');
-      }
-    } catch (err) {
-      const msg = err?.response?.data?.error || 'Submission failed. Please try again.';
-      showError(msg, 'Error');
-    } finally {
-      setLoading(false);
-    }
+    // Submission disabled
+    showError("Transaction submission is currently disabled.", "Submission Disabled");
+    return;
   };
 
   if (!paymentData) {
@@ -164,44 +128,21 @@ export default function GenericSubmitTransactionPage() {
               />
             </div>
 
-            {/* Transaction ID Field */}
+            {/* Transaction ID Field - DISABLED */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                UPI Transaction ID / UTR (Ref No✅)
-              </label>
-              <input
-                type="text"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                placeholder="e.g. 103245678912"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Enter the numeric transaction reference / UTR from your payment app after successful payment.
-                Do NOT enter your UPI ID (like name@bank).
-              </p>
-            </div>
-
-            {/* Important Note */}
-            <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-              <p className="text-sm text-yellow-800">
-                <span className="font-semibold">⚠️ Important:</span> Please ensure you enter the correct Transaction ID.
-                Wrong or fake transaction IDs will result in rejection.
-              </p>
+              <p className="text-gray-500 text-center py-4">Transaction submission is currently disabled.</p>
             </div>
 
             {/* Submit Button */}
             <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={true}
+              className="w-full py-3 bg-gray-300 text-gray-500 rounded-xl font-semibold cursor-not-allowed"
             >
-              {loading ? 'Submitting…' : 'Submit Transaction'}
+              Submission Disabled
             </button>
 
             {/* Help Text */}
             <p className="text-center text-xs text-gray-500">
-              Your purchase will be activated within 24 hours after verification.
               Contact support if you face any issues.
             </p>
           </div>

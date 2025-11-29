@@ -30,8 +30,7 @@ const app = express();
  */
 app.use(helmet());
 
-// Special handling for Razorpay webhook - needs raw body
-app.use("/api/payments/webhook", express.raw({ type: "application/json" }));
+
 
 // Regular JSON parsing for other routes
 app.use(express.json());

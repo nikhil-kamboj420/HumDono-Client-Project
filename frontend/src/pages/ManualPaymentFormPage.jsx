@@ -69,6 +69,7 @@ export default function ManualPaymentFormPage() {
               />
             </div>
 
+            {/* Transaction ID Field - DISABLED
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Enter UPI Transaction ID / UTR (Ref No✅) (NOT your UPI ID)
@@ -84,13 +85,16 @@ export default function ManualPaymentFormPage() {
                 Do NOT enter your UPI ID (like name@bank). Enter the numeric transaction reference / UTR from your payment app after successful payment.
               </p>
             </div>
+            */}
+            <div>
+              <p className="text-gray-500 text-center py-4">Transaction submission is currently disabled.</p>
+            </div>
 
             <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={true}
+              className="w-full py-3 bg-gray-300 text-gray-500 rounded-xl font-semibold cursor-not-allowed"
             >
-              {loading ? 'Submitting…' : 'Submit'}
+              Submission Disabled
             </button>
           </div>
         </div>

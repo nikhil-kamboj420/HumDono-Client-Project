@@ -24,6 +24,7 @@ export default function ScanToPayPage() {
           </div>
 
           <div className="p-6">
+            {/* QR Code - TEMPORARILY DISABLED
             <div className="rounded-xl border bg-gray-50 p-4 flex items-center justify-center">
               <img
                 src="/HUMDONO_UPI_SCANNER.jpg"
@@ -32,21 +33,26 @@ export default function ScanToPayPage() {
                 onError={(e) => { e.currentTarget.src = '/qr-fallback.png'; }}
               />
             </div>
+            */}
+            <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-8 flex flex-col items-center justify-center text-center">
+              <p className="text-gray-500 font-medium">QR Code Payments Currently Unavailable</p>
+              <p className="text-gray-400 text-sm mt-2">Please check back later</p>
+            </div>
 
+            {/* Instructions - TEMPORARILY DISABLED
             <div className="mt-6 space-y-2 text-gray-700">
               <p>1. Open your UPI app (GPay, PhonePe, Paytm, etc.)</p>
               <p>2. Scan the QR code above</p>
               <p>3. Enter the exact amount: <span className="font-semibold">₹{amount}</span></p>
               <p>4. Complete the payment</p>
             </div>
+            */}
 
             <button
-              onClick={() => navigate('/lifetime-access/submit-transaction', {
-                state: { amount, couponCode, discount }
-              })}
-              className="mt-6 w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+              disabled={true}
+              className="mt-6 w-full py-3 bg-gray-300 text-gray-500 rounded-xl font-semibold cursor-not-allowed"
             >
-              I have completed the payment – Next
+              Payment Verification Disabled
             </button>
           </div>
         </div>

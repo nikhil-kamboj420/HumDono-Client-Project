@@ -31,22 +31,7 @@ const Boosts = () => {
     checkUserAndSubscription();
     fetchBoostData();
     fetchAvailableCoupons();
-    loadRazorpayScript();
   }, []);
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
 
   const checkUserAndSubscription = async () => {
     try {
@@ -143,128 +128,10 @@ const Boosts = () => {
     const boost = boostOptions.find((b) => b.type === boostType);
     if (!boost) return;
 
-    // Store selected boost in sessionStorage for the payment page
-    const paymentData = {
-      type: "boost",
-      boostType: boost.type,
-      price: boost.price,
-      description: boost.description,
-      duration: boost.duration,
-      couponCode: appliedCoupon?.coupon?.code || null,
-      discountAmount: appliedCoupon?.discount?.amount || 0,
-      finalAmount: appliedCoupon
-        ? boost.price - appliedCoupon.discount.amount
-        : boost.price,
-    };
-
-    sessionStorage.setItem("pendingPayment", JSON.stringify(paymentData));
-
-    // Redirect to manual payment page
-    navigate("/boosts/scan-to-pay");
+    // Payment disabled
+    showError("Online payments are currently disabled.", "Payments Disabled");
+    return;
   };
-
-  /*
-   * RAZORPAY PAYMENT - TEMPORARILY DISABLED
-   * Keep this code for future use when payment gateway is re-enabled
-   *
-  const purchaseBoostRazorpay = async (boostType) => {
-    if (purchasing) return;
-
-    const boost = boostOptions.find((b) => b.type === boostType);
-    if (!boost) return;
-
-    setPurchasing(boostType);
-
-    let finalAmount = boost.price;
-    let discountAmount = 0;
-
-    if (appliedCoupon) {
-      finalAmount = boost.price - appliedCoupon.discount.amount;
-      discountAmount = appliedCoupon.discount.amount;
-    }
-
-    try {
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded || !window.Razorpay) {
-        throw new Error("Payment gateway not available. Please refresh the page.");
-      }
-
-      const orderResponse = await api.post("/payments/create-order", {
-        amount: finalAmount,
-        originalAmount: boost.price,
-        type: "boost",
-        boostType,
-        couponCode: appliedCoupon?.coupon?.code || null,
-        discountAmount,
-      });
-
-      if (!orderResponse.success) {
-        throw new Error(orderResponse.error || "Failed to create order");
-      }
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_Ri6GYh8gLqAcT0",
-        amount: orderResponse.amount,
-        currency: orderResponse.currency,
-        name: "HumDono Boost",
-        description: `${boost.type} Boost - ${boost.description}`,
-        order_id: orderResponse.order_id,
-        handler: async function (response) {
-          try {
-            const verifyResponse = await api.post("/boosts/purchase", {
-              boostType,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-            if (verifyResponse.ok) {
-              playNotificationSound("boost");
-              showSuccess(`${boostType} boost activated successfully! 🚀`, "Boost Activated");
-              setAppliedCoupon(null);
-              setCouponCode("");
-              fetchBoostData();
-            } else {
-              throw new Error(verifyResponse.error || "Boost activation failed");
-            }
-          } catch (error) {
-            console.error("Boost verification error:", error);
-            playNotificationSound("error");
-            showError(error.response?.data?.error || error.message || "Boost activation failed", "Activation Failed");
-          } finally {
-            setPurchasing(null);
-          }
-        },
-        prefill: {
-          name: currentUser?.name || "",
-          email: currentUser?.email || "",
-          contact: currentUser?.phone || "",
-        },
-        theme: { color: "#ec4899" },
-        modal: {
-          ondismiss: function () {
-            setPurchasing(null);
-            showError("Payment cancelled", "Cancelled");
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-    } catch (error) {
-      console.error("Payment error:", error);
-      playNotificationSound("error");
-
-      if (error.response?.status === 403 && error.response?.data?.requiresSubscription) {
-        showError("Please subscribe first to purchase boosts! 🔒", "Subscription Required");
-        setTimeout(() => navigate("/subscription?required=true"), 2000);
-      } else {
-        showError(error.response?.data?.error || error.message || "Failed to initiate payment", "Payment Failed");
-      }
-      setPurchasing(null);
-    }
-  };
-  */
 
   const getBoostIcon = (type) => {
     switch (type) {
@@ -413,10 +280,10 @@ const Boosts = () => {
                         {boost.type === "superlike"
                           ? "5 Super Likes Pack"
                           : boost.type === "visibility"
-                          ? "Visibility Boost"
-                          : boost.type === "spotlight"
-                          ? "Spotlight Feature"
-                          : boost.type}
+                            ? "Visibility Boost"
+                            : boost.type === "spotlight"
+                              ? "Spotlight Feature"
+                              : boost.type}
                       </h3>
                       <p className="text-gray-700 text-sm mb-4">
                         {boost.description}

@@ -134,7 +134,7 @@ const Gifts = () => {
             
             <div className="grid grid-cols-2 gap-4">
               {categoryGifts.map((gift) => (
-                <div key={gift._id} className="min-w-[80vw] mx-auto bg-white rounded-lg p-4 shadow-sm border">
+                <div key={gift._id} className="min-w-[80vw] mx-auto md:min-w-[10vw] md:col-span-2 bg-white rounded-lg p-4 shadow-sm border">
                   <div className="text-center">
                     <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-pink-100 to-purple-100 rounded-full flex items-center justify-center">
                       <span className="text-2xl">🎁</span>

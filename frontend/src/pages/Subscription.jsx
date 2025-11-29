@@ -22,23 +22,7 @@ const Subscription = () => {
   useEffect(() => {
     fetchPlans();
     fetchAvailableCoupons();
-    loadRazorpayScript();
   }, []);
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
 
   const fetchPlans = async () => {
     try {
@@ -98,9 +82,9 @@ const Subscription = () => {
   const handleSubscribe = async (planId) => {
     if (purchasing) return;
 
-    // Redirect to manual payment page
-    navigate('/manual-payment');
-    setPurchasing(null);
+    // Payment disabled
+    showError("Online payments are currently disabled.", "Payments Disabled");
+    return;
   };
 
   const getPlanIcon = (planId) => {

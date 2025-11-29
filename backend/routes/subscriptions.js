@@ -3,34 +3,42 @@ import express from "express";
 import auth from "../middleware/auth.js";
 import User from "../models/User.js";
 import Subscription from "../models/Subscription.js";
-import Transaction from "../models/Transaction.js";
-import Razorpay from "razorpay";
 
 const router = express.Router();
 
-// Initialize Razorpay only if credentials are available
-let razorpay = null;
-if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-  razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-  });
-  console.log("✅ Razorpay initialized for subscriptions");
-} else {
-  console.log("⚠️ Razorpay NOT initialized for subscriptions - missing credentials");
-  console.log("Manual payment flow will be used instead.");
-}
-
-// Subscription plans configuration
+// Define subscription plans (static for now)
 const SUBSCRIPTION_PLANS = {
-  lifetime: {
-    name: "Lifetime Access",
-    price: 699,
-    duration: 36500, // ~100 years (lifetime)
-    coinsIncluded: 200,
-    isLifetime: true,
+  "plan_weekly": {
+    id: "plan_weekly",
+    name: "Weekly Plan",
+    price: 199,
+    duration: 7, // days
+    coinsIncluded: 100,
     features: {
-      unlimitedLikes: true,
+      unlimitedMessages: true,
+      prioritySupport: false,
+      profileBoost: false,
+    },
+  },
+  "plan_monthly": {
+    id: "plan_monthly",
+    name: "Monthly Plan",
+    price: 499,
+    duration: 30, // days
+    coinsIncluded: 500,
+    features: {
+      unlimitedMessages: true,
+      prioritySupport: true,
+      profileBoost: true,
+    },
+  },
+  "plan_lifetime": {
+    id: "plan_lifetime",
+    name: "Lifetime Access",
+    price: 999,
+    duration: 36500, // ~100 years
+    coinsIncluded: 2000,
+    features: {
       unlimitedMessages: true,
       prioritySupport: true,
       profileBoost: true,
@@ -53,17 +61,11 @@ router.get("/plans", auth, async (req, res) => {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
-    // Add current subscription info to response
-    const plans = Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => ({
-      id: key,
-      ...plan,
-      isCurrent: user.subscription?.plan === key && user.subscription?.active,
-    }));
-
+    // Return plans array
+    const plans = Object.values(SUBSCRIPTION_PLANS);
     res.json({
       success: true,
       plans,
-      currentSubscription: user.subscription,
     });
   } catch (error) {
     console.error("GET /api/subscriptions/plans error:", error);
@@ -73,197 +75,24 @@ router.get("/plans", auth, async (req, res) => {
 
 /**
  * POST /api/subscriptions/create
- * Create subscription order
+ * Create subscription order (DISABLED)
  */
 router.post("/create", auth, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { planId, couponCode, originalAmount, finalAmount, discountAmount } =
-      req.body;
-
-    if (!SUBSCRIPTION_PLANS[planId]) {
-      return res.status(400).json({ success: false, error: "Invalid plan" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
-
-    const plan = SUBSCRIPTION_PLANS[planId];
-    const orderAmount = finalAmount || plan.price;
-
-    // Check if Razorpay is available
-    if (!razorpay) {
-      // Return manual payment info instead
-      return res.json({
-        success: true,
-        useManualPayment: true,
-        amount: orderAmount * 100,
-        currency: "INR",
-        planDetails: {
-          id: planId,
-          ...plan,
-        },
-        message: "Please use manual payment (UPI/QR code) to complete this subscription.",
-      });
-    }
-
-    // Create Razorpay order
-    const orderOptions = {
-      amount: orderAmount * 100, // Convert to paise
-      currency: "INR",
-      receipt: `sub_${Date.now()}_${userId}`,
-      notes: {
-        userId,
-        planId,
-        type: "subscription",
-        couponCode: couponCode || "",
-        originalAmount: originalAmount || plan.price,
-        discountAmount: discountAmount || 0,
-      },
-    };
-
-    const razorpayOrder = await razorpay.orders.create(orderOptions);
-
-    res.json({
-      success: true,
-      orderId: razorpayOrder.id,
-      amount: razorpayOrder.amount,
-      currency: razorpayOrder.currency,
-      planDetails: {
-        id: planId,
-        ...plan,
-      },
-    });
-  } catch (error) {
-    console.error("POST /api/subscriptions/create error:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to create subscription order" });
-  }
+  return res.status(400).json({
+    success: false,
+    error: "Online payments are currently disabled.",
+  });
 });
 
 /**
  * POST /api/subscriptions/verify
- * Verify subscription payment and activate
+ * Verify subscription payment and activate (DISABLED)
  */
 router.post("/verify", auth, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      planId,
-    } = req.body;
-
-    // Verify payment signature
-    const crypto = await import("crypto");
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Invalid payment signature" });
-    }
-
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
-
-    const plan = SUBSCRIPTION_PLANS[planId];
-    if (!plan) {
-      return res.status(400).json({ success: false, error: "Invalid plan" });
-    }
-
-    // Calculate subscription dates
-    const startDate = new Date();
-    const endDate = new Date(
-      startDate.getTime() + plan.duration * 24 * 60 * 60 * 1000
-    );
-
-    // Create subscription record
-    const subscription = new Subscription({
-      user: userId,
-      planId,
-      planName: plan.name,
-      price: plan.price,
-      coinsIncluded: plan.coinsIncluded,
-      duration: plan.duration,
-      startDate,
-      endDate,
-      status: "active",
-      features: plan.features,
-      paymentHistory: [
-        {
-          date: new Date(),
-          amount: plan.price,
-          status: "paid",
-          razorpayPaymentId: razorpay_payment_id,
-        },
-      ],
-    });
-
-    await subscription.save();
-
-    // Update user subscription
-    user.subscription = {
-      active: true,
-      plan: planId,
-      expiresAt: endDate,
-      features: plan.features,
-    };
-
-    // Add coins to user account
-    user.coins += plan.coinsIncluded;
-
-    // Unlock features if this is first subscription
-    if (user.requiresFirstSubscription) {
-      user.requiresFirstSubscription = false;
-      user.hasCompletedFirstSubscription = true;
-      user.firstSubscriptionDate = new Date();
-    }
-
-    await user.save();
-
-    // Record transaction
-    await Transaction.create({
-      user: userId,
-      amount: plan.price,
-      coins: plan.coinsIncluded,
-      orderId: razorpay_order_id,
-      status: "paid",
-      currency: "INR",
-      metadata: {
-        type: "subscription",
-        planId,
-        planName: plan.name,
-        description: `${plan.name} subscription activated`,
-      },
-    });
-
-    res.json({
-      success: true,
-      message: "Subscription activated successfully!",
-      subscription: {
-        plan: planId,
-        expiresAt: endDate,
-        coinsAdded: plan.coinsIncluded,
-        features: plan.features,
-      },
-      totalCoins: user.coins,
-    });
-  } catch (error) {
-    console.error("POST /api/subscriptions/verify error:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to verify subscription" });
-  }
+  return res.status(400).json({
+    success: false,
+    error: "Online payments are currently disabled.",
+  });
 });
 
 /**
@@ -279,17 +108,28 @@ router.get("/current", auth, async (req, res) => {
       return res.status(404).json({ success: false, error: "User not found" });
     }
 
+    // Find active subscription
     const subscription = await Subscription.findOne({
       user: userId,
       status: "active",
-    }).sort({ createdAt: -1 });
+      endDate: { $gt: new Date() },
+    }).sort({ endDate: -1 });
+
+    if (!subscription) {
+      return res.json({
+        success: true,
+        isSubscribed: false,
+      });
+    }
 
     res.json({
       success: true,
-      subscription: user.subscription,
-      details: subscription,
-      isActive: subscription?.isActive() || false,
-      remainingDays: subscription?.getRemainingDays() || 0,
+      isSubscribed: true,
+      subscription: {
+        planName: subscription.planName,
+        expiresAt: subscription.endDate,
+        features: subscription.features,
+      },
     });
   } catch (error) {
     console.error("GET /api/subscriptions/current error:", error);
@@ -316,20 +156,14 @@ router.post("/cancel", auth, async (req, res) => {
         .json({ success: false, error: "No active subscription found" });
     }
 
-    // Update subscription status
+    // Mark as cancelled (but keep active until end date technically, or expire immediately depending on logic)
+    // For now, let's just set status to cancelled
     subscription.status = "cancelled";
-    subscription.autoRenew = false;
     await subscription.save();
-
-    // Update user subscription (keep active until expiry)
-    const user = await User.findById(userId);
-    user.subscription.active = false;
-    await user.save();
 
     res.json({
       success: true,
       message: "Subscription cancelled successfully",
-      validUntil: subscription.endDate,
     });
   } catch (error) {
     console.error("POST /api/subscriptions/cancel error:", error);

@@ -7,7 +7,7 @@ import CustomAlert from "../components/CustomAlert";
 import { playSound } from "../utils/simpleSound";
 
 /**
- * Enhanced Wallet page with Razorpay integration
+ * Enhanced Wallet page
  */
 export default function Wallet() {
   const navigate = useNavigate();
@@ -25,29 +25,7 @@ export default function Wallet() {
     fetchUserData();
     fetchTransactions();
     fetchAvailableCoupons();
-    loadRazorpayScript();
   }, []);
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      // Check if already loaded
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => {
-        resolve(true);
-      };
-      script.onerror = () => {
-        console.error("Failed to load Razorpay script");
-        resolve(false);
-      };
-      document.body.appendChild(script);
-    });
-  };
 
   const fetchUserData = async () => {
     try {
@@ -122,151 +100,10 @@ export default function Wallet() {
   const handleBuyCoins = async (pkg) => {
     if (purchasing) return;
 
-    // Calculate discount for this specific package
-    let discountAmount = 0;
-    let finalAmount = pkg.price;
-
-    if (appliedCoupon) {
-      // Recalculate discount based on the selected package price
-      if (appliedCoupon.coupon.discountType === "percentage") {
-        discountAmount = Math.floor(
-          (pkg.price * appliedCoupon.coupon.discountValue) / 100
-        );
-      } else {
-        discountAmount = appliedCoupon.coupon.discountValue;
-      }
-
-      // Apply max discount cap if exists
-      if (
-        appliedCoupon.coupon.maxDiscount &&
-        discountAmount > appliedCoupon.coupon.maxDiscount
-      ) {
-        discountAmount = appliedCoupon.coupon.maxDiscount;
-      }
-
-      finalAmount = pkg.price - discountAmount;
-    }
-
-    // Store selected package in sessionStorage for the payment page
-    const paymentData = {
-      type: "coins",
-      coins: pkg.coins + pkg.bonus,
-      price: pkg.price,
-      bonus: pkg.bonus,
-      couponCode: appliedCoupon?.coupon?.code || null,
-      discountAmount: discountAmount,
-      finalAmount: finalAmount,
-    };
-
-    sessionStorage.setItem("pendingPayment", JSON.stringify(paymentData));
-
-    // Redirect to manual payment page
-    navigate("/wallet/scan-to-pay");
+    // Payment disabled
+    showError("Online payments are currently disabled.", "Payments Disabled");
+    return;
   };
-
-  /*
-   * RAZORPAY PAYMENT - TEMPORARILY DISABLED
-   * Keep this code for future use when payment gateway is re-enabled
-   *
-  const handleBuyCoinsRazorpay = async (pkg) => {
-    if (purchasing) return;
-
-    setPurchasing(pkg.coins + pkg.bonus);
-
-    let finalAmount = pkg.price;
-    let discountAmount = 0;
-
-    if (appliedCoupon) {
-      finalAmount = appliedCoupon.orderSummary.finalAmount;
-      discountAmount = appliedCoupon.orderSummary.discountAmount;
-    }
-
-    try {
-      const scriptLoaded = await loadRazorpayScript();
-      if (!scriptLoaded || !window.Razorpay) {
-        throw new Error("Payment gateway not available. Please refresh the page.");
-      }
-
-      const orderResponse = await api.post("/payments/create-order", {
-        amount: finalAmount,
-        originalAmount: pkg.price,
-        coins: pkg.coins + pkg.bonus,
-        currency: "INR",
-        couponCode: appliedCoupon?.coupon?.code || null,
-        discountAmount,
-      });
-
-      if (!orderResponse.success) {
-        throw new Error(orderResponse.error || "Failed to create order");
-      }
-
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_Ri6GYh8gLqAcT0",
-        amount: orderResponse.amount,
-        currency: orderResponse.currency,
-        name: "HumDono Coins",
-        description: `${pkg.coins + pkg.bonus} Coins Package${appliedCoupon ? ` (${appliedCoupon.coupon.code} applied)` : ""}`,
-        order_id: orderResponse.order_id,
-        handler: async function (response) {
-          try {
-            const verifyResponse = await api.post("/payments/verify", {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-
-            if (verifyResponse.success) {
-              playSound("gift");
-              const message = appliedCoupon
-                ? `Payment successful! ${pkg.coins + pkg.bonus} coins added. You saved ₹${discountAmount} with coupon ${appliedCoupon.coupon.code}! 💰`
-                : `Successfully purchased ${pkg.coins + pkg.bonus} coins! 💰 Your new balance: ${verifyResponse.totalCoins} coins`;
-
-              showSuccess(message, "Payment Successful");
-              setAppliedCoupon(null);
-              setCouponCode("");
-              await fetchUserData();
-              await fetchTransactions();
-            } else {
-              throw new Error(verifyResponse.error || "Payment verification failed");
-            }
-          } catch (error) {
-            console.error("Payment verification error:", error);
-            playSound("error");
-            showError(error.response?.data?.error || error.message || "Payment verification failed. Please contact support.", "Verification Failed");
-          } finally {
-            setPurchasing(null);
-          }
-        },
-        prefill: {
-          name: user?.name || "",
-          email: user?.email || "",
-          contact: user?.phone || "",
-        },
-        theme: { color: "#ec4899" },
-        modal: {
-          ondismiss: function () {
-            setPurchasing(null);
-            showError("Payment cancelled", "Cancelled");
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-    } catch (error) {
-      console.error("Payment error:", error);
-      playSound("error");
-
-      if (error.response?.status === 401) {
-        showError("Session error. Please try again or refresh the page.", "Session Error");
-        // DO NOT auto-logout - let user stay on page
-      } else {
-        showError(error.response?.data?.error || error.message || "Failed to initiate payment. Please try again.", "Payment Failed");
-      }
-      setPurchasing(null);
-    }
-  };
-  */
 
   if (loading) {
     return (
@@ -561,9 +398,8 @@ export default function Wallet() {
             {coinPackages.map((pkg, index) => (
               <div
                 key={index}
-                className={`border-2 rounded-xl p-4 hover:border-pink-400 transition-all hover-romantic ${
-                  pkg.popular ? "border-pink-400 bg-pink-50" : "border-pink-200"
-                }`}
+                className={`border-2 rounded-xl p-4 hover:border-pink-400 transition-all hover-romantic ${pkg.popular ? "border-pink-400 bg-pink-50" : "border-pink-200"
+                  }`}
               >
                 <div className="text-center">
                   {pkg.popular && (
@@ -598,7 +434,7 @@ export default function Wallet() {
                               discount = Math.floor(
                                 (pkg.price *
                                   appliedCoupon.coupon.discountValue) /
-                                  100
+                                100
                               );
                             } else {
                               discount = appliedCoupon.coupon.discountValue;
@@ -622,7 +458,7 @@ export default function Wallet() {
                               discount = Math.floor(
                                 (pkg.price *
                                   appliedCoupon.coupon.discountValue) /
-                                  100
+                                100
                               );
                             } else {
                               discount = appliedCoupon.coupon.discountValue;
@@ -657,9 +493,6 @@ export default function Wallet() {
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-500 text-center mt-4">
-            🔒 Secure payment powered by Razorpay
-          </p>
         </div>
 
         {/* Transaction History */}
@@ -694,13 +527,12 @@ export default function Wallet() {
                       ₹{transaction.amount}
                     </p>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        transaction.status === "paid"
+                      className={`text-xs px-2 py-1 rounded-full ${transaction.status === "paid"
                           ? "bg-green-100 text-green-700"
                           : transaction.status === "failed"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
                     >
                       {transaction.status}
                     </span>

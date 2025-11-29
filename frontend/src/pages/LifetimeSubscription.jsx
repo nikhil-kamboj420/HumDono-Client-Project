@@ -14,16 +14,12 @@ export default function LifetimeSubscription() {
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
-  const RAZORPAY_ENABLED = import.meta.env.VITE_RAZORPAY_ENABLED === "true";
 
   const LIFETIME_PRICE = 699;
 
   useEffect(() => {
-    if (RAZORPAY_ENABLED) {
-      loadRazorpayScript();
-    }
     checkUserGender();
-  }, [RAZORPAY_ENABLED]);
+  }, []);
 
   const checkUserGender = async () => {
     try {
@@ -46,21 +42,6 @@ export default function LifetimeSubscription() {
     } catch (error) {
       console.error("Error fetching user:", error);
     }
-  };
-
-  const loadRazorpayScript = () => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true);
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
   };
 
   const applyCoupon = async () => {
@@ -91,79 +72,10 @@ export default function LifetimeSubscription() {
   };
 
   const handlePurchase = async () => {
-    navigate("/lifetime-access/scan-to-pay", {
-      state: {
-        amount: finalPrice,
-        couponCode,
-        discount,
-      },
-    });
-    /*
-    // EXISTING RAZORPAY LOGIC - TEMPORARILY DISABLED
-    try {
-      // Create order
-      const orderResponse = await api.post('/payments/create-order', {
-        amount: finalPrice,
-        type: 'lifetime_subscription',
-        couponCode: couponCode || null
-      });
-
-      if (!orderResponse.success) {
-        throw new Error('Failed to create order');
-      }
-
-      const { orderId, amount, currency } = orderResponse;
-
-      // Razorpay options
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: amount,
-        currency: currency,
-        name: 'HumDono',
-        description: 'Lifetime Subscription',
-        order_id: orderId,
-        handler: async function (response) {
-          try {
-            // Verify payment
-            const verifyResponse = await api.post('/payments/verify-subscription', {
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              isLifetime: true,
-              couponCode: couponCode || null
-            });
-
-            if (verifyResponse.success) {
-              showSuccess('Lifetime subscription activated! 🎉', 'Success');
-              setTimeout(() => {
-                navigate('/');
-              }, 2000);
-            }
-          } catch (error) {
-            showError('Payment verification failed', 'Error');
-          }
-        },
-        prefill: {
-          name: '',
-          email: '',
-          contact: ''
-        },
-        theme: {
-          color: '#cc0033'
-        }
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
-    } catch (error) {
-      showError(error.response?.data?.error || 'Purchase failed', 'Error');
-    } finally {
-      setLoading(false);
-    }
-    */
+    // Payment disabled
+    showError("Online payments are currently disabled.", "Payments Disabled");
+    return;
   };
-
-  // No manual form here; handled on submit-transaction page
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-50 p-4">
@@ -239,23 +151,10 @@ export default function LifetimeSubscription() {
             </button>
           </div>
 
-          {/* Manual UPI submission moved to /lifetime-access/submit-transaction */}
-
           {/* Info */}
           <div className="px-8 pb-8 text-center text-sm text-gray-500">
-            {RAZORPAY_ENABLED ? (
-              <>
-                <p>✓ Secure payment via Razorpay</p>
-                <p>✓ Instant activation</p>
-                <p>✓ No recurring charges</p>
-              </>
-            ) : (
-              <>
-                <p>✓ Manual UPI transaction submission</p>
-                <p>✓ Admin will verify and activate access</p>
-                <p>✓ No recurring charges</p>
-              </>
-            )}
+            <p>✓ Instant activation</p>
+            <p>✓ No recurring charges</p>
           </div>
         </div>
       </div>

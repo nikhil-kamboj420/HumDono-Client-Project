@@ -124,6 +124,7 @@ export default function GenericScanToPayPage() {
             </div>
 
             {/* QR Code */}
+            {/* QR Code - TEMPORARILY DISABLED
             <div className="rounded-xl border-2 border-pink-200 bg-gray-50 p-4 flex items-center justify-center">
               <img
                 src="/HUMDONO_UPI_SCANNER.jpg"
@@ -134,8 +135,14 @@ export default function GenericScanToPayPage() {
                 }}
               />
             </div>
+            */}
+            <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-8 flex flex-col items-center justify-center text-center">
+              <p className="text-gray-500 font-medium">QR Code Payments Currently Unavailable</p>
+              <p className="text-gray-400 text-sm mt-2">Please check back later</p>
+            </div>
 
             {/* Instructions */}
+            {/* Instructions - TEMPORARILY DISABLED
             <div className="mt-6 space-y-2 text-gray-700 text-sm">
               <p className="font-semibold text-gray-900">Instructions:</p>
               <p>1. Open your UPI app (GPay, PhonePe, Paytm, etc.)</p>
@@ -147,6 +154,7 @@ export default function GenericScanToPayPage() {
               <p>4. Complete the payment</p>
               <p>5. Note down the Transaction ID / UTR number</p>
             </div>
+            */}
 
             {/* Payment Details Summary */}
             <div className="mt-6 bg-pink-50 rounded-lg p-4 border border-pink-200">
@@ -183,10 +191,10 @@ export default function GenericScanToPayPage() {
 
             {/* Next Button */}
             <button
-              onClick={() => navigate(getSubmitPath())}
-              className="mt-6 w-full py-3 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+              disabled={true}
+              className="mt-6 w-full py-3 bg-gray-300 text-gray-500 rounded-xl font-semibold cursor-not-allowed"
             >
-              I have completed the payment – Next
+              Payment Verification Disabled
             </button>
           </div>
         </div>
