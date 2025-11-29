@@ -749,7 +749,13 @@ div button {
   color: inherit;
 }
 
-
 img{
-  aspect-ratio: 1/1;
+    aspect-ratio: 2/1.8 !important;
+    object-fit: cover !important;
 }
+
+
+
+
+
+

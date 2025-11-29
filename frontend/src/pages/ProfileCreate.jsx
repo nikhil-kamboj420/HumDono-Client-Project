@@ -300,6 +300,12 @@ export default function ProfileCreate() {
       return;
     }
 
+    // Validation: Gender required
+    if (!gender) {
+      showWarning("Please select your gender.", "Gender Required");
+      return;
+    }
+
     // Validation: Photo required (MANDATORY)
     if (photos.length === 0) {
       showError(
@@ -348,7 +354,7 @@ export default function ProfileCreate() {
       console.error("Save error:", err);
       showError(
         err?.response?.data?.error ||
-          "Failed to save profile. Please try again.",
+        "Failed to save profile. Please try again.",
         "Save Error"
       );
     } finally {
@@ -418,6 +424,22 @@ export default function ProfileCreate() {
               onChange={(value) => setInterests(value)}
               placeholder="e.g. Music, Hiking, Cooking"
             />
+          </div>
+
+          {/* Gender - Dropdown */}
+          <div>
+            <label className="block text-sm text-[#77001c] mb-1">
+              Gender <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className="w-full p-3 rounded-xl border border-[#ff4c91] bg-white text-black"
+            >
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
           </div>
 
           {/* Relationship Status - Dropdown */}
@@ -532,11 +554,10 @@ export default function ProfileCreate() {
                         const el = document.getElementById("state-dropdown");
                         if (el) el.classList.add("hidden");
                       }}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        location.state === st
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${location.state === st
                           ? "bg-[#cc0033] text-white"
                           : "bg-pink-50 text-[#77001c] hover:bg-pink-100"
-                      }`}
+                        }`}
                     >
                       {st}
                     </button>
