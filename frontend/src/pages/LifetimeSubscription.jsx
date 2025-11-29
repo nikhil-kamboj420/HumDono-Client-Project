@@ -8,9 +8,9 @@ import CustomAlert from "../components/CustomAlert";
 
 export default function LifetimeSubscription() {
   const [loading, setLoading] = useState(false);
-  const [couponCode, setCouponCode] = useState("");
-  const [discount, setDiscount] = useState(0);
-  const [finalPrice, setFinalPrice] = useState(699);
+  // const [couponCode, setCouponCode] = useState("");
+  // const [discount, setDiscount] = useState(0);
+  // const [finalPrice, setFinalPrice] = useState(699);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
@@ -44,32 +44,32 @@ export default function LifetimeSubscription() {
     }
   };
 
-  const applyCoupon = async () => {
-    if (!couponCode.trim()) {
-      showError("Please enter a coupon code", "Invalid Coupon");
-      return;
-    }
+  // const applyCoupon = async () => {
+  //   if (!couponCode.trim()) {
+  //     showError("Please enter a coupon code", "Invalid Coupon");
+  //     return;
+  //   }
 
-    try {
-      const response = await api.post("/coupons/validate", {
-        code: couponCode,
-        orderAmount: LIFETIME_PRICE,
-        orderType: "subscription",
-      });
+  //   try {
+  //     const response = await api.post("/coupons/validate", {
+  //       code: couponCode,
+  //       orderAmount: LIFETIME_PRICE,
+  //       orderType: "subscription",
+  //     });
 
-      if (response.success) {
-        const discountAmount = response.discount.amount;
-        setDiscount(discountAmount);
-        setFinalPrice(LIFETIME_PRICE - discountAmount);
-        showSuccess(`Coupon applied! ₹${discountAmount} off`, "Success");
-      }
-    } catch (error) {
-      showError(
-        error.response?.data?.error || "Invalid coupon code",
-        "Coupon Error"
-      );
-    }
-  };
+  //     if (response.success) {
+  //       const discountAmount = response.discount.amount;
+  //       setDiscount(discountAmount);
+  //       setFinalPrice(LIFETIME_PRICE - discountAmount);
+  //       showSuccess(`Coupon applied! ₹${discountAmount} off`, "Success");
+  //     }
+  //   } catch (error) {
+  //     showError(
+  //       error.response?.data?.error || "Invalid coupon code",
+  //       "Coupon Error"
+  //     );
+  //   }
+  // };
 
   const handlePurchase = async () => {
     // Payment disabled
@@ -94,33 +94,22 @@ export default function LifetimeSubscription() {
           {/* Header */}
           <div className="bg-gradient-to-r from-pink-500 to-red-500 p-6 text-white text-center">
             <SparklesIcon className="w-16 h-16 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-2">HumDono Premium Membership
+            <h1 className="text-3xl font-bold mb-2">
+              HumDono Premium Membership
             </h1>
             <p className="text-pink-100">Unlock premium messaging features</p>
           </div>
 
           {/* Price */}
           <div className="p-8 text-center">
-            {discount > 0 && (
-              <div className="mb-2">
-                <span className="text-2xl text-gray-400 line-through">
-                  ₹{LIFETIME_PRICE}
-                </span>
-              </div>
-            )}
             <div className="text-5xl font-bold text-gray-900 mb-2">
-              ₹{finalPrice}
+              ₹{LIFETIME_PRICE}
             </div>
             <p className="text-gray-600">One-time Premium Upgrade</p>
-            {discount > 0 && (
-              <div className="mt-2 inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">
-                You save ₹{discount}!
-              </div>
-            )}
           </div>
 
           {/* Coupon Code */}
-          <div className="px-8 pb-6">
+          {/* <div className="px-8 pb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Have a coupon code?
             </label>
@@ -139,17 +128,23 @@ export default function LifetimeSubscription() {
                 Apply
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Purchase Button */}
           <div className="px-8 pb-8">
-            <button
-              onClick={handlePurchase}
-              disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            <a
+              href="/https://humdonodating.mojo.page/humdono-premium"
+              target="_self"
+              rel="noopener noreferrer"
             >
-              {loading ? "Processing..." : "Get Premium Access"}
-            </button>
+              {" "}
+              <button
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-r from-pink-500 to-red-500 text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Processing..." : "Get Premium Access"}
+              </button>
+            </a>
           </div>
 
           {/* Info */}

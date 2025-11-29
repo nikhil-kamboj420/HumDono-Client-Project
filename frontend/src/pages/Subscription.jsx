@@ -12,16 +12,16 @@ const Subscription = () => {
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null);
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [availableCoupons, setAvailableCoupons] = useState([]);
-  const [showCoupons, setShowCoupons] = useState(false);
+  // const [couponCode, setCouponCode] = useState('');
+  // const [appliedCoupon, setAppliedCoupon] = useState(null);
+  // const [availableCoupons, setAvailableCoupons] = useState([]);
+  // const [showCoupons, setShowCoupons] = useState(false);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
   useEffect(() => {
     fetchPlans();
-    fetchAvailableCoupons();
+    // fetchAvailableCoupons();
   }, []);
 
   const fetchPlans = async () => {
@@ -38,46 +38,46 @@ const Subscription = () => {
     }
   };
 
-  const fetchAvailableCoupons = async () => {
-    try {
-      const response = await api.get('/coupons/available?orderType=subscription');
-      if (response.success) {
-        setAvailableCoupons(response.coupons || []);
-      }
-    } catch (error) {
-      console.error('Error fetching coupons:', error);
-    }
-  };
+  // const fetchAvailableCoupons = async () => {
+  //   try {
+  //     const response = await api.get('/coupons/available?orderType=subscription');
+  //     if (response.success) {
+  //       setAvailableCoupons(response.coupons || []);
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching coupons:', error);
+  //   }
+  // };
 
-  const validateCoupon = async (code, amount) => {
-    try {
-      const response = await api.post('/coupons/validate', {
-        code,
-        orderAmount: amount,
-        orderType: 'subscription'
-      });
+  // const validateCoupon = async (code, amount) => {
+  //   try {
+  //     const response = await api.post('/coupons/validate', {
+  //       code,
+  //       orderAmount: amount,
+  //       orderType: 'subscription'
+  //     });
 
-      if (response.success) {
-        setAppliedCoupon(response);
-        showSuccess(
-          `Coupon applied! You save ₹${response.discount.amount}`,
-          'Coupon Applied'
-        );
-        return response;
-      }
-    } catch (error) {
-      showError(
-        error.response?.data?.error || 'Invalid coupon code',
-        'Coupon Error'
-      );
-      return null;
-    }
-  };
+  //     if (response.success) {
+  //       setAppliedCoupon(response);
+  //       showSuccess(
+  //         `Coupon applied! You save ₹${response.discount.amount}`,
+  //         'Coupon Applied'
+  //       );
+  //       return response;
+  //     }
+  //   } catch (error) {
+  //     showError(
+  //       error.response?.data?.error || 'Invalid coupon code',
+  //       'Coupon Error'
+  //     );
+  //     return null;
+  //   }
+  // };
 
-  const removeCoupon = () => {
-    setAppliedCoupon(null);
-    setCouponCode('');
-  };
+  // const removeCoupon = () => {
+  //   setAppliedCoupon(null);
+  //   setCouponCode('');
+  // };
 
   const handleSubscribe = async (planId) => {
     if (purchasing) return;
@@ -163,10 +163,9 @@ const Subscription = () => {
         )}
 
         {/* Coupon Section */}
-        <div className="card-romantic p-6">
+        {/* <div className="card-romantic p-6">
           <h3 className="text-lg font-semibold text-passion mb-4">🎫 Coupons & Offers</h3>
 
-          {/* Applied Coupon Display */}
           {appliedCoupon && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-between">
@@ -187,7 +186,6 @@ const Subscription = () => {
             </div>
           )}
 
-          {/* Coupon Input */}
           {!appliedCoupon && (
             <div className="space-y-3">
               <div className="flex space-x-2">
@@ -207,7 +205,6 @@ const Subscription = () => {
                 </button>
               </div>
 
-              {/* Available Coupons */}
               {availableCoupons.length > 0 && (
                 <div>
                   <button
@@ -252,7 +249,7 @@ const Subscription = () => {
               )}
             </div>
           )}
-        </div>
+        </div> */}
 
         {/* Subscription Plans */}
         <div className="space-y-4">
@@ -288,54 +285,7 @@ const Subscription = () => {
                 </div>
 
                 <div className="text-right">
-                  {/* Price Display with Coupon */}
-                  {appliedCoupon ? (
-                    <div>
-                      <p className="text-lg text-gray-500 line-through">₹{plan.price}</p>
-                      <p className="text-3xl font-bold text-green-600">
-                        ₹
-                        {(() => {
-                          let discount = 0;
-                          if (appliedCoupon.coupon.discountType === "percentage") {
-                            discount = Math.floor(
-                              (plan.price * appliedCoupon.coupon.discountValue) / 100
-                            );
-                          } else {
-                            discount = appliedCoupon.coupon.discountValue;
-                          }
-                          if (
-                            appliedCoupon.coupon.maxDiscount &&
-                            discount > appliedCoupon.coupon.maxDiscount
-                          ) {
-                            discount = appliedCoupon.coupon.maxDiscount;
-                          }
-                          return plan.price - discount;
-                        })()}
-                      </p>
-                      <p className="text-sm text-green-600 font-medium">
-                        Save ₹
-                        {(() => {
-                          let discount = 0;
-                          if (appliedCoupon.coupon.discountType === "percentage") {
-                            discount = Math.floor(
-                              (plan.price * appliedCoupon.coupon.discountValue) / 100
-                            );
-                          } else {
-                            discount = appliedCoupon.coupon.discountValue;
-                          }
-                          if (
-                            appliedCoupon.coupon.maxDiscount &&
-                            discount > appliedCoupon.coupon.maxDiscount
-                          ) {
-                            discount = appliedCoupon.coupon.maxDiscount;
-                          }
-                          return discount;
-                        })()}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-3xl font-bold text-passion">₹{plan.price}</p>
-                  )}
+                  <p className="text-3xl font-bold text-passion">₹{plan.price}</p>
                   <p className="text-sm text-gray-600">+ {plan.coinsIncluded} coins</p>
                 </div>
               </div>

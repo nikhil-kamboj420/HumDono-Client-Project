@@ -116,11 +116,11 @@ export default function GenericScanToPayPage() {
             <div className="text-center mb-6">
               <p className="text-gray-600 text-sm">Amount to Pay</p>
               <p className="text-4xl font-bold text-gray-900">₹{getAmount()}</p>
-              {paymentData.discountAmount > 0 && (
+              {/* {paymentData.discountAmount > 0 && (
                 <p className="text-green-600 text-sm mt-1">
                   You save ₹{paymentData.discountAmount} with coupon!
                 </p>
-              )}
+              )} */}
             </div>
 
             {/* QR Code */}
@@ -178,11 +178,11 @@ export default function GenericScanToPayPage() {
                     <p>• Price: ₹{paymentData.price}</p>
                   </>
                 )}
-                {paymentData.discountAmount > 0 && (
+                {/* {paymentData.discountAmount > 0 && (
                   <p className="text-green-600">
                     • Discount: -₹{paymentData.discountAmount}
                   </p>
-                )}
+                )} */}
                 <p className="font-bold text-pink-600">
                   • Final Amount: ₹{getAmount()}
                 </p>
