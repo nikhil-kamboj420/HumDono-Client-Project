@@ -92,12 +92,12 @@ export default function SwipeCard({
   };
 
   return (
-    <div className="relative z-10 mx-auto max-h-[75vh] bottom-6 w-full max-w-md lg:max-w-lg xl:max-w-xl rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col h-full border-[6px] border-[#E91E63]">
+    <div className="relative z-10 mx-auto max-h-[76vh] bottom-6 w-full max-w-md lg:max-w-lg xl:max-w-xl rounded-2xl bg-white shadow-3xl overflow-hidden flex flex-col h-full border-[6px]border-b-[#e3e3e3] border-r-[#e3e3e3] border-l-[#e3e3e3] border-t-[#e3e3e3] ">
       {/* Top Action: Send Message */}
       <div className="px-4 py-3 shrink-0 bg-white z-10">
         <button
           onClick={handleMessage}
-          className="w-full flex items-center justify-center gap-3 bg-[#1a1a1a] hover:bg-black text-white font-semibold py-3.5 rounded-full shadow-lg text-sm sm:text-base transition-colors tracking-wider"
+          className="mt-2 w-full flex items-center justify-center gap-3 bg-[#1a1a1a] hover:bg-black text-white font-semibold py-3.5 rounded-full shadow-lg text-sm sm:text-base transition-colors tracking-wider"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" aria-hidden>
             <rect
@@ -124,14 +124,14 @@ export default function SwipeCard({
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto profile-scroll relative bg-white">
         {/* Large profile image */}
-        <div className="w-full aspect-[4/5] bg-gray-100 relative shrink-0">
+        <div className="max-h-[50vh] w-full aspect-[4/5] bg-gray-100 relative shrink-0">
           <img
             src={photo}
             alt={profile.name || "profile"}
-            className="w-full h-full object-cover"
+            className="max-h-full w-full object-cover"
           />
           {/* Scroll hint */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm flex items-center gap-1.5 pointer-events-none">
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm flex items-center gap-1.5 pointer-events-none animate-bounce">
             <span>Scroll</span>
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none">
               <path
@@ -146,7 +146,7 @@ export default function SwipeCard({
         </div>
 
         {/* Profile Details */}
-        <div className="px-5 py-5 bg-white">
+        <div className="px-4 py-3 bg-white">
           {/* Name and Age */}
           <h3 className="text-2xl font-bold text-gray-900 mb-2">
             {profile.name || "Unnamed"}
@@ -154,7 +154,7 @@ export default function SwipeCard({
           </h3>
 
           {/* Verified Badge */}
-          <div className="flex items-center gap-1.5 mb-5">
+          <div className="flex items-center gap-1.5 mb-3">
             <svg
               className="w-4 h-4 text-[#E91E63]"
               viewBox="0 0 24 24"
@@ -167,7 +167,7 @@ export default function SwipeCard({
 
           {/* Bio */}
           {profile.bio && (
-            <div className="mb-6">
+            <div className="mb-4">
               <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
                 About
               </h4>
@@ -176,7 +176,7 @@ export default function SwipeCard({
           )}
 
           {/* Info Grid */}
-          <div className="grid grid-cols-1 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-3 mb-4">
             {[
               { label: "Education", value: profile.education },
               {
@@ -203,7 +203,7 @@ export default function SwipeCard({
 
           {/* Interests */}
           {profile.interests?.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4">
               <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
                 Interests
               </h4>

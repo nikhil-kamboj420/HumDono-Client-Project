@@ -61,7 +61,7 @@ export default function HomeFeed() {
   const feedQuery = useInfiniteQuery({
     queryKey: ["feed", filters],
     queryFn: async ({ pageParam = 0 }) => {
-      const limit = 100;
+      const limit = 30;
       const params = {
         limit,
         skip: pageParam * limit,
@@ -75,16 +75,17 @@ export default function HomeFeed() {
       };
     },
     getNextPageParam: (lastPage) => {
-      if (!lastPage || lastPage.length === 0 || lastPage.length < 100)
-        return undefined;
-      return lastPage.nextPage;
+      return lastPage && lastPage.items && lastPage.items.length > 0
+        ? lastPage.nextPage
+        : undefined;
     },
     staleTime: 1000 * 30,
     retry: false,
     keepPreviousData: true,
   });
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = feedQuery;
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    feedQuery;
 
   // Flatten all pages into one list
   const rawItems = useMemo(
@@ -107,9 +108,7 @@ export default function HomeFeed() {
       // 3. Must NOT be in current queue (already added)
       const newCandidates = rawItems.filter(
         (item) =>
-          item?._id &&
-          !seenIds.has(item._id) &&
-          !currentQueueIds.has(item._id)
+          item?._id && !seenIds.has(item._id) && !currentQueueIds.has(item._id)
       );
 
       if (newCandidates.length === 0) return prevProfiles;
@@ -290,7 +289,7 @@ export default function HomeFeed() {
             <img
               src="/logo.png"
               alt="HumDono Logo"
-              className="h-20 w-20 lg:h-30 lg:w-30 object-contain cursor-pointer drop-shadow-lg"
+              className="mb-3 h-20 w-20 lg:h-30 lg:w-30 object-contain cursor-pointer drop-shadow-lg"
               onClick={() => navigate("/")}
             />
             <h2 className="text-xl lg:text-2xl xl:text-3xl font-extrabold text-white truncate shadow-lg">
@@ -302,7 +301,9 @@ export default function HomeFeed() {
             className="flex items-center space-x-2 text-white/80 hover:text-white transition-colors shrink-0"
           >
             <AdjustmentsHorizontalIcon className="w-5 h-5 lg:w-6 lg:h-6" />
-            <span className="text-sm lg:text-base hidden sm:inline">Filters</span>
+            <span className="text-sm lg:text-base hidden sm:inline">
+              Filters
+            </span>
           </button>
         </header>
 
@@ -415,18 +416,19 @@ export default function HomeFeed() {
                   onClick={() => navigate("/likes")}
                   className="px-6 py-3 bg-white text-pink-600 rounded-lg font-semibold hover:bg-pink-50 transition-colors"
                 >
-                  People I Like
+                  People I Liked
                 </button>
                 <button
                   onClick={() => navigate("/dislikes")}
                   className="px-6 py-3 bg-white/10 text-white border border-white rounded-lg font-semibold hover:bg-white/20 transition-colors"
                 >
-                  People I Dislike
+                  People I Disliked
                 </button>
               </div>
             </div>
           ) : (
-            hasNextPage && profiles.length === 0 && (
+            hasNextPage &&
+            profiles.length === 0 && (
               <button
                 onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}

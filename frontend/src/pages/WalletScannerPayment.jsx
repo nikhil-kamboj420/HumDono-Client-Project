@@ -2,17 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
-export default function ScannerPayment() {
+export default function WalletScannerPayment() {
     const navigate = useNavigate();
     const [paymentData, setPaymentData] = useState(null);
 
     useEffect(() => {
-        const storedData = sessionStorage.getItem('lifetimePayment');
+        const storedData = sessionStorage.getItem('walletPayment');
         if (storedData) {
             setPaymentData(JSON.parse(storedData));
         } else {
             // If no payment data, redirect back
-            navigate('/subscription');
+            navigate('/wallet');
         }
     }, [navigate]);
 
@@ -24,7 +24,15 @@ export default function ScannerPayment() {
         <div className="min-h-screen bg-white">
             {/* Scan to Pay Header */}
             <div className="bg-white pt-6 pb-4 px-4">
-                <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">Scan to Pay</h2>
+                <div className="flex items-center space-x-3 mb-4">
+                    <button
+                        onClick={() => navigate('/wallet')}
+                        className="text-gray-700 hover:text-gray-900"
+                    >
+                        <ArrowLeftIcon className="w-6 h-6" />
+                    </button>
+                    <h2 className="text-2xl font-bold text-gray-900">Scan to Pay</h2>
+                </div>
                 <p className="text-center text-gray-600">Use any UPI app to complete the payment</p>
             </div>
 
@@ -59,6 +67,14 @@ export default function ScannerPayment() {
 
                         <p className="text-sm text-gray-600">UPI ID: humdonodating@okicici</p>
                         <p className="text-xs text-gray-500 mt-2">Scan to pay with any UPI app</p>
+                    </div>
+                </div>
+
+                {/* Coin Package Info */}
+                <div className="bg-pink-50 border-2 border-pink-200 rounded-xl p-4 mb-6">
+                    <div className="text-center mb-3">
+                        <p className="text-gray-700 font-medium">You're purchasing</p>
+                        <p className="text-3xl font-bold text-pink-600">{paymentData.coins} Coins</p>
                     </div>
                 </div>
 
@@ -104,10 +120,20 @@ export default function ScannerPayment() {
                     </div>
                 )}
 
+                {/* Amount Display (if no discount) */}
+                {paymentData.discount === 0 && (
+                    <div className="bg-pink-50 border-2 border-pink-200 rounded-xl p-4 mb-6">
+                        <div className="flex items-center justify-between">
+                            <p className="text-gray-900 font-bold text-lg">Amount to Pay:</p>
+                            <p className="text-pink-600 font-bold text-2xl">₹{paymentData.amount}</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Complete Payment Button */}
                 <button
                     onClick={() => {
-                        sessionStorage.removeItem('lifetimePayment');
+                        sessionStorage.removeItem('walletPayment');
                         navigate('/');
                     }}
                     className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition"
@@ -118,7 +144,14 @@ export default function ScannerPayment() {
                 {/* Note */}
                 <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <p className="text-blue-800 text-sm text-center">
-                        <span className="font-bold">Note:</span> Go to your Profile page and enter the Pass Key you received to activate your access.
+                        <span className="font-bold">Note:</span> Go to your Profile page and enter the Pass Key you received to activate your coins.
+                    </p>
+                </div>
+
+                {/* Passkey Info */}
+                <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                    <p className="text-yellow-800 text-xs text-center font-medium">
+                        Based on the amount paid, you'll receive a specific passkey to unlock your coins in the Profile section.
                     </p>
                 </div>
             </div>

@@ -29,8 +29,7 @@ const Settings = () => {
     },
     privacy: {
       showAge: true,
-      showSocialLinks: false,
-      showDistance: true
+      showSocialLinks: false
     }
   });
   const navigate = useNavigate();
@@ -204,15 +203,7 @@ const Settings = () => {
               />
             </label>
 
-            <label className="flex items-center justify-between">
-              <span className="text-gray-700">Show distance</span>
-              <input
-                type="checkbox"
-                checked={preferences.privacy.showDistance}
-                onChange={(e) => updatePreferences('privacy', { showDistance: e.target.checked })}
-                className="rounded"
-              />
-            </label>
+            {/* Removed Show distance toggle */}
           </div>
         </div>
 

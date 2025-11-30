@@ -24,6 +24,8 @@ const Profile = () => {
   const [photoToDelete, setPhotoToDelete] = useState(null);
   const [passKey, setPassKey] = useState('');
   const [activating, setActivating] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+  const [applyingReferral, setApplyingReferral] = useState(false);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, showWarning, hideAlert } = useCustomAlert();
 
@@ -142,6 +144,35 @@ const Profile = () => {
       setActivating(false);
     }
   };
+
+  const handleApplyReferralCode = async () => {
+    if (!referralCode.trim()) {
+      showError("Please enter a referral code", "Invalid Input");
+      return;
+    }
+
+    setApplyingReferral(true);
+    try {
+      const response = await api.post('/referrals/apply-code', { referralCode });
+
+      if (response.ok) {
+        showSuccess(
+          `🎉 ${response.message}! You now have ${response.totalCoins} coins!`,
+          'Referral Applied'
+        );
+        setReferralCode('');
+        await fetchUserProfile();
+      }
+    } catch (error) {
+      showError(
+        error.response?.data?.error || 'Invalid referral code or already used',
+        'Application Failed'
+      );
+    } finally {
+      setApplyingReferral(false);
+    }
+  };
+
 
   if (loading) {
     return (
@@ -524,6 +555,53 @@ const Profile = () => {
               </p>
             </div>
           </div>
+
+          {/* Apply Referral Code Section - Only show if user hasn't used a referral code yet */}
+          {!user?.referredBy && (
+            <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl shadow-lg p-6 border-2 border-green-200">
+              <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                🎁 Apply Referral Code
+              </h2>
+              <p className="text-gray-600 text-sm mb-4">
+                Have a friend's referral code? Enter it to earn bonus coins for both of you!
+              </p>
+
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Enter referral code"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-3 border-2 border-green-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent font-mono text-lg"
+                />
+                <button
+                  onClick={handleApplyReferralCode}
+                  disabled={applyingReferral || !referralCode}
+                  className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {applyingReferral ? 'Applying...' : 'Apply Referral Code'}
+                </button>
+              </div>
+
+              <div className="mt-4 bg-white/50 rounded-lg p-3 border border-green-200">
+                <p className="text-xs text-gray-600 text-center">
+                  💰 You'll earn 50 coins and your friend will earn 100 coins!
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Show if user has already used a referral */}
+          {user?.referredBy && (
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl shadow-lg p-6 border-2 border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                ✅ Referral Code Applied
+              </h2>
+              <p className="text-gray-600 text-sm">
+                You have already used a referral code. You can only use one referral code per account.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

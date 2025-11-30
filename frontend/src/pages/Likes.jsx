@@ -65,7 +65,7 @@ export default function Likes() {
           >
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
-          <h2 className="text-2xl font-bold text-white">People I Like ❤️</h2>
+          <h2 className="text-2xl font-bold text-white">People I Liked ❤️</h2>
         </div>
 
         {/* List */}

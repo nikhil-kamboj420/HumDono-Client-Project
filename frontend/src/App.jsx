@@ -26,6 +26,7 @@ import Wallet from "./pages/Wallet";
 import Subscription from "./pages/Subscription";
 import LifetimeAccess from "./pages/LifetimeAccess";
 import ScannerPayment from "./pages/ScannerPayment";
+import WalletScannerPayment from "./pages/WalletScannerPayment";
 import RequireAuth from "./components/RequireAuth";
 import Notifications from "./pages/Notifications";
 import NotificationPopup from "./components/NotificationPopup";
@@ -211,6 +212,7 @@ function App() {
           {/* Subscription Routes */}
           <Route path="/subscription" element={<LifetimeAccess />} />
           <Route path="/scanner-payment" element={<ScannerPayment />} />
+          <Route path="/wallet-scanner-payment" element={<WalletScannerPayment />} />
 
           <Route path="/buy" element={<div className="p-6">Buy coins page (placeholder)</div>} />
         </Route>

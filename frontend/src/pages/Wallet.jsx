@@ -4,27 +4,26 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import api from "../lib/api";
 import { useCustomAlert } from "../hooks/useCustomAlert";
 import CustomAlert from "../components/CustomAlert";
-import { playSound } from "../utils/simpleSound";
+import { openUpiIntent } from "../utils/upi";
 
 /**
- * Enhanced Wallet page
+ * Enhanced Wallet page with payment processing
  */
 export default function Wallet() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [purchasing, setPurchasing] = useState(null); // Track which package is being purchased
+  const [purchasing, setPurchasing] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [availableCoupons, setAvailableCoupons] = useState([]);
-  const [showCoupons, setShowCoupons] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(null);
+
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
   useEffect(() => {
     fetchUserData();
     fetchTransactions();
-    fetchAvailableCoupons();
   }, []);
 
   const fetchUserData = async () => {
@@ -46,17 +45,6 @@ export default function Wallet() {
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);
-    }
-  };
-
-  const fetchAvailableCoupons = async () => {
-    try {
-      const response = await api.get("/coupons/available?orderType=coins");
-      if (response.success) {
-        setAvailableCoupons(response.coupons || []);
-      }
-    } catch (error) {
-      console.error("Error fetching coupons:", error);
     }
   };
 
@@ -97,12 +85,53 @@ export default function Wallet() {
     { coins: 6000, price: 4999, bonus: 1001, popular: false },
   ];
 
-  const handleBuyCoins = async (pkg) => {
+  const handleBuyCoins = (pkg) => {
     if (purchasing) return;
+    setSelectedPackage(pkg);
+    setPurchasing(pkg.coins + pkg.bonus);
+  };
 
-    // Payment disabled
-    showError("Online payments are currently disabled.", "Payments Disabled");
-    return;
+  const handleUpiPayment = () => {
+    if (!selectedPackage) return;
+
+    const finalPrice = appliedCoupon
+      ? selectedPackage.price - appliedCoupon.discount.amount
+      : selectedPackage.price;
+
+    openUpiIntent(finalPrice);
+
+    // Close modal and show success
+    setSelectedPackage(null);
+    setPurchasing(null);
+    showSuccess(
+      "Opening UPI app. Complete the payment and enter your passkey in Profile to activate coins.",
+      "Payment Processing"
+    );
+  };
+
+  const handleScannerPayment = () => {
+    if (!selectedPackage) return;
+
+    const finalPrice = appliedCoupon
+      ? selectedPackage.price - appliedCoupon.discount.amount
+      : selectedPackage.price;
+
+    // Store payment data for scanner page
+    sessionStorage.setItem('walletPayment', JSON.stringify({
+      amount: finalPrice,
+      basePrice: selectedPackage.price,
+      discount: appliedCoupon ? appliedCoupon.discount.amount : 0,
+      coupon: appliedCoupon ? appliedCoupon.coupon : null,
+      coins: selectedPackage.coins + selectedPackage.bonus,
+      package: selectedPackage
+    }));
+
+    navigate('/wallet-scanner-payment');
+  };
+
+  const closePaymentModal = () => {
+    setSelectedPackage(null);
+    setPurchasing(null);
   };
 
   if (loading) {
@@ -222,11 +251,6 @@ export default function Wallet() {
     );
   }
 
-  const hasActiveSubscription =
-    user?.subscription?.active &&
-    user?.subscription?.expiresAt &&
-    new Date(user.subscription.expiresAt) > new Date();
-
   return (
     <div className="min-h-screen bg-sunset-gradient lg:pr-64 pb-20 lg:pb-0">
       {/* Header */}
@@ -314,77 +338,24 @@ export default function Wallet() {
 
           {/* Coupon Input */}
           {!appliedCoupon && (
-            <div className="space-y-3">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="Enter coupon code"
-                  value={couponCode}
-                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  className="flex-1 px-3 py-2 border border-pink-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-                />
-                <button
-                  onClick={() =>
-                    couponCode &&
-                    validateCoupon(couponCode, coinPackages[0].price)
-                  }
-                  disabled={!couponCode}
-                  className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Apply
-                </button>
-              </div>
-
-              {/* Available Coupons */}
-              {availableCoupons.length > 0 && (
-                <div>
-                  <button
-                    onClick={() => setShowCoupons(!showCoupons)}
-                    className="text-pink-600 text-sm font-medium hover:text-pink-700"
-                  >
-                    {showCoupons ? "Hide" : "Show"} available coupons (
-                    {availableCoupons.length})
-                  </button>
-
-                  {showCoupons && (
-                    <div className="mt-3 space-y-2">
-                      {availableCoupons.map((coupon) => (
-                        <div
-                          key={coupon.code}
-                          className="bg-pink-50 border border-pink-200 rounded-lg p-3 cursor-pointer hover:bg-pink-100"
-                          onClick={() => {
-                            setCouponCode(coupon.code);
-                            setShowCoupons(false);
-                          }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-semibold text-pink-800">
-                                {coupon.code}
-                              </p>
-                              <p className="text-pink-600 text-sm">
-                                {coupon.description}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-pink-700 text-sm font-medium">
-                                {coupon.discountType === "percentage"
-                                  ? `${coupon.discountValue}% OFF`
-                                  : `₹${coupon.discountValue} OFF`}
-                              </p>
-                              {coupon.minOrderAmount > 0 && (
-                                <p className="text-pink-500 text-xs">
-                                  Min ₹{coupon.minOrderAmount}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                placeholder="Enter coupon code"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                className="flex-1 px-3 py-2 border border-pink-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+              />
+              <button
+                onClick={() =>
+                  couponCode &&
+                  validateCoupon(couponCode, coinPackages[0].price)
+                }
+                disabled={!couponCode}
+                className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Apply
+              </button>
             </div>
           )}
         </div>
@@ -395,46 +366,55 @@ export default function Wallet() {
             💎 Buy Coins
           </h3>
           <div className="grid grid-cols-2 gap-3">
-            {coinPackages.map((pkg, index) => (
-              <div
-                key={index}
-                className={`border-2 rounded-xl p-4 hover:border-pink-400 transition-all hover-romantic ${pkg.popular ? "border-pink-400 bg-pink-50" : "border-pink-200"
-                  }`}
-              >
-                <div className="text-center">
-                  {pkg.popular && (
-                    <span className="inline-block text-xs bg-romantic-gradient text-white px-2 py-1 rounded-full mb-2">
-                      Popular
-                    </span>
-                  )}
-                  <p className="text-3xl font-bold text-passion">
-                    {pkg.coins + pkg.bonus}
-                  </p>
-                  <p className="text-sm text-gray-600">coins</p>
-                  {pkg.bonus > 0 && (
-                    <p className="text-xs text-green-600 font-semibold">
-                      +{pkg.bonus} bonus!
-                    </p>
-                  )}
+            {coinPackages.map((pkg, index) => {
+              const finalPrice = appliedCoupon
+                ? pkg.price - appliedCoupon.discount.amount
+                : pkg.price;
 
-                  <div className="mt-2">
-                    <p className="text-sm font-bold text-passion">
-                      ₹{pkg.price}
+              return (
+                <div
+                  key={index}
+                  className={`border-2 rounded-xl p-4 hover:border-pink-400 transition-all hover-romantic ${pkg.popular ? "border-pink-400 bg-pink-50" : "border-pink-200"
+                    }`}
+                >
+                  <div className="text-center">
+                    {pkg.popular && (
+                      <span className="inline-block text-xs bg-romantic-gradient text-white px-2 py-1 rounded-full mb-2">
+                        Popular
+                      </span>
+                    )}
+                    <p className="text-3xl font-bold text-passion">
+                      {pkg.coins + pkg.bonus}
                     </p>
+                    <p className="text-sm text-gray-600">coins</p>
+                    {pkg.bonus > 0 && (
+                      <p className="text-xs text-green-600 font-semibold">
+                        +{pkg.bonus} bonus!
+                      </p>
+                    )}
+
+                    <div className="mt-2">
+                      {appliedCoupon && (
+                        <p className="text-xs text-gray-500 line-through">
+                          ₹{pkg.price}
+                        </p>
+                      )}
+                      <p className="text-sm font-bold text-passion">
+                        ₹{finalPrice}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => handleBuyCoins(pkg)}
+                      disabled={purchasing !== null}
+                      className="w-full mt-3 btn-romantic py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Buy Now
+                    </button>
                   </div>
-
-                  <button
-                    onClick={() => handleBuyCoins(pkg)}
-                    disabled={purchasing !== null}
-                    className="w-full mt-3 btn-romantic py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {purchasing === pkg.coins + pkg.bonus
-                      ? "Processing..."
-                      : "Buy Now"}
-                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -471,10 +451,10 @@ export default function Wallet() {
                     </p>
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${transaction.status === "paid"
-                        ? "bg-green-100 text-green-700"
-                        : transaction.status === "failed"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-yellow-100 text-yellow-700"
+                          ? "bg-green-100 text-green-700"
+                          : transaction.status === "failed"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
                         }`}
                     >
                       {transaction.status}
@@ -502,6 +482,71 @@ export default function Wallet() {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      {selectedPackage && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="text-4xl mb-3">💳</div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Choose Payment Method
+              </h3>
+              <p className="text-gray-600">
+                {selectedPackage.coins + selectedPackage.bonus} Coins
+              </p>
+              <div className="mt-4">
+                {appliedCoupon && (
+                  <p className="text-gray-500 line-through text-lg">
+                    ₹{selectedPackage.price}
+                  </p>
+                )}
+                <p className="text-3xl font-bold text-pink-600">
+                  ₹{appliedCoupon
+                    ? selectedPackage.price - appliedCoupon.discount.amount
+                    : selectedPackage.price}
+                </p>
+                {appliedCoupon && (
+                  <p className="text-green-600 text-sm mt-1">
+                    Saved ₹{appliedCoupon.discount.amount} with {appliedCoupon.coupon.code}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* UPI Intent Button */}
+            <button
+              onClick={handleUpiPayment}
+              className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all mb-3"
+            >
+              Pay with UPI Intent
+            </button>
+
+            {/* Scanner Payment Button */}
+            <button
+              onClick={handleScannerPayment}
+              className="w-full bg-white border-2 border-pink-500 text-pink-500 py-4 rounded-xl font-bold text-lg hover:bg-pink-50 transition mb-3"
+            >
+              Pay with Scanner
+            </button>
+
+            {/* Cancel Button */}
+            <button
+              onClick={closePaymentModal}
+              className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition"
+            >
+              Cancel
+            </button>
+
+            {/* Note */}
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-blue-800 text-xs text-center">
+                <span className="font-bold">Note:</span> After payment, go to Profile and enter your passkey to activate coins.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Custom Alert */}
       <CustomAlert

@@ -22,7 +22,7 @@ const Referrals = () => {
         api.get('/referrals/my-code'),
         api.get('/referrals/my-referrals')
       ]);
-      
+
       setReferralCode(codeResponse.referralCode);
       setStats(codeResponse.stats);
       setReferrals(referralsResponse.referrals || []);
@@ -53,8 +53,8 @@ const Referrals = () => {
   };
 
   const shareReferralCode = async () => {
-    const shareText = `Join me on HumDono dating app! Use my referral code: ${referralCode} and get bonus coins when you sign up!`;
-    
+    const shareText = `Join me on HumDono dating app! Use my referral code: ${referralCode} and get bonus coins when you sign up! Download now: https://humdono.in`;
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -99,7 +99,7 @@ const Referrals = () => {
               onClick={() => navigate('/')}
             />
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Invite Friends</h1>
+              <h2 className="text-2xl font-bold text-gray-900">Invite Friends</h2>
               <p className="text-gray-600 mt-1">Earn coins by referring friends</p>
             </div>
           </div>
@@ -115,7 +115,7 @@ const Referrals = () => {
             <div className="bg-white bg-opacity-20 rounded-lg p-4 mb-4">
               <p className="text-2xl font-bold tracking-wider">{referralCode}</p>
             </div>
-            
+
             <div className="flex space-x-3">
               <button
                 onClick={copyReferralCode}
@@ -124,7 +124,7 @@ const Referrals = () => {
                 <ClipboardIcon className="w-5 h-5" />
                 <span>{copied ? 'Copied!' : 'Copy'}</span>
               </button>
-              
+
               <button
                 onClick={shareReferralCode}
                 className="flex-1 bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg font-semibold flex items-center justify-center space-x-2"
@@ -176,7 +176,7 @@ const Referrals = () => {
           <div className="p-4 border-b">
             <h3 className="text-lg font-semibold text-gray-900">Your Referrals</h3>
           </div>
-          
+
           {referrals.length === 0 ? (
             <div className="p-6 text-center">
               <UserPlusIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
@@ -192,20 +192,19 @@ const Referrals = () => {
                     alt={referral.referred.name}
                     className="w-12 h-12 rounded-full object-cover"
                   />
-                  
+
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900">{referral.referred.name}</h4>
                     <p className="text-gray-600 text-sm">
                       Joined {new Date(referral.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-                  
+
                   <div className="text-right">
-                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                      referral.status === 'rewarded' 
-                        ? 'bg-green-100 text-green-800' 
+                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${referral.status === 'rewarded'
+                        ? 'bg-green-100 text-green-800'
                         : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                      }`}>
                       {referral.status === 'rewarded' ? 'Rewarded' : 'Pending'}
                     </span>
                     {referral.status === 'rewarded' && (

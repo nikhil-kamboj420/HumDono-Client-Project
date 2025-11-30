@@ -7,11 +7,11 @@ import Transaction from "../models/Transaction.js";
 
 const router = express.Router();
 
-// Boost pricing configuration (in Rupees for direct purchase)
+// Boost pricing configuration (in Coins)
 const BOOST_PRICES = {
-  visibility: { price: 20, duration: 30 }, // ₹20 for 30 minutes visibility boost
-  superlike: { price: 50, duration: 0 }, // ₹50 for 5 super likes pack
-  spotlight: { price: 99, duration: 60 }, // ₹99 for 1 hour spotlight
+  visibility: { coinCost: 100, duration: 30 }, // 100 coins for 30 minutes visibility boost
+  superlike: { coinCost: 150, duration: 0 }, // 150 coins for 5 super likes pack (currently hidden)
+  spotlight: { coinCost: 250, duration: 60 }, // 250 coins for 1 hour spotlight
 };
 
 /**
@@ -45,12 +45,15 @@ router.get("/available", auth, async (req, res) => {
       expiresAt: { $gt: new Date() },
     });
 
-    const boostOptions = Object.entries(BOOST_PRICES).map(([type, config]) => ({
-      type,
-      price: config.price,
-      duration: config.duration,
-      description: getBoostDescription(type),
-    }));
+    // Exclude superlike from available options for now
+    const boostOptions = Object.entries(BOOST_PRICES)
+      .filter(([type]) => type !== "superlike")
+      .map(([type, config]) => ({
+        type,
+        coinCost: config.coinCost,
+        duration: config.duration,
+        description: getBoostDescription(type),
+      }));
 
     res.json({
       ok: true,

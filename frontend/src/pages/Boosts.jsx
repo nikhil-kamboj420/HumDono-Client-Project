@@ -236,24 +236,7 @@ const Boosts = () => {
           </div>
         )}
 
-        {/* Super Likes Count */}
-        {superLikes > 0 && (
-          <div className="mb-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center space-x-3">
-                <HeartIcon className="w-6 h-6 text-blue-600" />
-                <div>
-                  <h3 className="font-semibold text-blue-900">
-                    Super Likes Available
-                  </h3>
-                  <p className="text-blue-700 text-sm">
-                    You have {superLikes} super likes to use
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Super Likes section removed */}
 
         {/* Boost Options */}
         <div>
@@ -261,61 +244,60 @@ const Boosts = () => {
             🚀 Available Boosts
           </h2>
           <div className="space-y-4">
-            {boostOptions.map((boost) => {
-              const Icon = getBoostIcon(boost.type);
-              const colorClass = getBoostColor(boost.type);
+            {boostOptions
+              .filter((b) => b.type !== "superlike")
+              .map((boost) => {
+                const Icon = getBoostIcon(boost.type);
+                const colorClass = getBoostColor(boost.type);
 
-              return (
-                <div
-                  key={boost.type}
-                  className={`border-2 rounded-xl p-5 ${colorClass}`}
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="p-3 rounded-full bg-white shadow-sm">
-                      <Icon className="w-8 h-8" />
-                    </div>
+                return (
+                  <div
+                    key={boost.type}
+                    className={`border-2 rounded-xl p-5 ${colorClass}`}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="p-3 rounded-full bg-white shadow-sm">
+                        <Icon className="w-8 h-8" />
+                      </div>
 
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 capitalize text-lg mb-1">
-                        {boost.type === "superlike"
-                          ? "5 Super Likes Pack"
-                          : boost.type === "visibility"
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900 capitalize text-lg mb-1">
+                          {boost.type === "superlike"
+                            ? "5 Super Likes Pack"
+                            : boost.type === "visibility"
                             ? "Visibility Boost"
                             : boost.type === "spotlight"
-                              ? "Spotlight Feature"
-                              : boost.type}
-                      </h3>
-                      <p className="text-gray-700 text-sm mb-4">
-                        {boost.description}
-                      </p>
+                            ? "Spotlight Feature"
+                            : boost.type}
+                        </h3>
+                        <p className="text-gray-700 text-sm mb-4">
+                          {boost.description}
+                        </p>
 
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-2xl font-bold text-passion">
-                            ₹{boost.price}
-                          </span>
-                          {boost.duration > 0 && (
-                            <span className="text-gray-500 text-sm">
-                              • {boost.duration} min
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-2xl font-bold text-pink-600">
+                              {boost.coinCost} 🪙
                             </span>
-                          )}
-                        </div>
+                            {boost.duration > 0 && (
+                              <span className="text-gray-500 text-sm">
+                                • {boost.duration} min
+                              </span>
+                            )}
+                          </div>
 
-                        <button
-                          onClick={() => purchaseBoost(boost.type)}
-                          disabled={purchasing === boost.type}
-                          className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-2.5 rounded-full font-semibold hover:from-pink-600 hover:to-rose-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all"
-                        >
-                          {purchasing === boost.type
-                            ? "Processing..."
-                            : "Buy Now"}
-                        </button>
+                          <button
+                            onClick={() => navigate("/wallet")}
+                            className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-2.5 rounded-full font-semibold hover:from-pink-600 hover:to-rose-600 shadow-lg transition-all"
+                          >
+                            Buy Coins
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
 

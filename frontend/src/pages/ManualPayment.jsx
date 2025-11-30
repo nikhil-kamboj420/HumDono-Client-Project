@@ -17,7 +17,7 @@ export default function ManualPayment() {
                         <ArrowLeftIcon className="w-5 h-5 mr-1" />
                         Back
                     </button>
-                    <h1 className="text-2xl font-bold text-center">Scan to Pay</h1>
+                    <h2 className="text-2xl font-bold text-center">Scan to Pay</h2>
                     <p className="text-center text-pink-100 mt-1">Complete your payment manually</p>
                 </div>
 

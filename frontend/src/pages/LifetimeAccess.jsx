@@ -10,8 +10,7 @@ export default function LifetimeAccess() {
     const navigate = useNavigate();
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
-    const [availableCoupons, setAvailableCoupons] = useState([]);
-    const [showCoupons, setShowCoupons] = useState(false);
+
     const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
     const basePrice = 699;
@@ -19,20 +18,9 @@ export default function LifetimeAccess() {
         ? basePrice - appliedCoupon.discount.amount
         : basePrice;
 
-    useEffect(() => {
-        fetchAvailableCoupons();
-    }, []);
 
-    const fetchAvailableCoupons = async () => {
-        try {
-            const response = await api.get('/coupons/available?orderType=subscription');
-            if (response.success) {
-                setAvailableCoupons(response.coupons || []);
-            }
-        } catch (error) {
-            console.error('Error fetching coupons:', error);
-        }
-    };
+
+
 
     const validateCoupon = async () => {
         if (!couponCode.trim()) {
@@ -94,7 +82,7 @@ export default function LifetimeAccess() {
                         >
                             <ArrowLeftIcon className="w-6 h-6" />
                         </button>
-                        <h1 className="text-xl font-bold text-gray-900">Back to Home</h1>
+                        <h2 className="text-2xl font-bold text-gray-900">Back to Home</h2>
                     </div>
                 </div>
             </div>
@@ -143,64 +131,22 @@ export default function LifetimeAccess() {
                                 </div>
                             </div>
                         ) : (
-                            <>
-                                <div className="flex space-x-2 mb-3">
-                                    <input
-                                        type="text"
-                                        placeholder="Enter coupon code"
-                                        value={couponCode}
-                                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
-                                    />
-                                    <button
-                                        onClick={validateCoupon}
-                                        disabled={!couponCode}
-                                        className="px-6 py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
-                                    >
-                                        Apply
-                                    </button>
-                                </div>
-
-                                {availableCoupons.length > 0 && (
-                                    <div>
-                                        <button
-                                            onClick={() => setShowCoupons(!showCoupons)}
-                                            className="text-pink-600 text-sm font-medium hover:text-pink-700"
-                                        >
-                                            {showCoupons ? 'Hide' : 'Show'} available coupons ({availableCoupons.length})
-                                        </button>
-
-                                        {showCoupons && (
-                                            <div className="mt-3 space-y-2 max-h-40 overflow-y-auto">
-                                                {availableCoupons.map((coupon) => (
-                                                    <div
-                                                        key={coupon.code}
-                                                        className="bg-pink-50 border border-pink-200 rounded-lg p-3 cursor-pointer hover:bg-pink-100 transition"
-                                                        onClick={() => {
-                                                            setCouponCode(coupon.code);
-                                                            setShowCoupons(false);
-                                                        }}
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <div>
-                                                                <p className="font-semibold text-pink-800">{coupon.code}</p>
-                                                                <p className="text-pink-600 text-sm">{coupon.description}</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <p className="text-pink-700 font-medium text-sm">
-                                                                    {coupon.discountType === 'percentage'
-                                                                        ? `${coupon.discountValue}% OFF`
-                                                                        : `₹${coupon.discountValue} OFF`}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </>
+                            <div className="flex space-x-2">
+                                <input
+                                    type="text"
+                                    placeholder="Enter coupon code"
+                                    value={couponCode}
+                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                    className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-transparent"
+                                />
+                                <button
+                                    onClick={validateCoupon}
+                                    disabled={!couponCode}
+                                    className="px-6 py-3 bg-pink-500 text-white rounded-xl hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+                                >
+                                    Apply
+                                </button>
+                            </div>
                         )}
                     </div>
 
@@ -224,9 +170,7 @@ export default function LifetimeAccess() {
                 {/* Guarantee Card */}
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-6 shadow-lg">
                     <div className="flex items-start space-x-3">
-                        <div className="text-3xl">✅</div>
                         <div>
-                            <h3 className="font-bold text-green-800 text-lg mb-2">100% Money-Back Guarantee</h3>
                             <p className="text-green-700">
                                 Guaranteed match within one month or full payment refund to your account
                             </p>

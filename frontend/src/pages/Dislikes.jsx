@@ -66,7 +66,7 @@ export default function Dislikes() {
           >
             <ArrowLeftIcon className="w-6 h-6" />
           </button>
-          <h2 className="text-2xl font-bold text-white">People I Dislike 👎</h2>
+          <h2 className="text-2xl font-bold text-white">People I Disliked 👎</h2>
         </div>
 
         {/* List */}

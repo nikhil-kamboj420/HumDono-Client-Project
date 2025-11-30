@@ -321,9 +321,17 @@ const Chat = () => {
               >
                 {message.messageType === "gift" ? (
                   <div className="text-center">
-                    <div className="text-3xl mb-1">
-                      {message.gift?.emoji || "🎁"}
-                    </div>
+                    {message.gift?.image ? (
+                      <img
+                        src={message.gift.image}
+                        alt={message.gift?.type || "Gift"}
+                        className="w-16 h-16 object-contain mx-auto mb-1"
+                      />
+                    ) : (
+                      <div className="text-3xl mb-1">
+                        {message.gift?.emoji || "🎁"}
+                      </div>
+                    )}
                     <p className="text-sm">{message.content}</p>
                     {message.gift?.value && (
                       <p className="text-xs opacity-75">
@@ -371,7 +379,15 @@ const Chat = () => {
                 onClick={() => sendGift(gift)}
                 className="flex flex-col items-center p-3 border border-pink-200 rounded-xl hover:bg-pink-50 hover:border-pink-400 transition-all shadow-sm"
               >
-                <div className="text-3xl mb-1">{gift.emoji || "🎁"}</div>
+                {gift.image ? (
+                  <img
+                    src={gift.image}
+                    alt={gift.name}
+                    className="w-12 h-12 object-contain mb-1"
+                  />
+                ) : (
+                  <div className="text-3xl mb-1">{gift.emoji || "🎁"}</div>
+                )}
                 <p className="text-xs font-medium text-gray-700">{gift.name}</p>
                 <p className="text-xs text-pink-600 font-semibold">
                   {gift.coinValue} 🪙

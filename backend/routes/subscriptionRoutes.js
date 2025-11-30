@@ -51,34 +51,44 @@ router.post("/activate-passkey", authMiddleware, async (req, res) => {
         'subscription.isLifetime': true
       });
 
-    } else if (passKey.trim() === process.env.PASSKEY_999) {
-      // 999 coins
+    } else if (passKey.trim() === process.env.PASSKEY_499) {
+      // 701 coins (600 + 101 bonus)
       rewardType = 'coins';
-      rewardAmount = 999;
-      customMessage = '🎁 Yay! You got 999 coins!';
+      rewardAmount = 701;
+      customMessage = '💝 Awesome! You got 701 coins!';
       
       await User.findByIdAndUpdate(userId, { 
-        $inc: { coins: 999 }
+        $inc: { coins: 701 }
+      });
+
+    } else if (passKey.trim() === process.env.PASSKEY_999) {
+      // 1301 coins (1150 + 151 bonus)
+      rewardType = 'coins';
+      rewardAmount = 1301;
+      customMessage = '🎁 Yay! You got 1301 coins!';
+      
+      await User.findByIdAndUpdate(userId, { 
+        $inc: { coins: 1301 }
       });
 
     } else if (passKey.trim() === process.env.PASSKEY_1999) {
-      // 1999 coins
+      // 2401 coins (2200 + 201 bonus)
       rewardType = 'coins';
-      rewardAmount = 1999;
-      customMessage = '💎 Amazing! You got 1999 coins!';
+      rewardAmount = 2401;
+      customMessage = '💎 Amazing! You got 2401 coins!';
       
       await User.findByIdAndUpdate(userId, { 
-        $inc: { coins: 1999 }
+        $inc: { coins: 2401 }
       });
 
     } else if (passKey.trim() === process.env.PASSKEY_4999) {
-      // 4999 coins
+      // 7001 coins (6000 + 1001 bonus)
       rewardType = 'coins';
-      rewardAmount = 4999;
-      customMessage = '👑 Woohoo! You got 4999 coins!';
+      rewardAmount = 7001;
+      customMessage = '👑 Woohoo! You got 7001 coins!';
       
       await User.findByIdAndUpdate(userId, { 
-        $inc: { coins: 4999 }
+        $inc: { coins: 7001 }
       });
 
     } else {
