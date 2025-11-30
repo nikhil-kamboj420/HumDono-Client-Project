@@ -41,7 +41,7 @@ export default function ScannerPayment() {
                         {/* QR Code */}
                         <div className="bg-white p-6 rounded-2xl shadow-lg mb-4">
                             <img
-                                src="/qr-code.jpg"
+                                src="/HUMDONO_UPI_SCANNER.jpg"
                                 alt="UPI QR Code"
                                 className="w-64 h-64 object-contain"
                                 onError={(e) => {
