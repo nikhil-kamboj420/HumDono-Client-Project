@@ -30,15 +30,7 @@ export default function HomeFeed() {
   const [profiles, setProfiles] = useState([]);
 
   // seenIds: History of all profiles swiped in this session (or persisted).
-  const [seenIds, setSeenIds] = useState(() => {
-    try {
-      const raw = sessionStorage.getItem("seenProfileIds");
-      const arr = JSON.parse(raw);
-      return new Set(Array.isArray(arr) ? arr : []);
-    } catch {
-      return new Set();
-    }
-  });
+  const [seenIds, setSeenIds] = useState(() => new Set());
 
   // actionLock: Ref to prevent double-clicks/rapid-fire actions within same render cycle
   const actionLock = useRef(false);
@@ -162,9 +154,6 @@ export default function HomeFeed() {
     setSeenIds((prev) => {
       const next = new Set(prev);
       next.add(current._id);
-      try {
-        sessionStorage.setItem("seenProfileIds", JSON.stringify(Array.from(next)));
-      } catch { }
       return next;
     });
 
@@ -411,7 +400,7 @@ export default function HomeFeed() {
         </div>
 
         {/* Load More / End Message */}
-        <div className="relative top-[-60vh] lg:mt-6 flex flex-col  mb-10  items-center gap-4">
+        <div className="mt-6 flex flex-col mb-10 items-center gap-4 z-50">
           {profiles.length === 0 && !hasNextPage ? (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">💕</div>
