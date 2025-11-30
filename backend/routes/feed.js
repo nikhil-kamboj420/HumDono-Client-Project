@@ -58,7 +58,7 @@ router.get("/", auth, async (req, res) => {
       .lean();
     const myGender = currentUser?.gender?.toLowerCase();
 
-    const limit = Math.min(Number(req.query.limit) || 10, 30);
+    const limit = Math.min(Number(req.query.limit) || 10, 100);
     const skip = Number(req.query.skip) || 0;
     const minAge = req.query.minAge ? Number(req.query.minAge) : null;
     const maxAge = req.query.maxAge ? Number(req.query.maxAge) : null;

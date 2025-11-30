@@ -69,7 +69,7 @@ export default function HomeFeed() {
   const feedQuery = useInfiniteQuery({
     queryKey: ["feed", filters],
     queryFn: async ({ pageParam = 0 }) => {
-      const limit = 8;
+      const limit = 100;
       const params = {
         limit,
         skip: pageParam * limit,
@@ -83,7 +83,7 @@ export default function HomeFeed() {
       };
     },
     getNextPageParam: (lastPage) => {
-      if (!lastPage || lastPage.length === 0 || lastPage.length < 8)
+      if (!lastPage || lastPage.length === 0 || lastPage.length < 100)
         return undefined;
       return lastPage.nextPage;
     },
