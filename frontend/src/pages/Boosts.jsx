@@ -19,10 +19,10 @@ const Boosts = () => {
   const [superLikes, setSuperLikes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null);
-  // const [couponCode, setCouponCode] = useState("");
-  // const [appliedCoupon, setAppliedCoupon] = useState(null);
-  // const [availableCoupons, setAvailableCoupons] = useState([]);
-  // const [showCoupons, setShowCoupons] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [showCoupons, setShowCoupons] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
@@ -30,7 +30,7 @@ const Boosts = () => {
   useEffect(() => {
     checkUserAndSubscription();
     fetchBoostData();
-    // fetchAvailableCoupons();
+    fetchAvailableCoupons();
   }, []);
 
   const checkUserAndSubscription = async () => {
@@ -81,46 +81,46 @@ const Boosts = () => {
     }
   };
 
-  // const fetchAvailableCoupons = async () => {
-  //   try {
-  //     const response = await api.get("/coupons/available?orderType=boosts");
-  //     if (response.success) {
-  //       setAvailableCoupons(response.coupons || []);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching coupons:", error);
-  //   }
-  // };
+  const fetchAvailableCoupons = async () => {
+    try {
+      const response = await api.get("/coupons/available?orderType=boosts");
+      if (response.success) {
+        setAvailableCoupons(response.coupons || []);
+      }
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+    }
+  };
 
-  // const validateCoupon = async (code, amount) => {
-  //   try {
-  //     const response = await api.post("/coupons/validate", {
-  //       code,
-  //       orderAmount: amount,
-  //       orderType: "boosts",
-  //     });
+  const validateCoupon = async (code, amount) => {
+    try {
+      const response = await api.post("/coupons/validate", {
+        code,
+        orderAmount: amount,
+        orderType: "boosts",
+      });
 
-  //     if (response.success) {
-  //       setAppliedCoupon(response);
-  //       showSuccess(
-  //         `Coupon applied! You save ${response.discount.amount} coins`,
-  //         "Coupon Applied"
-  //       );
-  //       return response;
-  //     }
-  //   } catch (error) {
-  //     showError(
-  //       error.response?.data?.error || "Invalid coupon code",
-  //       "Coupon Error"
-  //     );
-  //     return null;
-  //   }
-  // };
+      if (response.success) {
+        setAppliedCoupon(response);
+        showSuccess(
+          `Coupon applied! You save ${response.discount.amount} coins`,
+          "Coupon Applied"
+        );
+        return response;
+      }
+    } catch (error) {
+      showError(
+        error.response?.data?.error || "Invalid coupon code",
+        "Coupon Error"
+      );
+      return null;
+    }
+  };
 
-  // const removeCoupon = () => {
-  //   setAppliedCoupon(null);
-  //   setCouponCode("");
-  // };
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+  };
 
   const purchaseBoost = async (boostType) => {
     if (purchasing) return;

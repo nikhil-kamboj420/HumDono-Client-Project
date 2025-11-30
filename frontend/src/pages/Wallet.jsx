@@ -15,16 +15,16 @@ export default function Wallet() {
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(null); // Track which package is being purchased
   const [transactions, setTransactions] = useState([]);
-  // const [couponCode, setCouponCode] = useState("");
-  // const [appliedCoupon, setAppliedCoupon] = useState(null);
-  // const [availableCoupons, setAvailableCoupons] = useState([]);
-  // const [showCoupons, setShowCoupons] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [showCoupons, setShowCoupons] = useState(false);
   const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
   useEffect(() => {
     fetchUserData();
     fetchTransactions();
-    // fetchAvailableCoupons();
+    fetchAvailableCoupons();
   }, []);
 
   const fetchUserData = async () => {
@@ -49,46 +49,46 @@ export default function Wallet() {
     }
   };
 
-  // const fetchAvailableCoupons = async () => {
-  //   try {
-  //     const response = await api.get("/coupons/available?orderType=coins");
-  //     if (response.success) {
-  //       setAvailableCoupons(response.coupons || []);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching coupons:", error);
-  //   }
-  // };
+  const fetchAvailableCoupons = async () => {
+    try {
+      const response = await api.get("/coupons/available?orderType=coins");
+      if (response.success) {
+        setAvailableCoupons(response.coupons || []);
+      }
+    } catch (error) {
+      console.error("Error fetching coupons:", error);
+    }
+  };
 
-  // const validateCoupon = async (code, amount) => {
-  //   try {
-  //     const response = await api.post("/coupons/validate", {
-  //       code,
-  //       orderAmount: amount,
-  //       orderType: "coins",
-  //     });
+  const validateCoupon = async (code, amount) => {
+    try {
+      const response = await api.post("/coupons/validate", {
+        code,
+        orderAmount: amount,
+        orderType: "coins",
+      });
 
-  //     if (response.success) {
-  //       setAppliedCoupon(response);
-  //       showSuccess(
-  //         `Coupon applied! You save ₹${response.discount.amount}`,
-  //         "Coupon Applied"
-  //       );
-  //       return response;
-  //     }
-  //   } catch (error) {
-  //     showError(
-  //       error.response?.data?.error || "Invalid coupon code",
-  //       "Coupon Error"
-  //     );
-  //     return null;
-  //   }
-  // };
+      if (response.success) {
+        setAppliedCoupon(response);
+        showSuccess(
+          `Coupon applied! You save ₹${response.discount.amount}`,
+          "Coupon Applied"
+        );
+        return response;
+      }
+    } catch (error) {
+      showError(
+        error.response?.data?.error || "Invalid coupon code",
+        "Coupon Error"
+      );
+      return null;
+    }
+  };
 
-  // const removeCoupon = () => {
-  //   setAppliedCoupon(null);
-  //   setCouponCode("");
-  // };
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+  };
 
   const coinPackages = [
     { coins: 600, price: 500, bonus: 100, popular: false },
@@ -281,13 +281,13 @@ export default function Wallet() {
         </div>
 
         {/* Coupon Section */}
-        {/* <div className="card-romantic p-6">
+        <div className="card-romantic p-6">
           <h3 className="text-lg font-semibold text-passion mb-4">
             🎫 Coupons & Offers
           </h3>
 
           {/* Applied Coupon Display */}
-          {/*appliedCoupon && (
+          {appliedCoupon && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -313,7 +313,7 @@ export default function Wallet() {
           )}
 
           {/* Coupon Input */}
-          {/*!appliedCoupon && (
+          {!appliedCoupon && (
             <div className="space-y-3">
               <div className="flex space-x-2">
                 <input
@@ -336,7 +336,7 @@ export default function Wallet() {
               </div>
 
               {/* Available Coupons */}
-              {/*availableCoupons.length > 0 && (
+              {availableCoupons.length > 0 && (
                 <div>
                   <button
                     onClick={() => setShowCoupons(!showCoupons)}
@@ -387,7 +387,7 @@ export default function Wallet() {
               )}
             </div>
           )}
-        </div> */}
+        </div>
 
         {/* Buy Coins */}
         <div className="card-romantic p-6">
@@ -419,8 +419,8 @@ export default function Wallet() {
 
                   <div className="mt-2">
                     <p className="text-sm font-bold text-passion">
-                        ₹{pkg.price}
-                      </p>
+                      ₹{pkg.price}
+                    </p>
                   </div>
 
                   <button
@@ -471,10 +471,10 @@ export default function Wallet() {
                     </p>
                     <span
                       className={`text-xs px-2 py-1 rounded-full ${transaction.status === "paid"
-                          ? "bg-green-100 text-green-700"
-                          : transaction.status === "failed"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-yellow-100 text-yellow-700"
+                        ? "bg-green-100 text-green-700"
+                        : transaction.status === "failed"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-yellow-100 text-yellow-700"
                         }`}
                     >
                       {transaction.status}

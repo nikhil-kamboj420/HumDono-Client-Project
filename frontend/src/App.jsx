@@ -24,11 +24,6 @@ import Settings from "./pages/Settings";
 import api from "./lib/api";
 import Wallet from "./pages/Wallet";
 import Subscription from "./pages/Subscription";
-import LifetimeSubscription from "./pages/LifetimeSubscription";
-import ScanToPayPage from "./pages/ScanToPayPage";
-import ManualPaymentFormPage from "./pages/ManualPaymentFormPage";
-import GenericScanToPayPage from "./pages/GenericScanToPayPage";
-import GenericSubmitTransactionPage from "./pages/GenericSubmitTransactionPage";
 import RequireAuth from "./components/RequireAuth";
 import Notifications from "./pages/Notifications";
 import NotificationPopup from "./components/NotificationPopup";
@@ -37,6 +32,10 @@ import { playSound } from "./utils/simpleSound";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import RefundPolicy from "./pages/RefundPolicy";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import CheckoutPolicy from "./pages/CheckoutPolicy";
+import PremiumPassKey from "./pages/PremiumPassKey";
 
 function App() {
   const nav = useNavigate();
@@ -186,6 +185,9 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/refund-policy" element={<RefundPolicy />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/checkout-policy" element={<CheckoutPolicy />} />
 
         <Route element={<RequireAuth />}>
           <Route path="/" element={<HomeFeed />} />
@@ -205,24 +207,9 @@ function App() {
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/wallet" element={<Wallet />} />
 
-          {/* Manual Payment Routes for Wallet (Coins) */}
-          <Route path="/wallet/scan-to-pay" element={<GenericScanToPayPage />} />
-          <Route path="/wallet/submit-transaction" element={<GenericSubmitTransactionPage />} />
-
-          {/* Manual Payment Routes for Boosts */}
-          <Route path="/boosts/scan-to-pay" element={<GenericScanToPayPage />} />
-          <Route path="/boosts/submit-transaction" element={<GenericSubmitTransactionPage />} />
-
-          {/* Lifetime Subscription Routes */}
-          <Route path="/lifetime-access" element={<LifetimeSubscription />} />
-          <Route path="/lifetime-access/scan-to-pay" element={<ScanToPayPage />} />
-          <Route path="/lifetime-access/submit-transaction" element={<ManualPaymentFormPage />} />
-
           {/* Subscription Routes */}
-          <Route path="/subscription" element={<LifetimeSubscription />} />
-          <Route path="/subscription/plans" element={<Subscription />} />
-          <Route path="/subscription/scan-to-pay" element={<GenericScanToPayPage />} />
-          <Route path="/subscription/submit-transaction" element={<GenericSubmitTransactionPage />} />
+          <Route path="/premium/passkey" element={<PremiumPassKey />} />
+          <Route path="/subscription" element={<Subscription />} />
 
           <Route path="/buy" element={<div className="p-6">Buy coins page (placeholder)</div>} />
         </Route>

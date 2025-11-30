@@ -157,11 +157,18 @@ export default function RefundPolicy() {
                     </section>
                 </div>
 
-                {/* Back to Home Link */}
                 <div className="text-center mt-8">
+                    <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+                        <a href="/contact" className="text-pink-600 hover:underline">Contact</a>
+                        <a href="/terms" className="text-pink-600 hover:underline">Terms</a>
+                        <a href="/refund-policy" className="text-pink-600 hover:underline">Refund Policy</a>
+                        <a href="/privacy-policy" className="text-pink-600 hover:underline">Privacy Policy</a>
+                        <a href="/shipping-policy" className="text-pink-600 hover:underline">Shipping Policy</a>
+                        <a href="/checkout-policy" className="text-pink-600 hover:underline">Checkout Policy</a>
+                    </div>
                     <a
                         href="/"
-                        className="inline-block text-pink-600 hover:text-pink-700 font-medium text-lg hover:underline"
+                        className="inline-block mt-4 text-pink-600 hover:text-pink-700 font-medium text-lg hover:underline"
                     >
                         ← Back to HumDono
                     </a>

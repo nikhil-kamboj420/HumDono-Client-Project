@@ -18,7 +18,6 @@ import referralsRoutes from "./routes/referrals.js";
 import requestsRoutes from "./routes/requests.js";
 import paymentsRoutes from "./routes/payments.js";
 import adminRoutes from "./routes/admin.js";
-import manualPaymentRoutes from "./routes/manualPaymentRoutes.js";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -135,14 +134,15 @@ app.use("/api/boosts", boostsRoutes);
 app.use("/api/referrals", referralsRoutes);
 app.use("/api/requests", requestsRoutes);
 app.use("/api/payments", paymentsRoutes);
-app.use("/api/manual-payments", manualPaymentRoutes);
 
 // Import new routes
 import subscriptionsRoutes from "./routes/subscriptions.js";
+import subscriptionRoutes from "./routes/subscriptionRoutes.js"; // New pass key flow
 import couponsRoutes from "./routes/coupons.js";
 
 // Mount new routes
 app.use("/api/subscriptions", subscriptionsRoutes);
+app.use("/api/subscription", subscriptionRoutes); // New pass key flow
 app.use("/api/coupons", couponsRoutes);
 app.use("/api/admin", adminRoutes);
 
