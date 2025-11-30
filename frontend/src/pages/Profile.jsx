@@ -22,6 +22,8 @@ const Profile = () => {
   const [formData, setFormData] = useState({});
   const [uploading, setUploading] = useState(false);
   const [photoToDelete, setPhotoToDelete] = useState(null);
+  const [passKey, setPassKey] = useState('');
+  const [activating, setActivating] = useState(false);
   const navigate = useNavigate();
   const { alertConfig, showSuccess, showError, showWarning, hideAlert } = useCustomAlert();
 
@@ -113,6 +115,31 @@ const Profile = () => {
     } catch (error) {
       console.error("Error deleting photo:", error);
       showError("Failed to delete photo. Please try again.");
+    }
+  };
+
+  const handleActivatePassKey = async () => {
+    if (!passKey.trim()) {
+      showError("Please enter a pass key", "Invalid Input");
+      return;
+    }
+
+    setActivating(true);
+    try {
+      const response = await api.post('/subscription/activate-passkey', { passKey });
+
+      if (response.success) {
+        showSuccess(response.message, 'Success');
+        setPassKey('');
+        await fetchUserProfile();
+      }
+    } catch (error) {
+      showError(
+        error.response?.data?.message || 'Invalid pass key',
+        'Activation Failed'
+      );
+    } finally {
+      setActivating(false);
     }
   };
 
@@ -464,11 +491,58 @@ const Profile = () => {
               />
             </label>
           </div>
+
+          {/* Pass Key Activation Section */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl shadow-lg p-6 border-2 border-purple-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              🎁 Activate Pass Key
+            </h2>
+            <p className="text-gray-600 text-sm mb-4">
+              Have a pass key? Enter it below to unlock premium features or coins!
+            </p>
+
+            <div className="space-y-3">
+              <input
+                type="text"
+                placeholder="Enter your pass key"
+                value={passKey}
+                onChange={(e) => setPassKey(e.target.value.toUpperCase())}
+                className="w-full px-4 py-3 border-2 border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-lg"
+              />
+              <button
+                onClick={handleActivatePassKey}
+                disabled={activating || !passKey}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {activating ? 'Activating...' : 'Activate Pass Key'}
+              </button>
+            </div>
+
+            <div className="mt-4 bg-white/50 rounded-lg p-3 border border-purple-200">
+              <p className="text-xs text-gray-600 text-center">
+                After making a payment, enter the pass key to activate your rewards
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Bottom Navigation */}
       <Navigation />
+
+      {/* Save Button (shown when editing) */}
+      {editing && (
+        <div className="fixed bottom-20 left-0 right-0 lg:right-64 p-4 bg-white border-t border-gray-200 shadow-lg z-20">
+          <div className="max-w-2xl mx-auto">
+            <button
+              onClick={handleSave}
+              className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Success/Error Alerts */}
       <CustomAlert

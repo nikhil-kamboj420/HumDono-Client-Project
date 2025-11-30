@@ -24,6 +24,8 @@ import Settings from "./pages/Settings";
 import api from "./lib/api";
 import Wallet from "./pages/Wallet";
 import Subscription from "./pages/Subscription";
+import LifetimeAccess from "./pages/LifetimeAccess";
+import ScannerPayment from "./pages/ScannerPayment";
 import RequireAuth from "./components/RequireAuth";
 import Notifications from "./pages/Notifications";
 import NotificationPopup from "./components/NotificationPopup";
@@ -35,7 +37,6 @@ import RefundPolicy from "./pages/RefundPolicy";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ShippingPolicy from "./pages/ShippingPolicy";
 import CheckoutPolicy from "./pages/CheckoutPolicy";
-import PremiumPassKey from "./pages/PremiumPassKey";
 
 function App() {
   const nav = useNavigate();
@@ -208,8 +209,8 @@ function App() {
           <Route path="/wallet" element={<Wallet />} />
 
           {/* Subscription Routes */}
-          <Route path="/premium/passkey" element={<PremiumPassKey />} />
-          <Route path="/subscription" element={<Subscription />} />
+          <Route path="/subscription" element={<LifetimeAccess />} />
+          <Route path="/scanner-payment" element={<ScannerPayment />} />
 
           <Route path="/buy" element={<div className="p-6">Buy coins page (placeholder)</div>} />
         </Route>

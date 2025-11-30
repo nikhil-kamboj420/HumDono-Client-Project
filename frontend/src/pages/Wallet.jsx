@@ -91,8 +91,8 @@ export default function Wallet() {
   };
 
   const coinPackages = [
-    { coins: 600, price: 500, bonus: 100, popular: false },
-    { coins: 1150, price: 1000, bonus: 150, popular: false },
+    { coins: 600, price: 499, bonus: 101, popular: false },
+    { coins: 1150, price: 999, bonus: 151, popular: false },
     { coins: 2200, price: 1999, bonus: 201, popular: true },
     { coins: 6000, price: 4999, bonus: 1001, popular: false },
   ];
