@@ -103,9 +103,9 @@ router.get("/", auth, async (req, res) => {
       filter.relationshipStatus = relationshipStatus;
     }
 
-    // Gender filter
+    // Gender filter - Case insensitive to handle "Female", "female", etc.
     if (gender && gender !== "any") {
-      filter.gender = gender;
+      filter.gender = new RegExp(`^${gender}$`, "i");
     }
 
     // Verified users only

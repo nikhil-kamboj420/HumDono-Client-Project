@@ -18,7 +18,8 @@ export default function Likes() {
 
   const fetchLikedUsers = async () => {
     try {
-      const response = await getLikedUsers();
+      // Fetch with high limit to get all liked profiles in one request
+      const response = await getLikedUsers({ limit: 1000 });
       setLikedUsers(response.likedUsers || []);
     } catch (error) {
       console.error("Error fetching liked users:", error);
@@ -36,9 +37,10 @@ export default function Likes() {
         setLikedUsers((prev) =>
           prev.filter((item) => item.user._id !== userId)
         );
-        // Invalidate feed query
+        // Invalidate feed query to show profile again
         await qc.invalidateQueries({ queryKey: ["feed"] });
-        // Stay on same page - profile will appear in feed when user goes back
+        // Navigate to profile page to view the profile
+        navigate(`/profile/${userId}`);
       }
     } catch (error) {
       console.error("Error undoing like:", error);

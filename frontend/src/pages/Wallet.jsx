@@ -39,7 +39,7 @@ export default function Wallet() {
 
   const fetchTransactions = async () => {
     try {
-      const response = await api.get("/payments/transactions");
+      const response = await api.get("/payments/history");
       if (response.success) {
         setTransactions(response.transactions || []);
       }
@@ -79,9 +79,9 @@ export default function Wallet() {
   };
 
   const coinPackages = [
-    { coins: 600, price: 499, bonus: 101, popular: false },
+    { coins: 3200, price: 2999, bonus: 0, popular: true },
     { coins: 1150, price: 999, bonus: 151, popular: false },
-    { coins: 2200, price: 1999, bonus: 201, popular: true },
+    { coins: 2200, price: 1999, bonus: 201, popular: false },
     { coins: 6000, price: 4999, bonus: 1001, popular: false },
   ];
 

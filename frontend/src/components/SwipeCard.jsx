@@ -124,11 +124,12 @@ export default function SwipeCard({
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto profile-scroll relative bg-white">
         {/* Large profile image */}
-        <div className="max-h-[50vh] w-full aspect-[4/5] bg-gray-100 relative shrink-0">
+        <div className="max-h-[40vh] w-full aspect-[4/5] bg-gray-100 relative shrink-0">
           <img
             src={photo}
             alt={profile.name || "profile"}
-            className="max-h-full w-full object-cover"
+            className="h-full w-full object-cover object-[center_top]"
+            style={{ objectPosition: 'center 15%' }}
           />
           {/* Scroll hint */}
           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm flex items-center gap-1.5 pointer-events-none animate-bounce">

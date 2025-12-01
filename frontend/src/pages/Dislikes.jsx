@@ -18,7 +18,8 @@ export default function Dislikes() {
 
   const fetchDislikedUsers = async () => {
     try {
-      const response = await getDislikedUsers();
+      // Fetch with high limit to get all disliked profiles in one request
+      const response = await getDislikedUsers({ limit: 1000 });
       setDislikedUsers(response.dislikedUsers || []);
     } catch (error) {
       console.error("Error fetching disliked users:", error);

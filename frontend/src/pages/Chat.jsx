@@ -22,10 +22,11 @@ const Chat = () => {
   const [showGifts, setShowGifts] = useState(false);
   const [gifts, setGifts] = useState([]);
   const messagesEndRef = useRef(null);
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
+  const [giftModalMessage, setGiftModalMessage] = useState(null);
   const { alertConfig, showSuccess, showError, showWarning, hideAlert } =
     useCustomAlert();
-
-  const user = location.state?.user;
+  const [user, setUser] = useState(location.state?.user || null);
   const isDirectMessage =
     location.state?.isDirectMessage || matchId?.startsWith("direct_");
   const targetUserId = isDirectMessage ? matchId?.replace("direct_", "") : null;
@@ -35,100 +36,52 @@ const Chat = () => {
       fetchMessages();
       fetchGifts();
     } else if (isDirectMessage) {
-      // For direct messages, just fetch gifts (no messages yet)
       fetchGifts();
       setLoading(false);
     }
   }, [matchId, isDirectMessage]);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Socket.io for real-time messages - OPTIMIZED
   useEffect(() => {
-    const socketUrl = import.meta.env.VITE_SOCKET_URL || window.location.origin;
+    const apiBase = import.meta.env.VITE_API_BASE_URL;
+    const socketUrl =
+      import.meta.env.VITE_SOCKET_URL ||
+      (apiBase ? apiBase.replace(/\/api$/, "") : window.location.origin);
     const socket = io(socketUrl, {
       withCredentials: true,
-      transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
+      transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
     });
 
-    // Join user's personal room
     try {
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
       if (currentUser?._id) {
         socket.emit("user:join", currentUser._id);
-        console.log("✅ Joined socket room:", currentUser._id);
       }
     } catch (err) {
       console.error("Failed to join socket room:", err);
     }
 
-    // Listen for new messages
     socket.on("message:new", (data) => {
-      console.log("📨 Received new message via socket:", data);
       const { message, matchId: incomingMatchId } = data;
-
-      // Only add message if it belongs to the current chat
       if (String(incomingMatchId) === String(matchId)) {
         setMessages((prev) => {
-          // Prevent duplicates
-          const exists = prev.some(m => m._id === message._id);
+          const exists = prev.some((m) => m._id === message._id);
           if (exists) return prev;
           return [...prev, message];
         });
       }
     });
 
-    // Connection status logging
-    socket.on("connect", () => {
-      console.log("✅ Socket connected");
-    });
-
-    socket.on("disconnect", () => {
-      console.log("❌ Socket disconnected");
-    });
-
-    socket.on("connect_error", (error) => {
-      console.error("Socket connection error:", error);
-    });
-
     return () => {
       socket.disconnect();
     };
   }, [matchId]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const fetchMessages = async () => {
-    try {
-      if (isDirectMessage) {
-        // No messages yet for direct message
-        setMessages([]);
-        return;
-      }
-      const response = await api.get(`/messages/${matchId}`);
-      setMessages(response.messages || []);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchGifts = async () => {
-    try {
-      const response = await api.get("/gifts");
-      setGifts(response.gifts || []);
-    } catch (error) {
-      console.error("Error fetching gifts:", error);
-    }
-  };
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -202,7 +155,7 @@ const Chat = () => {
         const errorData = error.response.data;
         showError(
           errorData.error ||
-          `You've used your free messages. Subscribe to continue messaging! 💕`,
+            `You've used your free messages. Subscribe to continue messaging! 💕`,
           "Subscription Required"
         );
         setTimeout(() => navigate("/subscription?required=true"), 2000);
@@ -232,19 +185,14 @@ const Chat = () => {
         matchId: matchId,
         message: `Sent you a ${gift.name}!`,
       });
-
-      // Refresh messages to show the gift
-      fetchMessages();
+      await fetchMessages();
       setShowGifts(false);
-
-      // Show success notification with sound
       showSuccess(
         `${gift.name} sent successfully! 🎁 They'll love it!`,
         "Gift Sent"
       );
     } catch (error) {
       console.error("Error sending gift:", error);
-
       if (error.response?.data?.error === "Insufficient coins") {
         showError(
           `You need ${error.response.data.required} coins to send this gift. You have ${error.response.data.balance} coins. 💰`,
@@ -254,6 +202,36 @@ const Chat = () => {
         showError("Failed to send gift. Please try again.", "Gift Failed");
       }
     }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      if (isDirectMessage) {
+        setMessages([]);
+        return;
+      }
+      const response = await api.get(`/messages/${matchId}`);
+      setMessages(response.messages || []);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchGifts = async () => {
+    try {
+      const response = await api.get("/gifts");
+      setGifts(response.gifts || []);
+    } catch (error) {
+      console.error("Error fetching gifts:", error);
+    }
+  };
+
+  // Helper to handle image error
+  const handleImageError = (e) => {
+    e.target.style.display = "none";
+    e.target.nextSibling.style.display = "block"; // Show emoji
   };
 
   if (loading) {
@@ -293,7 +271,7 @@ const Chat = () => {
               <h3 className="font-semibold  text-gray-900">{user?.name}</h3>
               <p className="text-xs text-gray-500">
                 {user?.lastActiveAt &&
-                  new Date() - new Date(user.lastActiveAt) < 5 * 60 * 1000
+                new Date() - new Date(user.lastActiveAt) < 5 * 60 * 1000
                   ? "🟢 Online"
                   : "Last seen recently"}
               </p>
@@ -308,25 +286,39 @@ const Chat = () => {
           {messages.map((message) => (
             <div
               key={message._id}
-              className={`flex ${message.sender._id === user?._id
-                ? "justify-start"
-                : "justify-end"
-                }`}
+              className={`flex ${
+                message.sender._id === user?._id
+                  ? "justify-start"
+                  : "justify-end"
+              }`}
             >
               <div
-                className={`max-w-xs px-4 py-2 rounded-lg ${message.sender._id === user?._id
-                  ? "bg-gray-200 text-gray-900"
-                  : "bg-pink-500 text-white"
-                  }`}
+                className={`max-w-xs px-4 py-2 rounded-lg ${
+                  message.sender._id === user?._id
+                    ? "bg-gray-200 text-gray-900"
+                    : "bg-pink-500 text-white"
+                }`}
               >
                 {message.messageType === "gift" ? (
-                  <div className="text-center">
+                  <div
+                    className="text-center cursor-pointer"
+                    onClick={() => {
+                      setGiftModalMessage(message);
+                      setGiftModalOpen(true);
+                    }}
+                  >
                     {message.gift?.image ? (
-                      <img
-                        src={message.gift.image}
-                        alt={message.gift?.type || "Gift"}
-                        className="w-16 h-16 object-contain mx-auto mb-1"
-                      />
+                      <>
+                        <img
+                          src={message.gift.image}
+                          alt={message.gift?.type || "Gift"}
+                          className="w-16 h-16 object-contain mx-auto mb-1"
+                          onError={handleImageError}
+                        />
+                        <div className="text-3xl mb-1 hidden">
+                          {message.gift?.emoji || "🎁"}
+                        </div>
+                      </>
                     ) : (
                       <div className="text-3xl mb-1">
                         {message.gift?.emoji || "🎁"}
@@ -343,10 +335,11 @@ const Chat = () => {
                   <p>{message.content}</p>
                 )}
                 <p
-                  className={`text-xs mt-1 ${message.sender._id === user?._id
-                    ? "text-gray-500"
-                    : "text-pink-100"
-                    }`}
+                  className={`text-xs mt-1 ${
+                    message.sender._id === user?._id
+                      ? "text-gray-500"
+                      : "text-pink-100"
+                  }`}
                 >
                   {new Date(message.createdAt).toLocaleTimeString([], {
                     hour: "2-digit",
@@ -380,11 +373,17 @@ const Chat = () => {
                 className="flex flex-col items-center p-3 border border-pink-200 rounded-xl hover:bg-pink-50 hover:border-pink-400 transition-all shadow-sm"
               >
                 {gift.image ? (
-                  <img
-                    src={gift.image}
-                    alt={gift.name}
-                    className="w-12 h-12 object-contain mb-1"
-                  />
+                  <>
+                    <img
+                      src={gift.image}
+                      alt={gift.name}
+                      className="w-12 h-12 object-contain mb-1"
+                      onError={handleImageError}
+                    />
+                    <div className="text-3xl mb-1 hidden">
+                      {gift.emoji || "🎁"}
+                    </div>
+                  </>
                 ) : (
                   <div className="text-3xl mb-1">{gift.emoji || "🎁"}</div>
                 )}
@@ -441,6 +440,53 @@ const Chat = () => {
         onConfirm={alertConfig.onConfirm}
         onCancel={alertConfig.onCancel}
       />
+
+      {giftModalOpen && giftModalMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl p-6 w-80 text-center shadow-xl scale-100 animate-[fadeIn_0.2s_ease-out]">
+            <div className="text-4xl mb-2">
+              {giftModalMessage.gift?.emoji || "🎁"}
+            </div>
+            <h3 className="font-semibold text-gray-900 mb-1">
+              {giftModalMessage.gift?.type || "Gift"}
+            </h3>
+            {giftModalMessage.gift?.value && (
+              <p className="text-sm text-pink-600 font-medium mb-3">
+                {giftModalMessage.gift.value} 🪙
+              </p>
+            )}
+            <p className="text-sm text-gray-700 mb-4">
+              {giftModalMessage.content}
+            </p>
+            <div className="flex gap-2">
+              <button
+                className="flex-1 bg-pink-500 text-white py-2 rounded-full font-semibold hover:bg-pink-600"
+                onClick={async () => {
+                  try {
+                    await api.sendMessage(
+                      matchId,
+                      "Thank you for the gift! ❤️"
+                    );
+                  } catch {}
+                  setGiftModalOpen(false);
+                  setGiftModalMessage(null);
+                }}
+              >
+                Send Thanks
+              </button>
+              <button
+                className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-full font-semibold hover:bg-gray-300"
+                onClick={() => {
+                  setGiftModalOpen(false);
+                  setGiftModalMessage(null);
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

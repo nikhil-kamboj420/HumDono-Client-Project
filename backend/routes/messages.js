@@ -38,9 +38,10 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
     // Check gender and handle messaging rules
     const isMale = sender.gender?.toLowerCase() === "male";
     const isFemale = sender.gender?.toLowerCase() === "female";
+    const hasLifetimeSubscription = sender.subscription?.isLifetime === true;
+    const MESSAGE_COST = 10; // coins per message for males with subscription
+
     let needsSenderSave = false;
-    const FREE_MESSAGES_FOR_MALES = 3;
-    const MESSAGE_COST = 10; // coins per message after free quota
 
     // FEMALES - COMPLETELY FREE, NO RESTRICTIONS
     if (isFemale) {
@@ -49,53 +50,45 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
       sender.messagesSent = (sender.messagesSent || 0) + 1;
       needsSenderSave = true;
     }
-    // MALES - First 3 messages free, then require subscription AND coins
+    // MALES - Require lifetime subscription AND 10 coins per message
     else if (isMale) {
-      const messagesSent = sender.messagesSent || 0;
-
-      // First 3 messages are FREE for males
-      if (messagesSent < FREE_MESSAGES_FOR_MALES) {
-        // Free message - just increment counter
-        sender.messagesSent = messagesSent + 1;
-        needsSenderSave = true;
-      } else {
-        // After 3 free messages, require subscription first
-        const hasLifetime = sender.subscription?.isLifetime === true;
-        if (!hasLifetime) {
-          return res.status(403).json({
-            ok: false,
-            error: `You've used your ${FREE_MESSAGES_FOR_MALES} free messages. Subscribe to continue messaging!`,
-            requiresSubscription: true,
-            freeMessagesUsed: messagesSent,
-            freeMessagesLimit: FREE_MESSAGES_FOR_MALES,
-          });
-        }
-
-        // Has subscription -> require coins and deduct per message
-        const currentCoins = sender.coins || 0;
-        if (currentCoins < MESSAGE_COST) {
-          return res.status(402).json({
-            ok: false,
-            error: "Insufficient coins",
-            coinsRequired: MESSAGE_COST,
-            currentCoins,
-          });
-        }
-
-        sender.coins = currentCoins - MESSAGE_COST;
-        sender.messagesSent = messagesSent + 1;
-        needsSenderSave = true;
-
-        await Transaction.create({
-          user: sender._id,
-          orderId: `message_${Date.now()}_${sender._id}`,
-          amount: 0,
-          coins: -MESSAGE_COST,
-          currency: "INR",
-          status: "paid",
-          metadata: { type: "direct_message", receiverId },
+      // Check for lifetime subscription first
+      if (!hasLifetimeSubscription) {
+        // No subscription -> redirect to subscription page
+        return res.status(403).json({
+          ok: false,
+          error: "Lifetime subscription required to send messages",
+          requiresSubscription: true,
         });
       }
+
+      // Has subscription but still need to pay 10 coins PER MESSAGE
+      const currentCoins = sender.coins || 0;
+      if (currentCoins < MESSAGE_COST) {
+        return res.status(402).json({
+          ok: false,
+          error: "Insufficient coins",
+          coinsRequired: MESSAGE_COST,
+          currentCoins,
+          requiresTopup: true,
+        });
+      }
+
+      // Deduct 10 coins per message
+      sender.coins = currentCoins - MESSAGE_COST;
+      sender.messagesSent = (sender.messagesSent || 0) + 1;
+      needsSenderSave = true;
+
+      // Record transaction
+      await Transaction.create({
+        user: sender._id,
+        orderId: `message_${Date.now()}_${sender._id}`,
+        amount: 0,
+        coins: -MESSAGE_COST,
+        currency: "INR",
+        status: "paid",
+        metadata: { type: "direct_message", receiverId },
+      });
     } else {
       // Not male or female - require match
       return res.status(403).json({
@@ -193,10 +186,7 @@ router.post("/direct/:receiverId", auth, async (req, res) => {
       matchId: match._id,
       coinsRemaining: sender.coins,
       messagesSent: sender.messagesSent,
-      coinsDeducted:
-        isMale && sender.messagesSent > FREE_MESSAGES_FOR_MALES
-          ? MESSAGE_COST
-          : 0,
+      coinsDeducted: isMale && hasLifetimeSubscription ? MESSAGE_COST : 0,
     });
   } catch (err) {
     console.error("POST /api/messages/direct/:receiverId error:", err);
@@ -239,7 +229,16 @@ router.get("/:matchId", auth, async (req, res) => {
       { isRead: true, readAt: new Date() }
     ).catch((err) => console.error("Failed to mark messages as read:", err));
 
-    res.json({ ok: true, messages: messages.reverse() });
+    // Identify the other user
+    const otherUserId = match.users.find(id => String(id) !== String(userId));
+    const otherUser = await User.findById(otherUserId).select("name photos lastActiveAt");
+
+    res.json({ 
+      ok: true, 
+      messages: messages.reverse(),
+      match,
+      user: otherUser 
+    });
   } catch (err) {
     console.error("GET /api/messages/:matchId error:", err);
     res.status(500).json({ ok: false, error: "Server error" });
@@ -284,8 +283,7 @@ router.post("/:matchId", auth, async (req, res) => {
     const isMale = sender.gender?.toLowerCase() === "male";
     const isFemale = sender.gender?.toLowerCase() === "female";
     const hasLifetimeSubscription = sender.subscription?.isLifetime === true;
-    const FREE_MESSAGES_FOR_MALES = 3;
-    const MESSAGE_COST = 1; // coins per message after free quota for males
+    const MESSAGE_COST = 10; // coins per message for males with subscription
 
     let needsSenderSave = false;
 
@@ -296,48 +294,45 @@ router.post("/:matchId", auth, async (req, res) => {
       sender.messagesSent = (sender.messagesSent || 0) + 1;
       needsSenderSave = true;
     }
-    // MALE USER LOGIC - First 3 messages free, then require subscription
+    // MALE USER LOGIC - Require lifetime subscription AND 10 coins per message
     else if (isMale) {
-      const messagesSent = sender.messagesSent || 0;
-
-      // First 3 messages are FREE for males
-      if (messagesSent < FREE_MESSAGES_FOR_MALES) {
-        // Free message - just increment counter
-        sender.messagesSent = messagesSent + 1;
-        needsSenderSave = true;
-      } else {
-        // After 3 free messages
-        if (!hasLifetimeSubscription) {
-          // No subscription -> require coins per message
-          const currentCoins = sender.coins || 0;
-          if (currentCoins < MESSAGE_COST) {
-            return res.status(402).json({
-              ok: false,
-              error: "Insufficient coins",
-              coinsRequired: MESSAGE_COST,
-              currentCoins,
-            });
-          }
-          // Deduct coins and record transaction
-          sender.coins = currentCoins - MESSAGE_COST;
-          sender.messagesSent = messagesSent + 1;
-          needsSenderSave = true;
-
-          await Transaction.create({
-            user: sender._id,
-            orderId: `message_${Date.now()}_${sender._id}`,
-            amount: 0,
-            coins: -MESSAGE_COST,
-            currency: "INR",
-            status: "paid",
-            metadata: { type: "message", matchId },
-          });
-        } else {
-          // Has subscription - allow messaging without coins
-          sender.messagesSent = messagesSent + 1;
-          needsSenderSave = true;
-        }
+      // Check for lifetime subscription first
+      if (!hasLifetimeSubscription) {
+        // No subscription -> redirect to subscription page
+        return res.status(403).json({
+          ok: false,
+          error: "Lifetime subscription required to send messages",
+          requiresSubscription: true,
+        });
       }
+
+      // Has subscription but still need to pay 10 coins PER MESSAGE
+      const currentCoins = sender.coins || 0;
+      if (currentCoins < MESSAGE_COST) {
+        return res.status(402).json({
+          ok: false,
+          error: "Insufficient coins",
+          coinsRequired: MESSAGE_COST,
+          currentCoins,
+          requiresTopup: true,
+        });
+      }
+
+      // Deduct 10 coins per message
+      sender.coins = currentCoins - MESSAGE_COST;
+      sender.messagesSent = (sender.messagesSent || 0) + 1;
+      needsSenderSave = true;
+
+      // Record transaction
+      await Transaction.create({
+        user: sender._id,
+        orderId: `message_${Date.now()}_${sender._id}`,
+        amount: 0,
+        coins: -MESSAGE_COST,
+        currency: "INR",
+        status: "paid",
+        metadata: { type: "message", matchId },
+      });
     }
     // OTHER GENDERS - Require match
     else {
@@ -415,12 +410,7 @@ router.post("/:matchId", auth, async (req, res) => {
       message,
       coinsRemaining: sender.coins,
       messagesSent: sender.messagesSent,
-      coinsDeducted:
-        isMale &&
-        !hasLifetimeSubscription &&
-        sender.messagesSent > FREE_MESSAGES_FOR_MALES
-          ? MESSAGE_COST
-          : 0,
+      coinsDeducted: isMale && hasLifetimeSubscription ? MESSAGE_COST : 0,
     });
   } catch (err) {
     console.error("POST /api/messages/:matchId error:", err);

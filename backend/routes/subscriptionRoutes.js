@@ -51,14 +51,14 @@ router.post("/activate-passkey", authMiddleware, async (req, res) => {
         'subscription.isLifetime': true
       });
 
-    } else if (passKey.trim() === process.env.PASSKEY_499) {
-      // 701 coins (600 + 101 bonus)
+    } else if (passKey.trim() === process.env.PASSKEY_2999) {
+      // 3200 coins package (no bonus)
       rewardType = 'coins';
-      rewardAmount = 701;
-      customMessage = '💝 Awesome! You got 701 coins!';
+      rewardAmount = 3200;
+      customMessage = '💝 Awesome! You got 3200 coins!';
       
       await User.findByIdAndUpdate(userId, { 
-        $inc: { coins: 701 }
+        $inc: { coins: 3200 }
       });
 
     } else if (passKey.trim() === process.env.PASSKEY_999) {

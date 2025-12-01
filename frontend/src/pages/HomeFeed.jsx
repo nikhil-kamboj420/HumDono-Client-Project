@@ -382,7 +382,7 @@ export default function HomeFeed() {
 
         <div className="relative z-40 h-[calc(100vh-120px)] lg:h-[80vh] w-full overflow-hidden">
           <SwipeDeck>
-            {/* Only render the first profile - single card view */}
+            {/* Show profiles if available */}
             {profiles.length > 0 && (
               <SwipeCard
                 key={profiles[0]._id}
@@ -397,47 +397,49 @@ export default function HomeFeed() {
                 onSendFriendRequest={handleSendFriendRequest}
               />
             )}
-          </SwipeDeck>
-        </div>
 
-        {/* Load More / End Message */}
-        <div className="mt-6 flex flex-col mb-10 items-center gap-4 z-50">
-          {profiles.length === 0 && !hasNextPage ? (
-            <div className="text-center py-8">
-              <div className="text-6xl mb-4">💕</div>
-              <h3 className="text-xl font-bold text-white mb-2">
-                No More Profiles
-              </h3>
-              <p className="text-white/80 mb-6">
-                Adjust filters or check back later!
-              </p>
-              <div className="flex gap-3 justify-center">
+            {/* Show "No More Profiles" message centered in the card area */}
+            {profiles.length === 0 && !hasNextPage && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center py-8 px-4">
+                  <div className="text-6xl lg:text-7xl mb-4">💕</div>
+                  <h3 className="text-2xl lg:text-3xl font-bold text-white mb-3">
+                    No More Profiles
+                  </h3>
+                  <p className="text-white/80 mb-6 text-base lg:text-lg">
+                    Adjust filters or check back later!
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <button
+                      onClick={() => navigate("/likes")}
+                      className="px-6 py-3 bg-white text-pink-600 rounded-lg font-semibold hover:bg-pink-50 transition-colors"
+                    >
+                      People I Liked
+                    </button>
+                    <button
+                      onClick={() => navigate("/dislikes")}
+                      className="px-6 py-3 bg-white/10 text-white border border-white rounded-lg font-semibold hover:bg-white/20 transition-colors"
+                    >
+                      People I Disliked
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show "Load more" button if there are more pages but no profiles in queue */}
+            {profiles.length === 0 && hasNextPage && (
+              <div className="absolute inset-0 flex items-center justify-center">
                 <button
-                  onClick={() => navigate("/likes")}
-                  className="px-6 py-3 bg-white text-pink-600 rounded-lg font-semibold hover:bg-pink-50 transition-colors"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="px-6 py-3 bg-white border rounded-lg shadow text-base hover:bg-gray-50 transition-colors disabled:opacity-50 font-semibold"
                 >
-                  People I Liked
-                </button>
-                <button
-                  onClick={() => navigate("/dislikes")}
-                  className="px-6 py-3 bg-white/10 text-white border border-white rounded-lg font-semibold hover:bg-white/20 transition-colors"
-                >
-                  People I Disliked
+                  {isFetchingNextPage ? "Loading…" : "Load more"}
                 </button>
               </div>
-            </div>
-          ) : (
-            hasNextPage &&
-            profiles.length === 0 && (
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="px-4 lg:px-6 py-2 lg:py-3 bg-white border rounded shadow text-sm lg:text-base hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                {isFetchingNextPage ? "Loading…" : "Load more"}
-              </button>
-            )
-          )}
+            )}
+          </SwipeDeck>
         </div>
       </div>
 

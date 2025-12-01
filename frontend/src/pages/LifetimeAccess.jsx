@@ -155,7 +155,7 @@ export default function LifetimeAccess() {
                         onClick={handleUpiPayment}
                         className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 mb-3"
                     >
-                        Get Lifetime Access
+                        Pay with UPI
                     </button>
 
                     {/* Scanner Payment Button */}

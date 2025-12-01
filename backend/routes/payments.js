@@ -67,4 +67,24 @@ router.get('/history', protect, async (req, res) => {
   }
 });
 
+/**
+ * @route   GET /api/payments/transactions
+ * @desc    Alias for transaction history (backward compatibility)
+ * @access  Private
+ */
+router.get('/transactions', protect, async (req, res) => {
+  try {
+    const userId = req.user.userId || req.user._id;
+
+    const transactions = await Transaction.find({ user: userId })
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json({ success: true, transactions });
+  } catch (error) {
+    console.error('Get transactions alias error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch transactions' });
+  }
+});
+
 export default router;

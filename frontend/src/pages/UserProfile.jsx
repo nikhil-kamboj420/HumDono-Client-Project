@@ -66,7 +66,7 @@ const UserProfile = () => {
 
       if (existingMatch) {
         // Navigate to existing chat
-        navigate(`/chat/${existingMatch._id}`, {
+        navigate(`/chat/${existingMatch.matchId || existingMatch._id}`, {
           state: { user: user },
         });
       } else {

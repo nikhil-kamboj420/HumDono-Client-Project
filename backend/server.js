@@ -29,8 +29,6 @@ const app = express();
  */
 app.use(helmet());
 
-
-
 // Regular JSON parsing for other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -58,7 +56,12 @@ app.use(
     origin: (origin, cb) => {
       // allow requests with no origin like mobile apps or curl
       if (!origin) return cb(null, true);
-      if (ALLOWED_ORIGINS.indexOf(origin) !== -1) return cb(null, true);
+      const isExplicitAllowed = ALLOWED_ORIGINS.indexOf(origin) !== -1;
+      const isLocalhost = /^(http:\/\/|https:\/\/)localhost:\d+$/i.test(origin);
+      const isLoopback = /^(http:\/\/|https:\/\/)127\.0\.0\.1:\d+$/i.test(
+        origin
+      );
+      if (isExplicitAllowed || isLocalhost || isLoopback) return cb(null, true);
       return cb(new Error("CORS not allowed"), false);
     },
     credentials: true,

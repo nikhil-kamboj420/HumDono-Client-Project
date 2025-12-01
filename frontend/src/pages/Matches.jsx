@@ -16,7 +16,9 @@ const Matches = () => {
   const fetchMatches = async () => {
     try {
       const response = await api.get('/messages');
-      setMatches(response.conversations || []);
+      // Filter out invalid matches where user is missing
+      const validMatches = (response.conversations || []).filter(m => m.user);
+      setMatches(validMatches);
     } catch (error) {
       console.error('Error fetching matches:', error);
     } finally {
@@ -41,24 +43,23 @@ const Matches = () => {
 
   return (
     <div className="min-h-screen bg-sunset-gradient pb-20 lg:pb-0 lg:pr-64">
-      <div className="bg-white/10 backdrop-blur-sm shadow-romantic">
-        <div className="max-w-md mx-auto px-4 py-6">
-          <div className="flex items-center space-x-4 mb-2">
+      <div className="bg-white/10 backdrop-blur-sm shadow-romantic sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <div className="flex items-center space-x-4">
             <img
               src="/logo.png"
               alt="HumDono Logo"
-              className="h-12 w-12 object-contain cursor-pointer"
+              className="h-10 w-10 object-contain cursor-pointer"
               onClick={() => navigate('/')}
             />
-            <h2 className="text-2xl font-bold text-gray-900">Matches</h2>
+            <h2 className="text-xl font-bold text-gray-900">Matches</h2>
           </div>
-          <p className="text-gray-600 mt-1">{matches.length} matches</p>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-md mx-auto px-4 py-6 space-y-4">
         {matches.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white/50 rounded-xl">
             <div className="text-6xl mb-4">💕</div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No matches yet</h3>
             <p className="text-gray-600 mb-6">Start swiping to find your perfect match!</p>
@@ -70,51 +71,35 @@ const Matches = () => {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {matches.map((match) => (
               <div
                 key={match.matchId}
                 onClick={() => openChat(match.matchId, match.user)}
-                className="bg-white rounded-lg p-4 shadow-sm border cursor-pointer hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl p-4 shadow-sm border border-pink-50 cursor-pointer hover:shadow-md transition-all active:scale-[0.99]"
               >
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <img
                       src={match.user.photos?.[0]?.url || '/default-avatar.png'}
                       alt={match.user.name}
-                      className="w-16 h-16 rounded-full object-cover cursor-pointer"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/profile/${match.user._id}`); }}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-pink-100"
                     />
-                    {match.unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-                        {match.unreadCount}
-                      </div>
-                    )}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 truncate">
-                      {match.user.name}
-                    </h3>
-                    {match.lastMessage ? (
-                      <p className="text-gray-600 text-sm truncate">
-                        {match.lastMessage.messageType === 'gift' 
-                          ? `🎁 ${match.lastMessage.content}`
-                          : match.lastMessage.content
-                        }
-                      </p>
-                    ) : (
-                      <p className="text-gray-400 text-sm">Say hello! 👋</p>
-                    )}
-                    <p className="text-gray-400 text-xs mt-1">
-                      {match.lastMessageAt ? new Date(match.lastMessageAt).toLocaleDateString() : 'New match'}
+                    <div className="flex justify-between items-baseline">
+                      <h3 className="font-semibold text-gray-900 truncate text-lg">
+                        {match.user.name}
+                      </h3>
+                      <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
+                        {new Date(match.lastMessageAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <p className="text-pink-600 text-sm font-medium mt-1">
+                      You matched with {match.user.name.split(' ')[0]}! 💖
                     </p>
-                  </div>
-                  
-                  <div className="text-pink-500">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
                   </div>
                 </div>
               </div>
