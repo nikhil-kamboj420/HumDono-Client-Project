@@ -234,6 +234,20 @@ const Chat = () => {
     e.target.nextSibling.style.display = "block"; // Show emoji
   };
 
+  const giftEmojiFor = (gift) => {
+    if (!gift) return "🎁";
+    if (gift.emoji) return gift.emoji;
+    const t = String(gift.type || gift.name || "").toLowerCase();
+    if (t.includes("heart")) return "❤️";
+    if (t.includes("rose")) return "🌹";
+    if (t.includes("chocolate")) return "🍫";
+    if (t.includes("diamond")) return "💎";
+    if (t.includes("teddy")) return "🧸";
+    if (t.includes("ring")) return "💍";
+    if (t.includes("star")) return "⭐";
+    return "🎁";
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-sunset-gradient flex items-center justify-center">
@@ -307,23 +321,9 @@ const Chat = () => {
                       setGiftModalOpen(true);
                     }}
                   >
-                    {message.gift?.image ? (
-                      <>
-                        <img
-                          src={message.gift.image}
-                          alt={message.gift?.type || "Gift"}
-                          className="w-16 h-16 object-contain mx-auto mb-1"
-                          onError={handleImageError}
-                        />
-                        <div className="text-3xl mb-1 hidden">
-                          {message.gift?.emoji || "🎁"}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-3xl mb-1">
-                        {message.gift?.emoji || "🎁"}
-                      </div>
-                    )}
+                    <div className="text-3xl mb-1">
+                      {giftEmojiFor(message.gift)}
+                    </div>
                     <p className="text-sm">{message.content}</p>
                     {message.gift?.value && (
                       <p className="text-xs opacity-75">
@@ -444,9 +444,7 @@ const Chat = () => {
       {giftModalOpen && giftModalMessage && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl p-6 w-80 text-center shadow-xl scale-100 animate-[fadeIn_0.2s_ease-out]">
-            <div className="text-4xl mb-2">
-              {giftModalMessage.gift?.emoji || "🎁"}
-            </div>
+            <div className="text-4xl mb-2">{giftEmojiFor(giftModalMessage.gift)}</div>
             <h3 className="font-semibold text-gray-900 mb-1">
               {giftModalMessage.gift?.type || "Gift"}
             </h3>

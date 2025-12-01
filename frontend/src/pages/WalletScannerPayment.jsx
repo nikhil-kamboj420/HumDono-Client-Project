@@ -26,7 +26,7 @@ export default function WalletScannerPayment() {
             <div className="bg-white pt-6 pb-4 px-4">
                 <div className="flex items-center space-x-3 mb-4">
                     <button
-                        onClick={() => navigate('/wallet')}
+                        onClick={() => navigate('/')}
                         className="text-gray-700 hover:text-gray-900"
                     >
                         <ArrowLeftIcon className="w-6 h-6" />

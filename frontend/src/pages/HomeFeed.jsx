@@ -24,6 +24,14 @@ export default function HomeFeed() {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [prevOpen, setPrevOpen] = useState(false);
+  const [exhausted, setExhausted] = useState(() => {
+    try {
+      return localStorage.getItem("feedExhausted") === "true";
+    } catch {
+      return false;
+    }
+  });
 
   // --- CORE STATE ---
   // profiles: The active queue of cards. We always show profiles[0].
@@ -117,6 +125,16 @@ export default function HomeFeed() {
       return [...prevProfiles, ...newCandidates];
     });
   }, [rawItems, seenIds]); // Re-run if rawItems changes or if we need to re-validate against seenIds
+
+  // Mark exhausted when queue empty and no next page
+  useEffect(() => {
+    if (profiles.length === 0 && !hasNextPage) {
+      try {
+        localStorage.setItem("feedExhausted", "true");
+        setExhausted(true);
+      } catch {}
+    }
+  }, [profiles.length, hasNextPage]);
 
   const interactionMutation = useMutation({
     mutationFn: ({ to, action }) => api.postInteraction({ to, action }),
@@ -383,7 +401,7 @@ export default function HomeFeed() {
         <div className="relative z-40 h-[calc(100vh-120px)] lg:h-[80vh] w-full overflow-hidden">
           <SwipeDeck>
             {/* Show profiles if available */}
-            {profiles.length > 0 && (
+            {profiles.length > 0 && !exhausted && (
               <SwipeCard
                 key={profiles[0]._id}
                 profile={profiles[0]}
@@ -399,30 +417,35 @@ export default function HomeFeed() {
             )}
 
             {/* Show "No More Profiles" message centered in the card area */}
-            {profiles.length === 0 && !hasNextPage && (
+            {(exhausted || (profiles.length === 0 && !hasNextPage)) && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center py-8 px-4">
                   <div className="text-6xl lg:text-7xl mb-4">💕</div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-white mb-3">
-                    No More Profiles
+                    More profiles coming soon..
                   </h3>
-                  <p className="text-white/80 mb-6 text-base lg:text-lg">
-                    Adjust filters or check back later!
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <button
-                      onClick={() => navigate("/likes")}
-                      className="px-6 py-3 bg-white text-pink-600 rounded-lg font-semibold hover:bg-pink-50 transition-colors"
-                    >
-                      People I Liked
-                    </button>
-                    <button
-                      onClick={() => navigate("/dislikes")}
-                      className="px-6 py-3 bg-white/10 text-white border border-white rounded-lg font-semibold hover:bg-white/20 transition-colors"
-                    >
-                      People I Disliked
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setPrevOpen((v) => !v)}
+                    className="px-6 py-3 bg-white text-pink-600 rounded-lg font-semibold hover:bg-pink-50 transition-colors mb-4"
+                  >
+                    Previous interactions
+                  </button>
+                  {prevOpen && (
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <button
+                        onClick={() => navigate("/likes")}
+                        className="px-6 py-3 bg-white text-pink-600 rounded-lg font-semibold hover:bg-pink-50 transition-colors"
+                      >
+                        People I Liked
+                      </button>
+                      <button
+                        onClick={() => navigate("/dislikes")}
+                        className="px-6 py-3 bg-white/10 text-white border border-white rounded-lg font-semibold hover:bg-white/20 transition-colors"
+                      >
+                        People I Disliked
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -154,7 +154,7 @@ export default function Wallet() {
           <div className="max-w-md mx-auto px-4 py-6">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/')}
                 className="text-gray-600 hover:text-gray-900"
               >
                 <ArrowLeftIcon className="w-6 h-6" />
@@ -258,7 +258,7 @@ export default function Wallet() {
         <div className="max-w-md mx-auto px-4 py-6">
           <div className="flex items-center space-x-4">
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
               className="text-gray-600 hover:text-gray-900"
             >
               <ArrowLeftIcon className="w-6 h-6" />

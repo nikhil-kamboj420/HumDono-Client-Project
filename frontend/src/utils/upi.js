@@ -6,7 +6,7 @@
  */
 export const openUpiIntent = (amount) => {
   // HumDono Official UPI ID
-  const vpa = 'humdonodating@okicici'; 
+  const vpa = '8813965378@ptyes'; 
   const name = 'Hum dono';
   const txnNote = 'HumDono Lifetime Premium';
   const currency = 'INR';

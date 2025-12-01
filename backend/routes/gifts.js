@@ -34,48 +34,79 @@ router.post("/send", auth, async (req, res) => {
     const { giftId, receiverId, matchId, message = "" } = req.body;
 
     if (!giftId || !receiverId) {
-      return res.status(400).json({ success: false, ok: false, error: "Gift ID and receiver ID required" });
+      return res
+        .status(400)
+        .json({
+          success: false,
+          ok: false,
+          error: "Gift ID and receiver ID required",
+        });
     }
 
     // Get gift details
     const gift = await Gift.findById(giftId);
     if (!gift || !gift.isActive) {
-      return res.status(404).json({ success: false, ok: false, error: "Gift not found" });
+      return res
+        .status(404)
+        .json({ success: false, ok: false, error: "Gift not found" });
     }
 
-    // Check user has enough coins
+    // Check sender and apply gender-based rules
     const user = await User.findById(userId);
-    if (!user) return res.status(404).json({ success: false, ok: false, error: "User not found" });
+    if (!user)
+      return res
+        .status(404)
+        .json({ success: false, ok: false, error: "User not found" });
+    const isFemale = String(user.gender || "").toLowerCase() === "female";
 
-    if (user.coins < gift.coinValue) {
-      return res.status(400).json({ 
-        success: false,
-        ok: false, 
-        error: "Insufficient coins", 
-        required: gift.coinValue,
-        balance: user.coins 
+    if (!isFemale) {
+      // Males (and others) must have coins and will be deducted
+      if (user.coins < gift.coinValue) {
+        return res.status(400).json({
+          success: false,
+          ok: false,
+          error: "Insufficient coins",
+          required: gift.coinValue,
+          balance: user.coins,
+        });
+      }
+
+      // Deduct coins
+      user.coins -= gift.coinValue;
+      await user.save();
+
+      // Record transaction (deduction)
+      await Transaction.create({
+        user: userId,
+        orderId: "gift_" + Date.now() + "_" + userId,
+        amount: 0,
+        coins: -gift.coinValue,
+        currency: "INR",
+        status: "paid",
+        metadata: {
+          type: "gift_sent",
+          giftId,
+          receiverId,
+          giftName: gift.name,
+        },
+      });
+    } else {
+      // Females send gifts completely free (no coin check, no deduction)
+      await Transaction.create({
+        user: userId,
+        orderId: "gift_free_" + Date.now() + "_" + userId,
+        amount: 0,
+        coins: 0,
+        currency: "INR",
+        status: "paid",
+        metadata: {
+          type: "gift_sent_free",
+          giftId,
+          receiverId,
+          giftName: gift.name,
+        },
       });
     }
-
-    // Deduct coins
-    user.coins -= gift.coinValue;
-    await user.save();
-
-    // Record transaction
-    await Transaction.create({
-      user: userId,
-      orderId: "gift_" + Date.now() + "_" + userId,
-      amount: 0, // No money transaction, just coins
-      coins: -gift.coinValue, // Negative for deduction
-      currency: 'INR',
-      status: 'paid',
-      metadata: { 
-        type: "gift_sent",
-        giftId, 
-        receiverId, 
-        giftName: gift.name 
-      }
-    });
 
     // If matchId provided, send as message
     if (matchId) {
@@ -91,40 +122,49 @@ router.post("/send", auth, async (req, res) => {
             type: gift.name,
             value: gift.coinValue,
             image: gift.image,
-            emoji: gift.emoji || "🎁"
-          }
+            emoji: gift.emoji || "🎁",
+          },
         });
         await giftMessage.save();
-        
+
         match.lastMessageAt = new Date();
         await match.save();
       }
     }
 
     // Create notification for receiver
-    await createNotification({
-      recipient: receiverId,
-      sender: userId,
-      type: "gift",
-      message: user.name + " sent you a " + gift.name + "! 🎁",
-      data: {
-        giftName: gift.name,
-        giftImage: gift.image,
-        senderName: user.name,
-        senderPhoto: user.photos?.[0]?.url
-      }
-    }, req.app?.locals?.io);
+    await createNotification(
+      {
+        recipient: receiverId,
+        sender: userId,
+        type: "gift",
+        message: user.name + " sent you a " + gift.name + "! 🎁",
+        data: {
+          giftName: gift.name,
+          giftImage: gift.image,
+          senderName: user.name,
+          senderPhoto: user.photos?.[0]?.url,
+        },
+      },
+      req.app?.locals?.io
+    );
 
-    res.json({ 
+    res.json({
       success: true,
-      ok: true, 
+      ok: true,
       message: "Gift sent successfully",
-      remainingCoins: user.coins 
+      remainingCoins: user.coins,
     });
   } catch (err) {
     console.error("POST /api/gifts/send error:", err);
     console.error("Error details:", err.message, err.stack);
-    res.status(500).json({ success: false, ok: false, error: err.message || "Server error" });
+    res
+      .status(500)
+      .json({
+        success: false,
+        ok: false,
+        error: err.message || "Server error",
+      });
   }
 });
 

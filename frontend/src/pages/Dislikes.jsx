@@ -93,7 +93,7 @@ export default function Dislikes() {
                   <h3 className="text-black font-semibold text-lg">
                     {user.name}, {user.age}
                   </h3>
-                  <p className="text-sm text-gray-600">{user.location?.city}</p>
+                  {/* location hidden per requirement */}
                 </div>
                 <button
                   onClick={() => handleUndo(user._id)}

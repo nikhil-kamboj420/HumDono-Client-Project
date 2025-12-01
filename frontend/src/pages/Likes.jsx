@@ -93,7 +93,7 @@ export default function Likes() {
                   <h3 className="text-gray-900 font-semibold text-lg">
                     {user.name}, {user.age}
                   </h3>
-                  <p className="text-sm text-gray-600">{user.location?.city}</p>
+                  {/* location hidden per requirement */}
                   {action === "superlike" && (
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
                       Super Like 💫

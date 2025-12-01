@@ -124,6 +124,8 @@ const UserSchema = new mongoose.Schema({
   
   // Message tracking (hidden from user)
   messagesSent: { type: Number, default: 0 },
+  // Free direct messages allowance tracking for unsubscribed males
+  freeDirectMessagesUsed: { type: Number, default: 0 },
   
   // Profile boost tracking
   boosts: {
