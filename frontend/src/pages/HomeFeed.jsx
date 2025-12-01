@@ -25,13 +25,6 @@ export default function HomeFeed() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [prevOpen, setPrevOpen] = useState(false);
-  const [exhausted, setExhausted] = useState(() => {
-    try {
-      return localStorage.getItem("feedExhausted") === "true";
-    } catch {
-      return false;
-    }
-  });
 
   // --- CORE STATE ---
   // profiles: The active queue of cards. We always show profiles[0].
@@ -125,16 +118,6 @@ export default function HomeFeed() {
       return [...prevProfiles, ...newCandidates];
     });
   }, [rawItems, seenIds]); // Re-run if rawItems changes or if we need to re-validate against seenIds
-
-  // Mark exhausted when queue empty and no next page
-  useEffect(() => {
-    if (profiles.length === 0 && !hasNextPage) {
-      try {
-        localStorage.setItem("feedExhausted", "true");
-        setExhausted(true);
-      } catch {}
-    }
-  }, [profiles.length, hasNextPage]);
 
   const interactionMutation = useMutation({
     mutationFn: ({ to, action }) => api.postInteraction({ to, action }),
@@ -401,7 +384,7 @@ export default function HomeFeed() {
         <div className="relative z-40 h-[calc(100vh-120px)] lg:h-[80vh] w-full overflow-hidden">
           <SwipeDeck>
             {/* Show profiles if available */}
-            {profiles.length > 0 && !exhausted && (
+            {profiles.length > 0 && (
               <SwipeCard
                 key={profiles[0]._id}
                 profile={profiles[0]}
@@ -417,7 +400,7 @@ export default function HomeFeed() {
             )}
 
             {/* Show "No More Profiles" message centered in the card area */}
-            {(exhausted || (profiles.length === 0 && !hasNextPage)) && (
+            {profiles.length === 0 && !hasNextPage && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center py-8 px-4">
                   <div className="text-6xl lg:text-7xl mb-4">💕</div>
