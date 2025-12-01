@@ -124,13 +124,34 @@ const Boosts = () => {
 
   const purchaseBoost = async (boostType) => {
     if (purchasing) return;
-
     const boost = boostOptions.find((b) => b.type === boostType);
     if (!boost) return;
-
-    // Payment disabled
-    showError("Online payments are currently disabled.", "Payments Disabled");
-    return;
+    try {
+      setPurchasing(boostType);
+      const res = await api.activateBoost(boostType);
+      if (res.ok) {
+        showSuccess("Boost activated!", "Success");
+        setUserCoins(res.coinsRemaining || userCoins);
+        await fetchBoostData();
+      }
+    } catch (error) {
+      const status = error?.response?.status;
+      const data = error?.response?.data || {};
+      if (status === 403 && data.requiresSubscription) {
+        showError("Subscription required to use boosts", "Subscription Required");
+        setTimeout(() => navigate("/subscription?required=true"), 1500);
+      } else if (status === 402) {
+        showError(
+          `Insufficient coins. Need ${data.coinsRequired}, have ${data.currentCoins}`,
+          "Insufficient Coins"
+        );
+        setTimeout(() => navigate("/wallet"), 1500);
+      } else {
+        showError("Failed to activate boost", "Error");
+      }
+    } finally {
+      setPurchasing(null);
+    }
   };
 
   const getBoostIcon = (type) => {
@@ -287,10 +308,11 @@ const Boosts = () => {
                           </div>
 
                           <button
-                            onClick={() => navigate("/wallet")}
-                            className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-2.5 rounded-full font-semibold hover:from-pink-600 hover:to-rose-600 shadow-lg transition-all"
+                            onClick={() => purchaseBoost(boost.type)}
+                            disabled={purchasing === boost.type}
+                            className="bg-gradient-to-r from-pink-500 to-rose-500 text-white px-6 py-2.5 rounded-full font-semibold hover:from-pink-600 hover:to-rose-600 shadow-lg transition-all disabled:opacity-50"
                           >
-                            Buy Coins
+                            Activate
                           </button>
                         </div>
                       </div>

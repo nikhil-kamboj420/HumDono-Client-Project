@@ -99,6 +99,77 @@ router.get("/history", auth, async (req, res) => {
   }
 });
 
+router.post("/activate", auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { type } = req.body;
+
+    if (!type || !BOOST_PRICES[type]) {
+      return res.status(400).json({ ok: false, error: "Invalid boost type" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user)
+      return res.status(404).json({ ok: false, error: "User not found" });
+
+    const isMale = user.gender?.toLowerCase() === "male";
+    const hasLifetimeSubscription = user.subscription?.isLifetime === true;
+
+    if (isMale && !hasLifetimeSubscription) {
+      return res
+        .status(403)
+        .json({
+          ok: false,
+          error: "Subscription required",
+          requiresSubscription: true,
+        });
+    }
+
+    const { coinCost, duration } = BOOST_PRICES[type];
+
+    if ((user.coins || 0) < coinCost) {
+      return res
+        .status(402)
+        .json({
+          ok: false,
+          error: "Insufficient coins",
+          coinsRequired: coinCost,
+          currentCoins: user.coins || 0,
+          requiresTopup: true,
+        });
+    }
+
+    user.coins = (user.coins || 0) - coinCost;
+
+    const expiresAt = new Date(Date.now() + duration * 60 * 1000);
+    const boost = await Boost.create({
+      user: userId,
+      type,
+      duration,
+      coinCost,
+      isActive: true,
+      expiresAt,
+    });
+
+    await user.save();
+
+    await Transaction.create({
+      user: userId,
+      orderId: `boost_${type}_${Date.now()}_${userId}`,
+      amount: 0,
+      coins: -coinCost,
+      currency: "INR",
+      status: "paid",
+      metadata: { type: "boost", boostType: type, duration },
+    });
+
+    return res.json({ ok: true, boost, coinsRemaining: user.coins });
+  } catch (err) {
+    console.error("POST /api/boosts/activate error:", err);
+    return res.status(500).json({ ok: false, error: "Server error" });
+  }
+});
+
 function getBoostDescription(type) {
   const descriptions = {
     visibility: "Increase your profile visibility for 30 minutes",

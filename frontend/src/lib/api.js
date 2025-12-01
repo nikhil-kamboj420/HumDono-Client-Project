@@ -422,6 +422,12 @@ const api = {
   sendMessage,
   sendDirectMessage,
 
+  // boosts
+  activateBoost: async (type) => {
+    const res = await axiosInstance.post('/boosts/activate', { type });
+    return res.data;
+  },
+
   // Generic HTTP methods
   get,
   post,
