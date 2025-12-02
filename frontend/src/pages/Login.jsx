@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import api from "../lib/api";
 import { setAxiosAuthToken } from "../lib/axios";
+import { clearServiceWorkerCache } from "../utils/clearSW";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: (data) => api.post("/auth/login", data),
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       // Save token and user
       if (res.token) {
         setAxiosAuthToken(res.token);
@@ -23,9 +24,10 @@ export default function Login() {
         localStorage.setItem("user", JSON.stringify(res.user));
       }
 
-      // Redirect based on profile completion
-      const dest = res.isProfileComplete ? "/" : "/profile/create";
-      navigate(dest, { replace: true });
+      await clearServiceWorkerCache();
+
+      // Force full reload (fixes stale user / old profiles)
+      window.location.href = res.isProfileComplete ? "/" : "/profile/create";
     },
     onError: (err) => {
       setError(err?.response?.data?.error || "Login failed");
