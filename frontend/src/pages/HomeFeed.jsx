@@ -161,9 +161,16 @@ export default function HomeFeed() {
     interactionMutation.mutate({ to: current._id, action: serverAction });
 
     // 6. Check if we need more profiles
-    if (hasNextPage && profiles.length <= 3 && !isFetchingNextPage) {
-      fetchNextPage();
-    }
+    setProfiles((prev) => {
+      const nextQueue = prev.slice(1);
+
+      // Fetch next page based on updated queue (correct length)
+      if (hasNextPage && nextQueue.length <= 3 && !isFetchingNextPage) {
+        setTimeout(() => fetchNextPage(), 0);
+      }
+
+      return nextQueue;
+    });
 
     // 7. Release Lock after delay (prevents double-tap)
     setTimeout(() => {

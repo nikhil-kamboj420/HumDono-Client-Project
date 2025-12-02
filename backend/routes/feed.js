@@ -164,7 +164,10 @@ router.get("/", auth, async (req, res) => {
       .select("to")
       .lean();
 
-    const excludeIds = allInteractions.map((x) => String(x.to));
+    const excludeIds = allInteractions.map(
+      (x) => new mongoose.Types.ObjectId(String(x.to))
+    );
+    if (!filter._id) filter._id = {};
 
     if (excludeIds.length > 0) {
       // Mongoose will cast string ids to ObjectId for the query
@@ -250,6 +253,8 @@ router.get("/", auth, async (req, res) => {
       };
     });
 
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    res.set("Pragma", "no-cache");
     return res.json({ ok: true, results: prepared });
   } catch (err) {
     console.error("GET /api/feed error:", err);
