@@ -83,6 +83,8 @@ export default function HomeFeed() {
     staleTime: 1000 * 30,
     retry: false,
     keepPreviousData: true,
+    refetchOnWindowFocus: true,
+    refetchOnMount: "always",
   });
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
