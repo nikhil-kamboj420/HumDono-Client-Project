@@ -118,21 +118,20 @@ export default function LifetimeAccess() {
     const handleUpiPayment = () => {
         try {
             const amount = finalPrice;
-            const upiId = "8168072911@okbizaxis";
+            const upiId = "humdono@indianbank";
             const name = "HumDono";
             const note = "HumDono Lifetime Access";
             const transactionRef = "HD" + Date.now();  // unique txn id
 
-            const upiUrl = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&tn=${note}&tr=${transactionRef}&cu=INR`;
+            // const upiUrl = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&tn=${note}&tr=${transactionRef}&cu=INR`;
+            const upiUrl = `upi://pay?pa=${upiId}&pn=${name}&tn=${note}&cu=INR`;
 
             // Open UPI App
             window.location.href = upiUrl;
 
             // OPTIONAL: store order locally to verify later
             sessionStorage.setItem("upiPendingPayment", JSON.stringify({
-                amount,
-                transactionRef,
-                coupon: appliedCoupon ? appliedCoupon.coupon.code : null
+                message: "User will pay manually"
             }));
 
         } catch (err) {
@@ -258,14 +257,6 @@ export default function LifetimeAccess() {
                         )}
                     </div>
 
-                    {/* UPI Payment Button */}
-                    <button
-                        onClick={handleUpiPayment}
-                        className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 mb-3"
-                    >
-                        Pay with UPI
-                    </button>
-
                     {sessionStorage.getItem("upiPendingPayment") && (
                         <button
                             onClick={confirmUpiPayment}
@@ -274,6 +265,15 @@ export default function LifetimeAccess() {
                             Activate Premium
                         </button>
                     )}
+
+                    {/* UPI Payment Button */}
+                    <button
+                        onClick={handleUpiPayment}
+                        className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 mb-3"
+                    >
+                        Pay with UPI
+                    </button>
+                    
 
                     {/* Scanner Payment Button */}
                     <button
