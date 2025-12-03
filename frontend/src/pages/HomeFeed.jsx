@@ -276,6 +276,17 @@ export default function HomeFeed() {
 
   const hasAnyItems = !!data?.pages?.some((p) => (p.items?.length ?? 0) > 0);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-sunset-gradient flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto romantic-pulse"></div>
+          <p className="mt-4 text-white font-semibold">Loading profiles...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-sunset-gradient pb-0 lg:pb-0 lg:pr-64 overflow-x-hidden w-full">
       <div className="mx-auto max-w-sm lg:max-w-md xl:max-w-lg p-4 w-full container-fix">
@@ -394,7 +405,7 @@ export default function HomeFeed() {
             )}
 
             {/* Show "No More Profiles" message centered in the card area */}
-            {profiles.length === 0 && !hasNextPage && !hasAnyItems &&(
+            {!hasNextPage && !hasAnyItems &&(
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center py-8 px-4">
                   <div className="text-6xl lg:text-7xl mb-4">💕</div>
