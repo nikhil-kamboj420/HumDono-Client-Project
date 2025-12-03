@@ -118,7 +118,7 @@ export default function LifetimeAccess() {
     const handleUpiPayment = () => {
         try {
             const amount = finalPrice;
-            const upiId = "Humdono@indianbank";
+            const upiId = "8168072911@okbizaxis";
             const name = "HumDono";
             const note = "HumDono Lifetime Access";
             const transactionRef = "HD" + Date.now();  // unique txn id
