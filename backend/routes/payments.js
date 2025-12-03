@@ -14,6 +14,69 @@ const protect = auth;
 //   key_secret: process.env.RAZORPAY_KEY_SECRET,
 // });
 
+
+/**
+ * @route POST /api/payments/scanner-confirm
+ * @desc Scanner Payment (lifetime plan Rs.699)
+ * @access Private
+ */
+router.post("/scanner-confirm", protect, async(req,res)=>{
+  try {
+    const userId = req.user.userId || req.user._id;
+    const { amount, basePrice, discount, coupon } = req.body;
+
+    if (!amount) {
+      return res.status(400).json({ success: false, error: "Amount required" });
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      isPremium: true,
+      premiumType: "lifetime",
+      requiresFirstSubscription: false,
+      hasCompletedFirstSubscription: true,
+      firstSubscriptionDate: new Date(),
+      coins: 100,
+      subscription: {
+        active: true,
+        plan: "lifetime",
+        isLifetime: true,
+        features: {
+          unlimitedLikes: true,
+          unlimitedMessages: true,
+          prioritySupport: true,
+          profileBoost: true,
+          seeWhoLikedYou: true,
+          rewindFeature: true
+        }
+      }
+    });
+
+    await Transaction.create({
+      user: userId,
+      amount,
+      orderId: "SCANNER_" + Date.now(),
+      status: "paid",
+      paymentMethod: "scanner_qr",
+      currency: "INR",
+      coins: 100,
+      metadata: {
+        plan: "LIFETIME",
+        basePrice,
+        discount,
+        coupon,
+        via: "SCANNER_PAYMENT"
+      }
+    });
+
+    return res.json({ success: true, message: "Scanner payment confirmed & premium activated" });
+
+  } catch (err) {
+    console.error("SCANNER ERROR >>>", err);   // ADD THIS
+    return res.status(500).json({ success: false, error: "Server error" });
+  }
+});
+
+
 /**
  * @route POST /api/payments/create-order
  * @desc Create Razorpay order (lifetime plan Rs.699)

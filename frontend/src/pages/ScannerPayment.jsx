@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
+import api from '../lib/api';
+import { useCustomAlert } from '../hooks/useCustomAlert';
 
 export default function ScannerPayment() {
     const navigate = useNavigate();
     const [paymentData, setPaymentData] = useState(null);
+
+    const { showSuccess, showError } = useCustomAlert();
 
     useEffect(() => {
         const storedData = sessionStorage.getItem('lifetimePayment');
@@ -19,6 +23,34 @@ export default function ScannerPayment() {
     if (!paymentData) {
         return null;
     }
+
+    const handleConfirmPayment = async () => {
+    try {
+        const data = JSON.parse(sessionStorage.getItem("lifetimePayment"));
+
+        if (!data) {
+            showError("No payment info found. Try again.");
+            return;
+        }
+
+        const res = await api.post(
+            "/payments/scanner-confirm",
+            data,
+            { withCredentials: true }
+        );
+
+        if (res.success) {
+            sessionStorage.removeItem("lifetimePayment");
+            showSuccess("Payment successful! Lifetime subscription activated 🎉");
+            navigate("/");
+        } else {
+            showError(res.error || "Unable to confirm payment.");
+        }
+    } catch (err) {
+        console.log(err);
+        showError("Server error confirming payment.");
+    }
+};
 
     return (
         <div className="min-h-screen bg-white">
@@ -106,10 +138,7 @@ export default function ScannerPayment() {
 
                 {/* Complete Payment Button */}
                 <button
-                    onClick={() => {
-                        sessionStorage.removeItem('lifetimePayment');
-                        navigate('/');
-                    }}
+                    onClick={handleConfirmPayment}
                     className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition"
                 >
                     I have completed the payment →

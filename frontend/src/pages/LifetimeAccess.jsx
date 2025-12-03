@@ -267,12 +267,16 @@ export default function LifetimeAccess() {
                     )}
 
                     {/* UPI Payment Button */}
-                    <button
+                    {/* <button
                         onClick={handleUpiPayment}
                         className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 mb-3"
                     >
                         Pay with UPI
-                    </button>
+                    </button> */}
+
+                    <div className="text-center mb-6">
+                        <p className="text-gray-600 mt-2">Pay on UPI - Humdonolove@okicici</p>
+                    </div>
                     
 
                     {/* Scanner Payment Button */}
