@@ -405,7 +405,7 @@ export default function HomeFeed() {
             )}
 
             {/* Show "No More Profiles" message centered in the card area */}
-            {!hasNextPage && !hasAnyItems &&(
+            {!hasAnyItems &&(
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center py-8 px-4">
                   <div className="text-6xl lg:text-7xl mb-4">💕</div>
