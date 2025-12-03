@@ -145,11 +145,11 @@ export default function ScannerPayment() {
                 </button>
 
                 {/* Note */}
-                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                {/* <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <p className="text-blue-800 text-sm text-center">
                         <span className="font-bold">Note:</span> Go to your Profile page and enter the Pass Key you received to activate your access.
                     </p>
-                </div>
+                </div> */}
             </div>
         </div>
     );
