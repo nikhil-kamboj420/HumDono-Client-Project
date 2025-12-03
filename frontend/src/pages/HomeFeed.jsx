@@ -91,7 +91,6 @@ export default function HomeFeed() {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage , isFetching} =
     feedQuery;
 
-  
   const location = useLocation();
 
   useEffect(() => {
