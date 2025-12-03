@@ -26,6 +26,7 @@ export default function HomeFeed() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [prevOpen, setPrevOpen] = useState(false);
+  const [loadingProfiles, setLoadingProfiles] = useState(true);
 
   // --- CORE STATE ---
   // profiles: The active queue of cards. We always show profiles[0].
@@ -70,6 +71,7 @@ export default function HomeFeed() {
         ...filters,
       };
       const res = await api.getFeed(params);
+      setLoadingProfiles(false);
       return {
         items: res.results || [],
         nextPage: pageParam + 1,
@@ -400,7 +402,7 @@ export default function HomeFeed() {
         <div className="relative z-40 h-[calc(100vh-120px)] lg:h-[80vh] w-full overflow-hidden">
           <SwipeDeck>
             {/* Show profiles if available */}
-            {profiles.length > 0 && hasAnyItems && (
+            {profiles.length > 0 && hasAnyItems && !loadingProfiles &&(
               <SwipeCard
                 key={profiles[0]._id}
                 profile={profiles[0]}
