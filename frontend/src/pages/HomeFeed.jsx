@@ -12,6 +12,7 @@ import SwipeCard from "../components/SwipeCard";
 import MatchModal from "../components/MatchModal";
 import Navigation from "../components/Navigation";
 import CustomAlert from "../components/CustomAlert";
+import { useLocation } from "react-router-dom";
 import { useCustomAlert } from "../hooks/useCustomAlert";
 
 export default function HomeFeed() {
@@ -89,6 +90,17 @@ export default function HomeFeed() {
 
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage , isFetching} =
     feedQuery;
+
+  
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === "/") {
+      feedQuery.refetch();
+      setProfiles([]);
+      setSeenIds(new Set());
+    }
+  }, [location.pathname]);
 
   // Flatten all pages into one list
   const rawItems = useMemo(
