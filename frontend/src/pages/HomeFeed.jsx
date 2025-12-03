@@ -82,12 +82,12 @@ export default function HomeFeed() {
     },
     staleTime: 1000 * 30,
     retry: false,
-    keepPreviousData: true,
-    refetchOnWindowFocus: true,
-    refetchOnMount: "always",
+    keepPreviousData: false,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage , isFetching} =
     feedQuery;
 
   // Flatten all pages into one list
@@ -280,12 +280,14 @@ export default function HomeFeed() {
     }
   };
 
-  if (isLoading && !data) {
+  const hasAnyItems = !!data?.pages?.some((p) => (p.items?.length ?? 0) > 0);
+
+  if (isLoading || (!hasAnyItems && isFetching)) {
     return (
       <div className="min-h-screen bg-sunset-gradient flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto romantic-pulse"></div>
-          <p className="mt-4 text-white font-semibold">Loading feed...</p>
+          <p className="mt-4 text-white font-semibold">Loading profiles...</p>
         </div>
       </div>
     );
