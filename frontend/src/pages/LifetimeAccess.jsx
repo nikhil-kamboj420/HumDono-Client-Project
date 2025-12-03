@@ -4,7 +4,6 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import api from '../lib/api';
 import { useCustomAlert } from '../hooks/useCustomAlert';
 import CustomAlert from '../components/CustomAlert';
-import { openUpiIntent } from '../utils/upi';
 
 export default function LifetimeAccess() {
     const navigate = useNavigate();
@@ -13,13 +12,22 @@ export default function LifetimeAccess() {
 
     const { alertConfig, showSuccess, showError, hideAlert } = useCustomAlert();
 
+    useEffect(() => {
+        const pending = sessionStorage.getItem("upiPendingPayment");
+
+        if (pending) {
+            // User came back from UPI app
+            showSuccess(
+                "If you have completed the payment, tap 'Activate Premium'.",
+                "Payment Pending Confirmation"
+            );
+        }
+    }, []);
+
     const basePrice = 699;
     const finalPrice = appliedCoupon
         ? basePrice - appliedCoupon.discount.amount
         : basePrice;
-
-
-
 
 
     const validateCoupon = async () => {
@@ -55,9 +63,84 @@ export default function LifetimeAccess() {
         setCouponCode('');
     };
 
+    // const handleUpiPayment = async () => {
+    //     try {
+
+    //         // 1. Create Order
+    //         const res = await api.post("/payments/create-order");
+
+    //         if (!res || !res.success) {
+    //             showError("Unable to create order. Try again.");
+    //             return;
+    //         }
+
+    //         const { orderId, amount, key } = res;
+
+    //         // 2. Razorpay Options
+    //         const options = {
+    //             key: key,
+    //             amount: amount * 100,
+    //             currency: "INR",
+    //             name: "HumDono",
+    //             description: "Lifetime Access – ₹699",
+    //             order_id: orderId,
+
+    //             handler: async function (paymentResponse) {
+
+    //                 const verify = await api.post("/payments/verify", paymentResponse, { withCredentials: true });
+
+    //                 if (verify.success) {
+    //                     showSuccess("Payment successful!", "Premium activated");
+    //                 } else {
+    //                     showError("Payment verification failed");
+    //                 }
+    //             },
+
+    //             theme: { color: "#ff0066" }
+    //         };
+
+    //         // 3. Initialize Checkout
+    //         const rzp = new (window ).Razorpay(options);
+
+    //         rzp.on("payment.failed", function () {
+    //             showError("Payment failed. Try again.");
+    //         });
+
+    //         rzp.open();
+
+    //     } catch (err) {
+    //         console.error("Payment init error:", err);
+    //         showError("Something went wrong.");
+    //     }
+    // };
+
+
     const handleUpiPayment = () => {
-        openUpiIntent(finalPrice);
+        try {
+            const amount = finalPrice;
+            const upiId = "Humdono@indianbank";
+            const name = "HumDono";
+            const note = "HumDono Lifetime Access";
+            const transactionRef = "HD" + Date.now();  // unique txn id
+
+            const upiUrl = `upi://pay?pa=${upiId}&pn=${name}&am=${amount}&tn=${note}&tr=${transactionRef}&cu=INR`;
+
+            // Open UPI App
+            window.location.href = upiUrl;
+
+            // OPTIONAL: store order locally to verify later
+            sessionStorage.setItem("upiPendingPayment", JSON.stringify({
+                amount,
+                transactionRef,
+                coupon: appliedCoupon ? appliedCoupon.coupon.code : null
+            }));
+
+        } catch (err) {
+            console.error("UPI intent error:", err);
+            showError("Unable to start UPI payment.");
+        }
     };
+
 
     const handleScannerPayment = () => {
         // Store payment data for scanner page
@@ -68,6 +151,31 @@ export default function LifetimeAccess() {
             coupon: appliedCoupon ? appliedCoupon.coupon : null
         }));
         navigate('/scanner-payment');
+    };
+
+    const confirmUpiPayment = async () => {
+        try {
+            const pending = JSON.parse(sessionStorage.getItem("upiPendingPayment"));
+            if (!pending) {
+                return showError("No payment found.");
+            }
+
+            const res = await api.post("/payments/upi/confirm", {
+                transactionId: pending.transactionRef, 
+                amount: pending.amount
+            });
+
+            if (res.success) {
+                sessionStorage.removeItem("upiPendingPayment");
+                showSuccess("Payment confirmed!", "Premium Activated");
+                navigate("/"); // take to home or premium page
+            } else {
+                showError(res.error || "Unable to confirm payment");
+            }
+        } catch (err) {
+            console.error(err);
+            showError("Error confirming UPI payment");
+        }
     };
 
     return (
@@ -157,6 +265,15 @@ export default function LifetimeAccess() {
                     >
                         Pay with UPI
                     </button>
+
+                    {sessionStorage.getItem("upiPendingPayment") && (
+                        <button
+                            onClick={confirmUpiPayment}
+                            className="w-full bg-green-600 text-white py-4 mt-2 rounded-xl font-bold"
+                        >
+                            Activate Premium
+                        </button>
+                    )}
 
                     {/* Scanner Payment Button */}
                     <button
