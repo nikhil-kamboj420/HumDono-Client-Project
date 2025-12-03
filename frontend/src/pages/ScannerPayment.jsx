@@ -52,12 +52,12 @@ export default function ScannerPayment() {
                             <div className="w-64 h-64 hidden flex items-center justify-center bg-gray-100 rounded-lg">
                                 <div className="text-center">
                                     <p className="text-gray-500 font-medium">QR Code</p>
-                                    <p className="text-gray-400 text-sm mt-2">humdonodating@okicici</p>
+                                    <p className="text-gray-400 text-sm mt-2">Humdonolove@okicici</p>
                                 </div>
                             </div>
                         </div>
 
-                        <p className="text-sm text-gray-600">UPI ID: humdonodating@okicici</p>
+                        <p className="text-sm text-gray-600">UPI ID: Humdonolove@okicici</p>
                         <p className="text-xs text-gray-500 mt-2">Scan to pay with any UPI app</p>
                     </div>
                 </div>
