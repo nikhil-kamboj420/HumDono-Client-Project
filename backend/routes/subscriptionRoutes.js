@@ -47,6 +47,7 @@ router.post("/activate-passkey", authMiddleware, async (req, res) => {
       
       await User.findByIdAndUpdate(userId, { 
         isPremium: true,
+        coins: 100,
         'subscription.active': true,
         'subscription.isLifetime': true
       });

@@ -24,33 +24,39 @@ export default function ScannerPayment() {
         return null;
     }
 
-    const handleConfirmPayment = async () => {
-    try {
-        const data = JSON.parse(sessionStorage.getItem("lifetimePayment"));
+    // const handleConfirmPayment = async () => {
+    //     try {
+    //         const data = JSON.parse(sessionStorage.getItem("lifetimePayment"));
 
-        if (!data) {
-            showError("No payment info found. Try again.");
-            return;
-        }
+    //         if (!data) {
+    //             showError("No payment info found. Try again.");
+    //             return;
+    //         }
 
-        const res = await api.post(
-            "/payments/scanner-confirm",
-            data,
-            { withCredentials: true }
-        );
+    //         const res = await api.post(
+    //             "/payments/scanner-confirm",
+    //             data,
+    //             { withCredentials: true }
+    //         );
 
-        if (res.success) {
-            sessionStorage.removeItem("lifetimePayment");
-            showSuccess("Payment successful! Lifetime subscription activated 🎉");
-            navigate("/");
-        } else {
-            showError(res.error || "Unable to confirm payment.");
-        }
-    } catch (err) {
-        console.log(err);
-        showError("Server error confirming payment.");
+    //         if (res.success) {
+    //             sessionStorage.removeItem("lifetimePayment");
+    //             showSuccess("Payment successful! Lifetime subscription activated 🎉");
+    //             navigate("/");
+    //         } else {
+    //             showError(res.error || "Unable to confirm payment.");
+    //         }
+    //     } catch (err) {
+    //         console.log(err);
+    //         showError("Server error confirming payment.");
+    //     }
+    // };
+
+    const handleConfirmPayment = () => {
+        sessionStorage.removeItem("lifetimePayment");
+        showSuccess("Passkey will be sent to you shortly to activate your subscription.");
+        navigate("/");
     }
-};
 
     return (
         <div className="min-h-screen bg-white">
